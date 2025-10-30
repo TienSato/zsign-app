@@ -1,0 +1,746 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		591F7F4D2EB3243100DC435F /* zsign in Frameworks */ = {isa = PBXBuildFile; productRef = 591F7F4C2EB3243100DC435F /* zsign */; };
+		591F80702EB32CE800DC435F /* ZsignSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 591F806F2EB32CE800DC435F /* ZsignSwift */; };
+		591F80722EB32CE800DC435F /* zsign in Frameworks */ = {isa = PBXBuildFile; productRef = 591F80712EB32CE800DC435F /* zsign */; };
+		591F80752EB3943300DC435F /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 591F80742EB3943300DC435F /* Zip */; };
+		593F6E742EAE471E0034C655 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E732EAE471E0034C655 /* NIO */; };
+		593F6E762EAE471E0034C655 /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E752EAE471E0034C655 /* NIOCore */; };
+		593F6E782EAE471E0034C655 /* NIOFoundationCompat in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E772EAE471E0034C655 /* NIOFoundationCompat */; };
+		593F6E7B2EAE47470034C655 /* NIOExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E7A2EAE47470034C655 /* NIOExtras */; };
+		593F6E7D2EAE47470034C655 /* NIOHTTPCompression in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E7C2EAE47470034C655 /* NIOHTTPCompression */; };
+		593F6E7F2EAE47470034C655 /* NIOHTTPResponsiveness in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E7E2EAE47470034C655 /* NIOHTTPResponsiveness */; };
+		593F6E812EAE47470034C655 /* NIOHTTPTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E802EAE47470034C655 /* NIOHTTPTypes */; };
+		593F6EAF2EAF21F60034C655 /* AltSourceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6EAE2EAF21F60034C655 /* AltSourceKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		590E62122EAD80BD006D0A86 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 590E61F42EAD80BA006D0A86 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 590E61FB2EAD80BA006D0A86;
+			remoteInfo = zsignapp;
+		};
+		590E621C2EAD80BD006D0A86 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 590E61F42EAD80BA006D0A86 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 590E61FB2EAD80BA006D0A86;
+			remoteInfo = zsignapp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		590E61FC2EAD80BA006D0A86 /* zsignapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zsignapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		590E62112EAD80BD006D0A86 /* zsignappTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = zsignappTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		590E621B2EAD80BD006D0A86 /* zsignappUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = zsignappUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		59608D622EAD9D5300603CDB /* Exceptions for "zsignapp" folder in "zsignapp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				Resource/ellekit.deb,
+			);
+			target = 590E61FB2EAD80BA006D0A86 /* zsignapp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		591F7E562EB1384C00DC435F /* Exceptions for "zsignapp" folder in "Copy Bundle Resources" phase from "zsignapp" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 590E61FA2EAD80BA006D0A86 /* Resources */;
+			membershipExceptions = (
+				Resource/ellekit.deb,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		590E61FE2EAD80BA006D0A86 /* zsignapp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				59608D622EAD9D5300603CDB /* Exceptions for "zsignapp" folder in "zsignapp" target */,
+				591F7E562EB1384C00DC435F /* Exceptions for "zsignapp" folder in "Copy Bundle Resources" phase from "zsignapp" target */,
+			);
+			path = zsignapp;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		590E61F92EAD80BA006D0A86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				591F7F4D2EB3243100DC435F /* zsign in Frameworks */,
+				593F6EAF2EAF21F60034C655 /* AltSourceKit in Frameworks */,
+				593F6E7F2EAE47470034C655 /* NIOHTTPResponsiveness in Frameworks */,
+				591F80722EB32CE800DC435F /* zsign in Frameworks */,
+				593F6E742EAE471E0034C655 /* NIO in Frameworks */,
+				593F6E7D2EAE47470034C655 /* NIOHTTPCompression in Frameworks */,
+				591F80752EB3943300DC435F /* Zip in Frameworks */,
+				591F80702EB32CE800DC435F /* ZsignSwift in Frameworks */,
+				593F6E812EAE47470034C655 /* NIOHTTPTypes in Frameworks */,
+				593F6E7B2EAE47470034C655 /* NIOExtras in Frameworks */,
+				593F6E782EAE471E0034C655 /* NIOFoundationCompat in Frameworks */,
+				593F6E762EAE471E0034C655 /* NIOCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		590E620E2EAD80BD006D0A86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		590E62182EAD80BD006D0A86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		590E61F32EAD80BA006D0A86 = {
+			isa = PBXGroup;
+			children = (
+				590E61FE2EAD80BA006D0A86 /* zsignapp */,
+				59608D692EADA05C00603CDB /* Frameworks */,
+				590E61FD2EAD80BA006D0A86 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		590E61FD2EAD80BA006D0A86 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				590E61FC2EAD80BA006D0A86 /* zsignapp.app */,
+				590E62112EAD80BD006D0A86 /* zsignappTests.xctest */,
+				590E621B2EAD80BD006D0A86 /* zsignappUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		59608D692EADA05C00603CDB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		590E61FB2EAD80BA006D0A86 /* zsignapp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 590E62252EAD80BD006D0A86 /* Build configuration list for PBXNativeTarget "zsignapp" */;
+			buildPhases = (
+				590E61F82EAD80BA006D0A86 /* Sources */,
+				590E61F92EAD80BA006D0A86 /* Frameworks */,
+				590E61FA2EAD80BA006D0A86 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				590E61FE2EAD80BA006D0A86 /* zsignapp */,
+			);
+			name = zsignapp;
+			packageProductDependencies = (
+				593F6E732EAE471E0034C655 /* NIO */,
+				593F6E752EAE471E0034C655 /* NIOCore */,
+				593F6E772EAE471E0034C655 /* NIOFoundationCompat */,
+				593F6E7A2EAE47470034C655 /* NIOExtras */,
+				593F6E7C2EAE47470034C655 /* NIOHTTPCompression */,
+				593F6E7E2EAE47470034C655 /* NIOHTTPResponsiveness */,
+				593F6E802EAE47470034C655 /* NIOHTTPTypes */,
+				593F6EAE2EAF21F60034C655 /* AltSourceKit */,
+				591F7F4C2EB3243100DC435F /* zsign */,
+				591F806F2EB32CE800DC435F /* ZsignSwift */,
+				591F80712EB32CE800DC435F /* zsign */,
+				591F80742EB3943300DC435F /* Zip */,
+			);
+			productName = zsignapp;
+			productReference = 590E61FC2EAD80BA006D0A86 /* zsignapp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		590E62102EAD80BD006D0A86 /* zsignappTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 590E62282EAD80BD006D0A86 /* Build configuration list for PBXNativeTarget "zsignappTests" */;
+			buildPhases = (
+				590E620D2EAD80BD006D0A86 /* Sources */,
+				590E620E2EAD80BD006D0A86 /* Frameworks */,
+				590E620F2EAD80BD006D0A86 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				590E62132EAD80BD006D0A86 /* PBXTargetDependency */,
+			);
+			name = zsignappTests;
+			packageProductDependencies = (
+			);
+			productName = zsignappTests;
+			productReference = 590E62112EAD80BD006D0A86 /* zsignappTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		590E621A2EAD80BD006D0A86 /* zsignappUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 590E622B2EAD80BD006D0A86 /* Build configuration list for PBXNativeTarget "zsignappUITests" */;
+			buildPhases = (
+				590E62172EAD80BD006D0A86 /* Sources */,
+				590E62182EAD80BD006D0A86 /* Frameworks */,
+				590E62192EAD80BD006D0A86 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				590E621D2EAD80BD006D0A86 /* PBXTargetDependency */,
+			);
+			name = zsignappUITests;
+			packageProductDependencies = (
+			);
+			productName = zsignappUITests;
+			productReference = 590E621B2EAD80BD006D0A86 /* zsignappUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		590E61F42EAD80BA006D0A86 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					590E61FB2EAD80BA006D0A86 = {
+						CreatedOnToolsVersion = 16.2;
+						LastSwiftMigration = 1620;
+					};
+					590E62102EAD80BD006D0A86 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 590E61FB2EAD80BA006D0A86;
+					};
+					590E621A2EAD80BD006D0A86 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 590E61FB2EAD80BA006D0A86;
+					};
+				};
+			};
+			buildConfigurationList = 590E61F72EAD80BA006D0A86 /* Build configuration list for PBXProject "zsignapp" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				vi,
+			);
+			mainGroup = 590E61F32EAD80BA006D0A86;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				593F6E722EAE471E0034C655 /* XCRemoteSwiftPackageReference "swift-nio" */,
+				593F6E792EAE47460034C655 /* XCRemoteSwiftPackageReference "swift-nio-extras" */,
+				593F6EAD2EAF21F60034C655 /* XCLocalSwiftPackageReference "AltSourceKit" */,
+				591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */,
+				591F80732EB3943300DC435F /* XCRemoteSwiftPackageReference "Zip" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 590E61FD2EAD80BA006D0A86 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				590E61FB2EAD80BA006D0A86 /* zsignapp */,
+				590E62102EAD80BD006D0A86 /* zsignappTests */,
+				590E621A2EAD80BD006D0A86 /* zsignappUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		590E61FA2EAD80BA006D0A86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		590E620F2EAD80BD006D0A86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		590E62192EAD80BD006D0A86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		590E61F82EAD80BA006D0A86 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		590E620D2EAD80BD006D0A86 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		590E62172EAD80BD006D0A86 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		590E62132EAD80BD006D0A86 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 590E61FB2EAD80BA006D0A86 /* zsignapp */;
+			targetProxy = 590E62122EAD80BD006D0A86 /* PBXContainerItemProxy */;
+		};
+		590E621D2EAD80BD006D0A86 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 590E61FB2EAD80BA006D0A86 /* zsignapp */;
+			targetProxy = 590E621C2EAD80BD006D0A86 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		590E62232EAD80BD006D0A86 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		590E62242EAD80BD006D0A86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		590E62262EAD80BD006D0A86 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = zsignapp/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/zsignapp/resource",
+					"$(PROJECT_DIR)/zsignapp/Resource",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "zsignapp/Resource/zsignapp-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		590E62272EAD80BD006D0A86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = zsignapp/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/zsignapp/resource",
+					"$(PROJECT_DIR)/zsignapp/Resource",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "zsignapp/Resource/zsignapp-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		590E62292EAD80BD006D0A86 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignappTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/zsignapp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/zsignapp";
+			};
+			name = Debug;
+		};
+		590E622A2EAD80BD006D0A86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignappTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/zsignapp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/zsignapp";
+			};
+			name = Release;
+		};
+		590E622C2EAD80BD006D0A86 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignappUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = zsignapp;
+			};
+			name = Debug;
+		};
+		590E622D2EAD80BD006D0A86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignappUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = zsignapp;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		590E61F72EAD80BA006D0A86 /* Build configuration list for PBXProject "zsignapp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				590E62232EAD80BD006D0A86 /* Debug */,
+				590E62242EAD80BD006D0A86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		590E62252EAD80BD006D0A86 /* Build configuration list for PBXNativeTarget "zsignapp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				590E62262EAD80BD006D0A86 /* Debug */,
+				590E62272EAD80BD006D0A86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		590E62282EAD80BD006D0A86 /* Build configuration list for PBXNativeTarget "zsignappTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				590E62292EAD80BD006D0A86 /* Debug */,
+				590E622A2EAD80BD006D0A86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		590E622B2EAD80BD006D0A86 /* Build configuration list for PBXNativeTarget "zsignappUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				590E622C2EAD80BD006D0A86 /* Debug */,
+				590E622D2EAD80BD006D0A86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		593F6EAD2EAF21F60034C655 /* XCLocalSwiftPackageReference "AltSourceKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = AltSourceKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/khcrysalis/Zsign-Package.git";
+			requirement = {
+				branch = package;
+				kind = branch;
+			};
+		};
+		591F80732EB3943300DC435F /* XCRemoteSwiftPackageReference "Zip" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/marmelroy/Zip.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.2;
+			};
+		};
+		593F6E722EAE471E0034C655 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.87.0;
+			};
+		};
+		593F6E792EAE47460034C655 /* XCRemoteSwiftPackageReference "swift-nio-extras" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio-extras.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.29.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		591F7F4C2EB3243100DC435F /* zsign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = zsign;
+		};
+		591F806F2EB32CE800DC435F /* ZsignSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */;
+			productName = ZsignSwift;
+		};
+		591F80712EB32CE800DC435F /* zsign */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */;
+			productName = zsign;
+		};
+		591F80742EB3943300DC435F /* Zip */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 591F80732EB3943300DC435F /* XCRemoteSwiftPackageReference "Zip" */;
+			productName = Zip;
+		};
+		593F6E732EAE471E0034C655 /* NIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 593F6E722EAE471E0034C655 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIO;
+		};
+		593F6E752EAE471E0034C655 /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 593F6E722EAE471E0034C655 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
+		};
+		593F6E772EAE471E0034C655 /* NIOFoundationCompat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 593F6E722EAE471E0034C655 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOFoundationCompat;
+		};
+		593F6E7A2EAE47470034C655 /* NIOExtras */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 593F6E792EAE47460034C655 /* XCRemoteSwiftPackageReference "swift-nio-extras" */;
+			productName = NIOExtras;
+		};
+		593F6E7C2EAE47470034C655 /* NIOHTTPCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 593F6E792EAE47460034C655 /* XCRemoteSwiftPackageReference "swift-nio-extras" */;
+			productName = NIOHTTPCompression;
+		};
+		593F6E7E2EAE47470034C655 /* NIOHTTPResponsiveness */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 593F6E792EAE47460034C655 /* XCRemoteSwiftPackageReference "swift-nio-extras" */;
+			productName = NIOHTTPResponsiveness;
+		};
+		593F6E802EAE47470034C655 /* NIOHTTPTypes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 593F6E792EAE47460034C655 /* XCRemoteSwiftPackageReference "swift-nio-extras" */;
+			productName = NIOHTTPTypes;
+		};
+		593F6EAE2EAF21F60034C655 /* AltSourceKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AltSourceKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 590E61F42EAD80BA006D0A86 /* Project object */;
+}

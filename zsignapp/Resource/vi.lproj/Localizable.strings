@@ -1,0 +1,622 @@
+//
+//  Localizable.strings
+//  zsignapp
+//
+//  Created by Sato on 29/10/25.
+//
+"Select Alternative Icon" = "Chọn biểu tượng thay thế";
+"Choose from Files" = "Chọn từ Tệp";
+"Choose from Photos" = "Chọn từ Ảnh";
+"Reset to Original" = "Khôi phục ban đầu";
+// MARK: - AppsView
+"Apps" = "Ứng dụng";
+"Unsigned" = "Chưa ký";
+"Signed" = "Đã ký";
+
+// MARK: - UnsignedAppsView
+"No Apps" = "Không có ứng dụng";
+"Import an IPA file to get started" = "Nhập tệp IPA để bắt đầu";
+"Cancel" = "Hủy";
+"Select" = "Chọn";
+"Import Failed" = "Nhập thất bại";
+"OK" = "OK";
+"Delete Apps" = "Xóa ứng dụng";
+"Delete" = "Xóa";
+"Are you sure you want to delete %d app(s)?" = "Bạn có chắc muốn xóa %d ứng dụng?";
+"Preparing..." = "Đang chuẩn bị...";
+
+// MARK: - UnsignedAppRow
+"Unknown App" = "Ứng dụng không xác định";
+"Version %@" = "Phiên bản %@";
+"Sign" = "Ký";
+"Options" = "Tùy chọn";
+"Sign App" = "Ký ứng dụng";
+"Delete App" = "Xóa ứng dụng";
+"Are you sure you want to delete this app?" = "Bạn có chắc muốn xóa ứng dụng này?";
+
+// MARK: - SignedAppsView
+"No Signed Apps" = "Không có ứng dụng đã ký";
+"Sign an app to see it here" = "Ký ứng dụng để hiển thị tại đây";
+
+// MARK: - SignedAppRow
+"Unknown" = "Không xác định";
+"Install" = "Cài đặt";
+"Detail" = "Chi tiết";
+"Share" = "Chia sẻ";
+"Show in Files" = "Hiển thị trong Tệp";
+"Install Failed" = "Cài đặt thất bại";
+"Delete App" = "Xóa ứng dụng";
+"Are you sure you want to delete this signed app?" = "Bạn có chắc muốn xóa ứng dụng đã ký này?";
+
+// MARK: - SignedAppDetailView
+"App Information" = "Thông tin ứng dụng";
+"Name" = "Tên";
+"Bundle ID" = "Bundle ID";
+"Version" = "Phiên bản";
+"File Size" = "Dung lượng";
+"Signed Date" = "Ngày ký";
+"Certificate Information" = "Thông tin chứng chỉ";
+"Team Name" = "Tên nhóm";
+"Team ID" = "Team ID";
+"Profile Name" = "Tên profile";
+"Expiration" = "Hết hạn";
+"PPQ Check" = "Kiểm tra PPQ";
+"Enabled" = "Bật";
+"Disabled" = "Tắt";
+"File Location" = "Vị trí tệp";
+"App Details" = "Chi tiết ứng dụng";
+"Done" = "Xong";
+
+// MARK: - BatchSignView
+"Batch Signing" = "Ký hàng loạt";
+"%d app(s) selected" = "%d ứng dụng được chọn";
+"Apps & Certificates" = "Ứng dụng & Chứng chỉ";
+"Customize app info and select certificates. Leave fields empty to keep original values." = "Tùy chỉnh thông tin ứng dụng và chọn chứng chỉ. Để trống để giữ giá trị gốc.";
+"Batch Sign" = "Ký hàng loạt";
+"Sign All" = "Ký tất cả";
+"App Name" = "Tên ứng dụng";
+"Certificate" = "Chứng chỉ";
+"(Default)" = "(Mặc định)";
+"Select Certificate" = "Chọn chứng chỉ";
+"Signing Apps" = "Đang ký ứng dụng";
+"%d/%d" = "%d/%d";
+"Batch Signing Completed" = "Hoàn thành ký hàng loạt";
+"All %d app(s) signed successfully!" = "Tất cả %d ứng dụng đã được ký thành công!";
+"Signed %d of %d app(s).\n\nFailed apps:\n%@" = "Đã ký %d trong số %d ứng dụng.\n\nỨng dụng thất bại:\n%@";
+"Signing Error" = "Lỗi ký";
+"Unknown App" = "Ứng dụng không xác định";
+// MARK: - AppTweaksManagerView
+"App Tweaks" = "Tweaks ứng dụng";
+"Mode" = "Chế độ";
+"Enable/Disable for Signing" = "Bật/Tắt khi ký";
+"Extract Tweaks" = "Trích xuất Tweaks";
+"Select tweaks to extract to your library" = "Chọn tweaks để trích xuất vào thư viện";
+"Enabled tweaks will be injected when signing" = "Tweaks đã bật sẽ được chèn khi ký";
+
+// MARK: - Summary Section
+"Overview" = "Tổng quan";
+"Frameworks" = "Frameworks";
+"Dylibs" = "Thư viện động";
+"Bundles" = "Bundles";
+"Total Tweaks" = "Tổng số Tweaks";
+
+// MARK: - Collapsible Sections
+"Dynamic Libraries" = "Thư viện động";
+"%d item(s)" = "%d mục";
+
+// MARK: - Empty State
+"No Tweaks Found" = "Không tìm thấy Tweaks";
+"This app doesn't contain any tweaks" = "Ứng dụng này không chứa tweaks nào";
+
+// MARK: - Extract Mode
+"Select All" = "Chọn tất cả";
+"Deselect All" = "Bỏ chọn tất cả";
+"Extracting..." = "Đang trích xuất...";
+"Extract %d File(s)" = "Trích xuất %d tệp";
+"Extraction Complete" = "Hoàn thành trích xuất";
+"Extracted %d file(s) to Tweaks folder" = "Đã trích xuất %d tệp vào thư mục Tweaks";
+
+// MARK: - Toolbar Actions
+"Enable All" = "Bật tất cả";
+"Disable All" = "Tắt tất cả";
+"Expand All" = "Mở rộng tất cả";
+"Collapse All" = "Thu gọn tất cả";
+
+// MARK: - TweakFileType
+"DYLIB" = "DYLIB";
+"FRAMEWORK" = "FRAMEWORK";
+"BUNDLE" = "BUNDLE";
+// MARK: - CertificatesManagementView
+"Certificates" = "Chứng chỉ";
+"Add" = "Thêm";
+"No Certificates" = "Không có chứng chỉ";
+"Add a certificate to sign apps" = "Thêm chứng chỉ để ký ứng dụng";
+"Checking certificates..." = "Đang kiểm tra chứng chỉ...";
+
+// MARK: - CertificateRow
+"Certificate" = "Chứng chỉ";
+"DEFAULT" = "MẶC ĐỊNH";
+"REVOKED" = "ĐÃ THU HỒI";
+"Team: %@" = "Nhóm: %@";
+"Expires: %@" = "Hết hạn: %@";
+
+// MARK: - AddCertificateView
+"Add Certificate" = "Thêm chứng chỉ";
+"Cancel" = "Hủy";
+"Save" = "Lưu";
+"Files" = "Tệp";
+"Certificate (.p12)" = "Chứng chỉ (.p12)";
+"Provisioning Profile" = "Provisioning Profile";
+"Password" = "Mật khẩu";
+"Leave blank if no password required" = "Để trống nếu không yêu cầu mật khẩu";
+"Nickname (Optional)" = "Biệt danh (Tùy chọn)";
+"Set as Default" = "Đặt làm mặc định";
+"Default certificate will be automatically selected when signing apps" = "Chứng chỉ mặc định sẽ được chọn tự động khi ký ứng dụng";
+"Validating..." = "Đang xác thực...";
+"Error" = "Lỗi";
+"Invalid certificate or password" = "Chứng chỉ hoặc mật khẩu không hợp lệ";
+// MARK: - FilesView
+"Files" = "Tệp";
+"Search files" = "Tìm kiếm tệp";
+"Loading files..." = "Đang tải tệp...";
+"No Files" = "Không có tệp";
+"Import or download files to get started" = "Nhập hoặc tải xuống tệp để bắt đầu";
+
+// MARK: - Toolbar Actions
+"Download from URL" = "Tải xuống từ URL";
+"Import File" = "Nhập tệp";
+
+// MARK: - Download URL Sheet
+"Enter URL" = "Nhập URL";
+"https://example.com/file.ipa" = "https://example.com/file.ipa";
+"Enter the direct URL to download the file. Supported formats: IPA, ZIP, and more." = "Nhập URL trực tiếp để tải xuống tệp. Định dạng hỗ trợ: IPA, ZIP, v.v.";
+"Tips:" = "Mẹo:";
+"Make sure the URL is a direct download link" = "Đảm bảo URL là liên kết tải xuống trực tiếp";
+"File will be saved to Files directory" = "Tệp sẽ được lưu vào thư mục Files";
+"You can download IPA, ZIP, and other files" = "Bạn có thể tải xuống IPA, ZIP và các tệp khác";
+"Download" = "Tải xuống";
+"Downloading..." = "Đang tải xuống...";
+
+// MARK: - Action Sheets
+"IPA Actions" = "Hành động IPA";
+"App Bundle Actions" = "Hành động App Bundle";
+"Dylib Actions" = "Hành động Dylib";
+"Deb Actions" = "Hành động Deb";
+"Choose an action for %@" = "Chọn hành động cho %@";
+
+// MARK: - IPA Actions
+"Import to Library" = "Nhập vào Thư viện";
+"Extract IPA" = "Giải nén IPA";
+
+// MARK: - App Bundle Actions
+"View Files" = "Xem tệp";
+"Package to IPA" = "Đóng gói thành IPA";
+
+// MARK: - Dylib Actions
+"Class Dump" = "Class Dump";
+"Modify Dependencies" = "Sửa Dependencies";
+"Share" = "Chia sẻ";
+
+// MARK: - Deb Actions
+"Extract Deb" = "Giải nén Deb";
+
+// MARK: - Delete Alert
+"Delete Item" = "Xóa mục";
+"Are you sure you want to delete \"%@\"?" = "Bạn có chắc muốn xóa \"%@\"?";
+
+// MARK: - Context Menu
+"Share Folder" = "Chia sẻ thư mục";
+"Delete Folder" = "Xóa thư mục";
+"App Actions" = "Hành động ứng dụng";
+
+// MARK: - File List
+"ALL FILES" = "TẤT CẢ TỆP";
+
+// MARK: - Progress Steps
+"Preparing..." = "Đang chuẩn bị...";
+"Extracting..." = "Đang giải nén...";
+"Packaging..." = "Đang đóng gói...";
+"Processing..." = "Đang xử lý...";
+
+// MARK: - Error Messages
+"An error occurred" = "Đã xảy ra lỗi";
+
+// MARK: - File Types (for display)
+"Image" = "Hình ảnh";
+"Video" = "Video";
+"Audio" = "Âm thanh";
+"Archive" = "Nén";
+"Document" = "Tài liệu";
+"Code" = "Mã nguồn";
+"Other" = "Khác";
+// MARK: - FolderView
+"Choose an action for %@" = "Chọn hành động cho %@";
+"Loading contents..." = "Đang tải nội dung...";
+"Empty Folder" = "Thư mục trống";
+"This folder doesn't contain any files" = "Thư mục này không chứa tệp nào";
+"%d ITEMS" = "%d MỤC";
+
+// MARK: - App Bundle Actions
+"App Bundle Actions" = "Hành động App Bundle";
+"View Contents" = "Xem nội dung";
+"Package to IPA" = "Đóng gói thành IPA";
+
+// MARK: - IPA Actions (in FolderView context)
+"IPA Actions" = "Hành động IPA";
+"Import to Library" = "Nhập vào Thư viện";
+"Extract IPA" = "Giải nén IPA";
+
+// MARK: - Dylib Actions (in FolderView context)
+"Dylib Actions" = "Hành động Dylib";
+"Class Dump" = "Class Dump";
+"Modify Dependencies" = "Sửa Dependencies";
+
+// MARK: - Deb Actions (in FolderView context)
+"Deb Actions" = "Hành động Deb";
+"Extract Deb" = "Giải nén Deb";
+
+// MARK: - Context Menu
+"App Actions" = "Hành động ứng dụng";
+
+// MARK: - Delete Alert
+"Delete Item" = "Xóa mục";
+"Are you sure you want to delete \"%@\"?" = "Bạn có chắc muốn xóa \"%@\"?";
+
+// MARK: - Packaging Progress
+"Preparing to package..." = "Đang chuẩn bị đóng gói...";
+"Creating Payload folder..." = "Đang tạo thư mục Payload...";
+"Copying .app bundle..." = "Đang sao chép .app bundle...";
+"Creating IPA archive..." = "Đang tạo IPA...";
+"Compressing: %d%%" = "Đang nén: %d%%";
+"Cleaning up..." = "Đang dọn dẹp...";
+"IPA created successfully!" = "Tạo IPA thành công!";
+
+// MARK: - IPA Processing Progress
+"Preparing to import IPA..." = "Đang chuẩn bị nhập IPA...";
+"Import successful!" = "Nhập thành công!";
+"Preparing to extract..." = "Đang chuẩn bị giải nén...";
+"Extracting IPA..." = "Đang giải nén IPA...";
+"Extracting: %d%%" = "Đang giải nén: %d%%";
+"Extraction complete!" = "Giải nén hoàn tất!";
+
+// MARK: - Deb Extraction
+"Extracting deb package..." = "Đang giải nén gói deb...";
+"Reading deb archive..." = "Đang đọc tệp deb...";
+"Extracting contents..." = "Đang giải nén nội dung...";
+
+// MARK: - Error Messages
+"Failed to delete: %@" = "Xóa thất bại: %@";
+"Failed to create IPA: %@" = "Tạo IPA thất bại: %@";
+"Failed to import IPA: %@" = "Nhập IPA thất bại: %@";
+"Failed to extract IPA: %@" = "Giải nén IPA thất bại: %@";
+"Failed to extract deb: %@" = "Giải nén deb thất bại: %@";
+
+// MARK: - Class Dump (placeholder)
+"Class dump feature - coming soon!\nWould integrate with class-dump tool to extract Objective-C headers from the dylib." = "Tính năng Class dump - sắp ra mắt!\nSẽ tích hợp công cụ class-dump để trích xuất Objective-C headers từ dylib.";
+// MARK: - SettingsView
+"Settings" = "Cài đặt";
+
+// MARK: - Management Section
+"Management" = "Quản lý";
+"Certificates" = "Chứng chỉ";
+"Signing Options" = "Tùy chọn ký";
+"Manage certificates and configure advanced signing options" = "Quản lý chứng chỉ và cấu hình tùy chọn ký nâng cao";
+
+// MARK: - IPA Compression Section
+"IPA Compression" = "Nén IPA";
+"Compression Level" = "Mức độ nén";
+"Choose compression level for IPA creation. For large apps (2-5GB), 'Default' or 'Speed' is recommended for best balance between size and time." = "Chọn mức độ nén khi tạo IPA. Với ứng dụng lớn (2-5GB), nên dùng 'Mặc định' hoặc 'Nhanh' để cân bằng tốt nhất giữa kích thước và thời gian.";
+
+// MARK: - Compression Types (ZipCompression labels)
+"No Compression" = "Không nén";
+"Fastest" = "Nhanh nhất";
+"Fast" = "Nhanh";
+"Default" = "Mặc định";
+"Best" = "Tốt nhất";
+
+// MARK: - Background Processing Section
+"Background Processing" = "Xử lý nền";
+"Keep App Active" = "Giữ ứng dụng hoạt động";
+"Background mode active" = "Chế độ nền đang hoạt động";
+"Prevents iOS from killing the app during large file transfers. Recommended for installing apps larger than 2GB." = "Ngăn iOS tắt ứng dụng khi truyền tệp lớn. Khuyến nghị khi cài đặt ứng dụng lớn hơn 2GB.";
+
+// MARK: - Background Mode Alert
+"Background Mode" = "Chế độ nền";
+"When enabled, the app plays silent audio to prevent iOS from suspending it during long operations.\n\nThis is especially useful when:\n• Installing large apps (2GB+)\n• Signing multiple apps\n• Slow network connections\n\nThe app will continue working even when the screen is locked or you switch to another app." = "Khi bật, ứng dụng phát âm thanh im lặng để ngăn iOS tạm dừng trong các tác vụ dài.\n\nĐặc biệt hữu ích khi:\n• Cài đặt ứng dụng lớn (2GB+)\n• Ký nhiều ứng dụng\n• Kết nối mạng chậm\n\nỨng dụng sẽ tiếp tục hoạt động ngay cả khi màn hình khóa hoặc bạn chuyển sang ứng dụng khác.";
+
+// MARK: - General Section
+"General" = "Chung";
+"Auto Clean Temp Files" = "Tự động dọn tệp tạm";
+"Show Debug Logs" = "Hiển thị Debug Logs";
+"Automatically clean temporary files after operations complete. Enable debug logs to see detailed information in console." = "Tự động dọn dẹp tệp tạm sau khi hoàn thành tác vụ. Bật debug logs để xem thông tin chi tiết trong console.";
+
+// MARK: - Storage Section
+"Storage" = "Bộ nhớ";
+"Used" = "Đã dùng";
+"Available" = "Còn trống";
+"Calculating..." = "Đang tính toán...";
+
+// MARK: - About Section
+"About" = "Thông tin";
+"Version" = "Phiên bản";
+"Build" = "Build";
+"Support & Feedback" = "Hỗ trợ & Phản hồi";
+"Report bugs or suggestions at Zsign.app Telegram Channel" = "Báo lỗi hoặc góp ý tại Kênh Telegram Zsign.app";
+
+// MARK: - Open Source Section
+"Open Source Packages" = "Gói mã nguồn mở";
+"by %@" = "bởi %@";
+"This app uses open source packages. Tap to view on GitHub." = "Ứng dụng này sử dụng các gói mã nguồn mở. Nhấn để xem trên GitHub.";
+
+// MARK: - Reset Section
+"Reset to Defaults" = "Đặt lại mặc định";
+"Reset all settings to default values" = "Đặt lại tất cả cài đặt về giá trị mặc định";
+"Reset Settings?" = "Đặt lại cài đặt?";
+"This will reset all settings to their default values." = "Điều này sẽ đặt lại tất cả cài đặt về giá trị mặc định.";
+"Reset" = "Đặt lại";
+// MARK: - SignAppView
+"Sign %@" = "Ký %@";
+
+// MARK: - App Information Section
+"App Information" = "Thông tin ứng dụng";
+"App Icon" = "Biểu tượng ứng dụng";
+"Tap to customize" = "Nhấn để tùy chỉnh";
+"Custom icon selected" = "Đã chọn biểu tượng tùy chỉnh";
+"Select Alternative Icon" = "Chọn biểu tượng thay thế";
+"Choose from Files" = "Chọn từ Tệp";
+"Choose from Photos" = "Chọn từ Ảnh";
+"Reset to Original" = "Khôi phục ban đầu";
+"Clone App" = "Nhân bản ứng dụng";
+"Clone Suffix:" = "Hậu tố nhân bản:";
+"App Name" = "Tên ứng dụng";
+"Bundle ID" = "Bundle ID";
+"Version" = "Phiên bản";
+"Clone mode enabled. App name and bundle ID will be automatically modified with suffix '%@'" = "Chế độ nhân bản đã bật. Tên và Bundle ID sẽ tự động thêm hậu tố '%@'";
+"Leave fields as-is to keep original values, or modify to customize" = "Giữ nguyên để dùng giá trị gốc, hoặc sửa để tùy chỉnh";
+
+// MARK: - Certificate Section
+"Certificate" = "Chứng chỉ";
+"No certificates available" = "Không có chứng chỉ";
+"Team: %@" = "Nhóm: %@";
+"Change" = "Thay đổi";
+"Expired" = "Hết hạn";
+"Expires in %d days" = "Hết hạn sau %d ngày";
+"PPQ Check: %@" = "Kiểm tra PPQ: %@";
+"Enabled" = "Bật";
+"Disabled" = "Tắt";
+"Certificate Revoked" = "Chứng chỉ đã thu hồi";
+"Select Certificate" = "Chọn chứng chỉ";
+"This certificate has been revoked. Signing may fail or the app may not install properly." = "Chứng chỉ này đã bị thu hồi. Việc ký có thể thất bại hoặc ứng dụng không cài đặt được.";
+
+// MARK: - Tweaks Section
+"Tweaks" = "Tweaks";
+"Manage App Tweaks" = "Quản lý Tweaks ứng dụng";
+"%d disabled" = "%d đã tắt";
+"Inject Additional Tweaks" = "Chèn thêm Tweaks";
+"Inject Path" = "Đường dẫn chèn";
+"Inject Folder" = "Thư mục chèn";
+"Root" = "Gốc";
+"Manage tweaks inside the app or inject new ones. Disabled tweaks won't be injected when signing." = "Quản lý tweaks trong ứng dụng hoặc chèn tweaks mới. Tweaks đã tắt sẽ không được chèn khi ký.";
+
+// MARK: - Quick Settings Section
+"Quick Settings" = "Cài đặt nhanh";
+"Auto Install After Signing" = "Tự động cài đặt sau khi ký";
+"File Sharing" = "Chia sẻ tệp";
+"Game Mode" = "Chế độ Game";
+"Remove Provision After Signing" = "Xóa Provision sau khi ký";
+"Custom Info.plist Entries" = "Mục tùy chỉnh Info.plist";
+"Auto-install is enabled. The app will be installed automatically after signing completes." = "Tự động cài đặt đã bật. Ứng dụng sẽ được cài đặt tự động sau khi ký xong.";
+"These settings apply only to this signing session and won't be saved as defaults" = "Các cài đặt này chỉ áp dụng cho phiên ký này và sẽ không được lưu làm mặc định";
+
+// MARK: - Advanced Options
+"Advanced Signing Options" = "Tùy chọn ký nâng cao";
+
+// MARK: - Progress Section
+"Progress" = "Tiến trình";
+"Starting..." = "Đang bắt đầu...";
+"Creating IPA" = "Đang tạo IPA";
+"App will continue running in background" = "Ứng dụng sẽ tiếp tục chạy ở nền";
+
+// MARK: - Sign Button
+"Sign App" = "Ký ứng dụng";
+
+// MARK: - Revoked Warning Alert
+"Certificate Revoked" = "Chứng chỉ đã thu hồi";
+"Sign Anyway" = "Vẫn ký";
+"This certificate has been revoked. The signed app may not install or run properly. Do you want to continue?" = "Chứng chỉ này đã bị thu hồi. Ứng dụng đã ký có thể không cài đặt hoặc chạy được. Bạn có muốn tiếp tục?";
+
+// MARK: - Error Alert
+"Signing Failed" = "Ký thất bại";
+
+// MARK: - Installation Progress
+"Opening installation..." = "Đang mở cài đặt...";
+"Installing app..." = "Đang cài đặt ứng dụng...";
+
+// MARK: - CertificatePickerView
+"Select Certificate" = "Chọn chứng chỉ";
+"DEFAULT" = "MẶC ĐỊNH";
+"REVOKED" = "ĐÃ THU HỒI";
+"PPQ" = "PPQ";
+"%dd left" = "Còn %d ngày";
+
+// MARK: - QuickCustomInfoPlistView
+"Custom Entries" = "Mục tùy chỉnh";
+"Done" = "Xong";
+"Add Entry" = "Thêm mục";
+"Key" = "Khóa";
+"Value" = "Giá trị";
+"Add" = "Thêm";
+"No Custom Entries" = "Không có mục tùy chỉnh";
+"Add custom Info.plist entries for this signing session" = "Thêm mục Info.plist tùy chỉnh cho phiên ký này";
+// MARK: - SigningOptionsView
+"Signing Options" = "Tùy chọn ký";
+
+// MARK: - Display & Requirements Section
+"Display & Requirements" = "Hiển thị & Yêu cầu";
+"App Appearance" = "Giao diện ứng dụng";
+"Minimum iOS" = "iOS tối thiểu";
+
+// MARK: - Features Section
+"Features" = "Tính năng";
+"File Sharing" = "Chia sẻ tệp";
+"iTunes File Sharing" = "Chia sẻ tệp iTunes";
+"ProMotion (120Hz)" = "ProMotion (120Hz)";
+"Game Mode" = "Chế độ Game";
+"iPad Fullscreen" = "iPad toàn màn hình";
+"Enable additional features for the signed app" = "Bật thêm tính năng cho ứng dụng đã ký";
+
+// MARK: - Cleanup Section
+"Cleanup" = "Dọn dẹp";
+"Remove Supported Devices" = "Xóa danh sách thiết bị hỗ trợ";
+"Remove URL Scheme" = "Xóa URL Scheme";
+"Remove Provisioning" = "Xóa Provisioning";
+"Remove Watch Placeholder" = "Xóa Watch Placeholder";
+"Remove unnecessary components from the app" = "Xóa các thành phần không cần thiết khỏi ứng dụng";
+
+// MARK: - Protection Section
+"Protection" = "Bảo vệ";
+"PPQ Protection" = "Bảo vệ PPQ";
+"PPQ String" = "Chuỗi PPQ";
+"Dynamic Protection" = "Bảo vệ động";
+"Enable advanced anti-detection features" = "Bật tính năng chống phát hiện nâng cao";
+
+// MARK: - Custom File Removal Section
+"Custom File Removal" = "Xóa tệp tùy chỉnh";
+"Files to Remove" = "Tệp cần xóa";
+"Specify additional files to remove from the app bundle" = "Chỉ định thêm tệp cần xóa khỏi app bundle";
+
+// MARK: - Injection Section
+"Injection" = "Chèn";
+"Inject Path" = "Đường dẫn chèn";
+"Inject Folder" = "Thư mục chèn";
+"Root" = "Gốc";
+"Configure dylib injection paths" = "Cấu hình đường dẫn chèn dylib";
+
+// MARK: - Experimental Section
+"Experimental" = "Thử nghiệm";
+"Support Liquid Glass" = "Hỗ trợ Liquid Glass";
+"Replace Substrate with ElleKit" = "Thay Substrate bằng ElleKit";
+"These features are experimental and may cause issues" = "Các tính năng này đang thử nghiệm và có thể gây lỗi";
+
+// MARK: - Info.plist Section
+"Info.plist" = "Info.plist";
+"Custom Entries" = "Mục tùy chỉnh";
+
+// MARK: - Reset Section
+"Reset to Defaults" = "Đặt lại mặc định";
+"Reset Options?" = "Đặt lại tùy chọn?";
+"Reset" = "Đặt lại";
+"This will reset all signing options to their default values." = "Điều này sẽ đặt lại tất cả tùy chọn ký về giá trị mặc định.";
+
+// MARK: - CustomInfoPlistView
+"Custom Entries" = "Mục tùy chỉnh";
+"Add Entry" = "Thêm mục";
+"Key" = "Khóa";
+"Value" = "Giá trị";
+"Add" = "Thêm";
+"No Custom Entries" = "Không có mục tùy chỉnh";
+"Add custom Info.plist entries" = "Thêm mục Info.plist tùy chỉnh";
+
+// MARK: - RemoveFilesView
+"Remove Files" = "Xóa tệp";
+"Add File" = "Thêm tệp";
+"File Path" = "Đường dẫn tệp";
+"Example: PlugIns/Widget.appex" = "Ví dụ: PlugIns/Widget.appex";
+"No Files to Remove" = "Không có tệp cần xóa";
+"Add file paths to remove from app bundle" = "Thêm đường dẫn tệp để xóa khỏi app bundle";
+
+// MARK: - App Appearance Values (Optional - nếu muốn dịch)
+"System" = "Hệ thống";
+"Light" = "Sáng";
+"Dark" = "Tối";
+
+// MARK: - iOS Version Values (giữ nguyên số)
+// Không cần dịch vì là số phiên bản: "14.0", "15.0", etc.
+// MARK: - SourcesView
+"AppStore" = "Cửa hàng";
+"All Apps" = "Tất cả ứng dụng";
+"Sources" = "Nguồn";
+
+// MARK: - AllSourceAppsView
+"No Sources Added" = "Chưa thêm nguồn nào";
+"Add a source in the Sources tab to browse apps" = "Thêm nguồn ở tab Nguồn để duyệt ứng dụng";
+"No Apps Found" = "Không tìm thấy ứng dụng";
+"Try a different search term" = "Thử từ khóa tìm kiếm khác";
+"APPS" = "ỨNG DỤNG";
+
+// MARK: - Sort Options
+"Sort By" = "Sắp xếp theo";
+"Default" = "Mặc định";
+"Name" = "Tên";
+"Date Added" = "Ngày thêm";
+"Ascending" = "Tăng dần";
+"Descending" = "Giảm dần";
+
+// MARK: - SearchAppsView
+"Search Apps" = "Tìm ứng dụng";
+"Search apps" = "Tìm ứng dụng";
+"No Results" = "Không có kết quả";
+"RESULTS" = "KẾT QUẢ";
+
+// MARK: - ManageSourcesView
+"No Sources" = "Không có nguồn";
+"Tap + to add your first source" = "Nhấn + để thêm nguồn đầu tiên";
+"Add Source" = "Thêm nguồn";
+"All Repositories" = "Tất cả kho lưu trữ";
+"%d sources" = "%d nguồn";
+"MY SOURCES" = "NGUỒN CỦA TôI";
+
+// MARK: - SearchSourcesView
+"Search Sources" = "Tìm nguồn";
+"Search sources" = "Tìm nguồn";
+
+// MARK: - SourceCellView
+"Unknown Source" = "Nguồn không xác định";
+"Added %@" = "Đã thêm %@";
+
+// MARK: - AddSourceView
+"Source URL" = "URL nguồn";
+"https://example.com/source.json" = "https://example.com/source.json";
+"Enter a valid AltStore/SideStore repository URL" = "Nhập URL kho lưu trữ AltStore/SideStore hợp lệ";
+"Add Source" = "Thêm nguồn";
+"Cancel" = "Hủy";
+"Invalid URL format" = "Định dạng URL không hợp lệ";
+"Failed to load source. Please check the URL and try again." = "Không thể tải nguồn. Vui lòng kiểm tra URL và thử lại.";
+
+// MARK: - SourceAppsView
+"Source" = "Nguồn";
+"All Repositories" = "Tất cả kho lưu trữ";
+
+// MARK: - AppCellView
+"Unknown App" = "Ứng dụng không xác định";
+"v%@" = "v%@";
+"Importing..." = "Đang nhập...";
+
+// MARK: - Download Status Messages
+"Downloading..." = "Đang tải xuống...";
+"Paused" = "Đã tạm dừng";
+"Completed" = "Hoàn thành";
+"Failed" = "Thất bại";
+"Cancelled" = "Đã hủy";
+
+// MARK: - Error Messages (Optional)
+"Download failed" = "Tải xuống thất bại";
+"No download URL" = "Không có URL tải xuống";
+"Using cached sources" = "Đang dùng nguồn đã lưu";
+"Fetching sources..." = "Đang tải nguồn...";
+"Finished fetching sources" = "Đã tải xong nguồn";
+// MARK: - TweakManagementView
+"Inject Tweaks" = "Chèn Tweaks";
+"No Tweaks" = "Không có Tweaks";
+"Tap + to add .dylib, .deb, or .bundle files" = "Nhấn + để thêm tệp .dylib, .deb hoặc .bundle";
+
+// MARK: - File Type Labels (uppercase display)
+"DYLIB" = "DYLIB";
+"DEB" = "DEB";
+"BUNDLE" = "BUNDLE";
+"FRAMEWORK" = "FRAMEWORK";
+
+// MARK: - Success/Error Messages
+"Added: %@" = "Đã thêm: %@";
+"Failed to add file: %@" = "Thêm tệp thất bại: %@";
+"Unsupported file type: %@" = "Loại tệp không được hỗ trợ: %@";
