@@ -66,14 +66,12 @@ class IPAHandler {
                         overwrite: true,
                         password: nil,
                         progress: { progress in
+                            // Chỉ đẩy tiến độ cho thanh. KHÔNG ghi thêm phần trăm vào
+                            // dòng mô tả: thanh chạy theo thang 20-70% còn con số kia
+                            // theo thang 0-100% -> hộp thoại hiện 2 số khác nhau.
                             let mappedProgress = 0.2 + (progress * 0.5)
                             Task { @MainActor in
                                 self?.progressCallback?(mappedProgress)
-                                
-                                let percentage = Int(progress * 100)
-                                if percentage % 10 == 0 {
-                                    self?.stepCallback?("Extracting: \(percentage)%")
-                                }
                             }
                         }
                     )

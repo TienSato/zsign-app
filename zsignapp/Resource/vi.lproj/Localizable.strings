@@ -683,3 +683,9 @@
 "Waiting for import..." = "Đang chờ import...";
 "Different bundle id (%@) — installing over will NOT apply; iOS treats it as a different app." = "Bundle id khác (%@) — cập nhật đè sẽ KHÔNG áp dụng, iOS coi là app khác.";
 "Source replaced → v%@. Tap Sign & Install to update." = "Đã đổi bản gốc → v%@. Bấm Ký & Cài để cập nhật.";
+
+/* Hộp thoại tiến trình */
+"Importing App" = "Đang nhập ứng dụng";
+"Auto Sign & Install" = "Tự động ký và cài";
+"Preparing certificate..." = "Đang chuẩn bị chứng chỉ...";
+"Extracting IPA archive..." = "Đang giải nén IPA...";

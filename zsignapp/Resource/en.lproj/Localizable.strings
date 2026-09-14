@@ -499,3 +499,9 @@
 "Waiting for import..." = "Waiting for import...";
 "Different bundle id (%@) — installing over will NOT apply; iOS treats it as a different app." = "Different bundle id (%@) — installing over will NOT apply; iOS treats it as a different app.";
 "Source replaced → v%@. Tap Sign & Install to update." = "Source replaced → v%@. Tap Sign & Install to update.";
+
+/* Hộp thoại tiến trình */
+"Importing App" = "Importing App";
+"Auto Sign & Install" = "Auto Sign & Install";
+"Preparing certificate..." = "Preparing certificate...";
+"Extracting IPA archive..." = "Extracting IPA archive...";

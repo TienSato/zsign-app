@@ -103,44 +103,12 @@ struct CertificatesManagementView: View {
                 ZSignCertificateHandler.cleanupOldExports()
             }
             
-            // Loading overlay when checking revoked status
             if isCheckingRevoked {
-                ZStack {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                        Text("Checking certificates...")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                    }
-                    .padding(32)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(16)
-                    .shadow(radius: 10)
-                }
+                ProgressOverlay(title: "Checking certificates...")
             }
-            
-            // Loading overlay when exporting certificate
+
             if isExporting {
-                ZStack {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                        Text("Preparing certificate...")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                    }
-                    .padding(32)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(16)
-                    .shadow(radius: 10)
-                }
+                ProgressOverlay(title: "Preparing certificate...")
             }
         }
     }

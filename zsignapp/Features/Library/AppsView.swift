@@ -171,36 +171,11 @@ struct UnsignedAppsView: View {
             }
             .hidden()
             
-            // Loading overlay
             if isImporting {
-                VStack(spacing: 12) {
-                    Text(L(importStep))
-                        .font(.subheadline)
-                        .foregroundColor(.primary)
-                    
-                    VStack(spacing: 6) {
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color(.systemGray4))
-                                .frame(height: 8)
-                            
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.accentColor)
-                                .frame(width: 200 * importProgress, height: 8)
-                                .animation(.linear(duration: 0.3), value: importProgress)
-                        }
-                        .frame(width: 200)
-                        
-                        Text("\(Int(importProgress * 100))%")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(24)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.secondarySystemBackground))
-                        .shadow(color: .black.opacity(0.3), radius: 20)
+                ProgressOverlay(
+                    title: "Importing App",
+                    step: L(importStep),
+                    progress: importProgress
                 )
             }
         }
@@ -1131,38 +1106,13 @@ struct BatchSignView: View {
                 }
             }
             
-            // Signing Overlay
             if isSigning {
-                VStack(spacing: 20) {
-                    Text("Signing Apps")
-                        .font(.headline)
-                    
-                    VStack(spacing: 8) {
-                        Text(currentSigningApp)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Text(L(currentAppProgress))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    ProgressView(value: overallProgress) {
-                        HStack {
-                            Text("\(completedCount)/\(selectedApps.count)")
-                                .font(.caption)
-                            Spacer()
-                            Text("\(Int(overallProgress * 100))%")
-                                .font(.caption)
-                        }
-                    }
-                    .frame(width: 250)
-                }
-                .padding(30)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(.secondarySystemBackground))
-                        .shadow(color: .black.opacity(0.3), radius: 20)
+                ProgressOverlay(
+                    title: "Signing Apps",
+                    subtitle: currentSigningApp,
+                    step: L(currentAppProgress),
+                    progress: overallProgress,
+                    trailingLabel: "\(completedCount)/\(selectedApps.count)"
                 )
             }
         }

@@ -136,41 +136,13 @@ struct MainTabView: View {
                     }
             }
             
-            // Auto Sign Progress Overlay
             if autoSignProgress.isProcessing {
-                VStack(spacing: 12) {
-                    Text("Auto Sign & Install")
-                        .font(.headline)
-                    
-                    Text(autoSignProgress.currentAppName)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    Text(L(autoSignProgress.currentStep))
-                        .font(.caption)
-                        .foregroundColor(.primary)
-                    
-                    VStack(spacing: 6) {
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color(.systemGray4))
-                                .frame(height: 8)
-                            
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.accentColor)
-                                .frame(width: 200 * autoSignProgress.progress, height: 8)
-                                .animation(.linear(duration: 0.3), value: autoSignProgress.progress)
-                        }
-                        .frame(width: 200)
-                        
-                        Text("\(Int(autoSignProgress.progress * 100))%")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(24)
-                .adaptiveGlass(cornerRadius: 16)
-                .shadow(color: .black.opacity(0.25), radius: 20)
+                ProgressOverlay(
+                    title: "Auto Sign & Install",
+                    subtitle: autoSignProgress.currentAppName,
+                    step: L(autoSignProgress.currentStep),
+                    progress: autoSignProgress.progress
+                )
             }
         }
     }
