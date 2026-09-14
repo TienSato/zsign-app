@@ -4,6 +4,10 @@
 //
 //  Created by Sato on 26/10/25.
 //
+//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents) thay cho List/Form,
+//  để nền và thẻ theo đúng tông của app. Mỗi chứng chỉ là MỘT thẻ riêng vì
+//  nội dung một hàng khá dài (tên, App ID, hồ sơ, đội, hạn dùng).
+//
 
 import SwiftUI
 import CoreData
@@ -28,7 +32,7 @@ struct CertificatesManagementView: View {
     
     var body: some View {
         ZStack {
-            List {
+            CardScreen {
                 ForEach(certificates) { cert in
                     CertificateRowContent(
                         certificate: cert,
@@ -41,8 +45,7 @@ struct CertificatesManagementView: View {
                     }
                 }
             }
-            .navigationTitle("Certificates")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("Certificates")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
@@ -185,86 +188,116 @@ struct CertificateRowContent: View {
     }
     
     var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            header
+            
+            if let provision = provision {
+                details(provision)
+            }
+            
+            if let expiration = certificate.expiration {
+                Rectangle()
+                    .fill(Theme.hairline)
+                    .frame(height: 1)
+                expiryRow(expiration)
+            }
+        }
+        .cardStyle()
+        .opacity(certificate.revoked || !isDefault ? 0.6 : 1.0)
+    }
+    
+    // MARK: - Tên + nhãn trạng thái
+    
+    private var header: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(certificate.nickname ?? L("Certificate"))
-                        .font(.headline)
-                    
-                    if isDefault {
-                        Text("DEFAULT")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(Color.accentColor)
-                            .cornerRadius(4)
-                    }
-                    
-                    if certificate.revoked {
-                        Text("REVOKED")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(Color.red)
-                            .cornerRadius(4)
-                    }
-                }
+            Image(systemName: "key.fill")
+                .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                .foregroundStyle(certificate.revoked ? Color.red : Color.accentColor)
+                .frame(width: Theme.Metric.iconBox, alignment: .center)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text(certificate.nickname ?? L("Certificate"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.leading)
                 
-                if let provision = provision {
-                    // App ID Name
-                    Text("App ID: \(provision.AppIDName)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Text(provision.Name)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Text("Team: \(provision.TeamName)")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    // PPQ Check badge
-                    if let ppqCheck = provision.PPQCheck, ppqCheck {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.shield.fill")
-                                .font(.caption2)
-                            Text("PPQ Check")
-                                .font(.caption2)
-                                .fontWeight(.semibold)
+                if isDefault || certificate.revoked {
+                    HStack(spacing: 6) {
+                        if isDefault {
+                            badge("DEFAULT", color: .accentColor)
                         }
-                        .foregroundColor(.green)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(4)
+                        
+                        if certificate.revoked {
+                            badge("REVOKED", color: .red)
+                        }
                     }
-                }
-                
-                if let expiration = certificate.expiration {
-                    Label {
-                        Text("Expires: \(expiration, style: .date)")
-                            .font(.caption2)
-                    } icon: {
-                        Image(systemName: isExpired ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-                            .font(.caption)
-                    }
-                    .foregroundColor(isExpired ? .red : .green)
                 }
             }
             
-            Spacer()
+            Spacer(minLength: 8)
             
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            CardChevron()
         }
-        .padding(.vertical, 4)
-        .opacity(certificate.revoked || !isDefault ? 0.6 : 1.0)
+    }
+    
+    private func badge(_ text: LocalizedStringKey, color: Color) -> some View {
+        Text(text)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(color))
+    }
+    
+    // MARK: - Thông tin hồ sơ cấp quyền
+    
+    private func details(_ provision: Certificate) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            // App ID Name
+            Text("App ID: \(provision.AppIDName)")
+                .font(.caption)
+                .foregroundStyle(Theme.ink2)
+            
+            Text(provision.Name)
+                .font(.caption)
+                .foregroundStyle(Theme.ink2)
+            
+            Text("Team: \(provision.TeamName)")
+                .font(.caption2)
+                .foregroundStyle(Theme.ink3)
+            
+            // PPQ Check badge
+            if let ppqCheck = provision.PPQCheck, ppqCheck {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.shield.fill")
+                        .font(.caption2)
+                    Text("PPQ Check")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                }
+                .foregroundStyle(.green)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.green.opacity(0.12)))
+                .padding(.top, 2)
+            }
+        }
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, Theme.Metric.iconBox + 12)
+    }
+    
+    // MARK: - Hạn dùng
+    
+    private func expiryRow(_ expiration: Date) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: isExpired ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                .font(.caption)
+            Text("Expires: \(expiration, style: .date)")
+                .font(.caption2)
+            Spacer(minLength: 8)
+        }
+        .foregroundStyle(isExpired ? Color.red : Color.green)
     }
 }
 
@@ -283,7 +316,8 @@ struct AddCertificateView: View {
                     Text("ZIP File").tag(2)
                 }
                 .pickerStyle(.segmented)
-                .padding()
+                .padding(.horizontal, Theme.Metric.screenPadding)
+                .padding(.vertical, 12)
                 
                 if selectedTab == 0 {
                     ManualAddCertificateView(parentDismiss: dismiss)
@@ -293,8 +327,8 @@ struct AddCertificateView: View {
                     ZipCertImportView(parentDismiss: dismiss)
                 }
             }
-            .navigationTitle("Add Certificate")
-            .navigationBarTitleDisplayMode(.inline)
+            .background(Theme.canvas.ignoresSafeArea())
+            .screenChrome("Add Certificate")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -326,65 +360,66 @@ struct ManualAddCertificateView: View {
     @State private var isValidating = false
     @State private var errorMessage: String?
     
+    private var canSave: Bool {
+        p12URL != nil && provisionURL != nil && !isValidating
+    }
+    
     var body: some View {
-        Form {
-            Section {
+        CardScreen {
+            CardGroup(L("Files")) {
                 FilePickerButton(
-                    title: "Certificate (.p12)",
+                    title: L("Certificate (.p12)"),
                     selectedFile: p12URL,
                     action: { showP12Picker = true }
                 )
                 
+                CardDivider()
+                
                 FilePickerButton(
-                    title: "Provisioning Profile",
+                    title: L("Provisioning Profile"),
                     selectedFile: provisionURL,
                     action: { showProvisionPicker = true }
                 )
-            } header: {
-                Text("Files")
             }
             
-            Section {
-                SecureField("Password", text: $password)
-                    .textContentType(.password)
-                    .autocapitalization(.none)
-            } footer: {
-                Text("Leave blank if no password required")
-                    .font(.caption)
+            CardGroup(footnote: L("Leave blank if no password required")) {
+                CertInputRow(icon: "lock.fill",
+                             title: L("Password"),
+                             text: $password,
+                             secure: true)
             }
             
-            Section {
-                TextField("Nickname (Optional)", text: $nickname)
-                Toggle("Set as Default", isOn: $isDefault)
-            } footer: {
-                Text("Default certificate will be automatically selected when signing apps")
-                    .font(.caption)
+            CardGroup(footnote: L("Default certificate will be automatically selected when signing apps")) {
+                CertInputRow(icon: "tag.fill",
+                             title: L("Nickname (Optional)"),
+                             text: $nickname)
+                
+                CardDivider()
+                
+                CardToggleRow(icon: "star.fill",
+                              title: L("Set as Default"),
+                              isOn: $isDefault)
             }
             
             if isValidating {
-                Section {
-                    HStack {
-                        ProgressView()
-                        Text("Validating...")
-                    }
+                CardGroup {
+                    CertStatusRow(title: "Validating...")
                 }
             }
             
             if let error = errorMessage {
-                Section {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .font(.caption)
+                CardGroup {
+                    CertErrorRow(message: error)
                 }
             }
             
-            Section {
-                Button("Save Certificate") {
-                    saveCertificate()
-                }
-                .frame(maxWidth: .infinity)
-                .disabled(p12URL == nil || provisionURL == nil || isValidating)
+            FilledButton(title: L("Save Certificate"),
+                         icon: "checkmark.circle.fill") {
+                saveCertificate()
             }
+            .disabled(!canSave)
+            .opacity(canSave ? 1 : 0.5)
+            .padding(.top, 4)
         }
         .sheet(isPresented: $showP12Picker) {
             FileImporterRepresentableView(
@@ -477,58 +512,48 @@ struct ZSignCertImportView: View {
     @State private var isDefault: Bool = false
     
     var body: some View {
-        Form {
-            Section {
-                Button(action: { showFilePicker = true }) {
-                    HStack {
-                        Text(zsignCertURL == nil ? "Select .zsigncert file" : "Selected file")
-                            .foregroundColor(zsignCertURL == nil ? .accentColor : .secondary)
-                        Spacer()
-                        if let file = zsignCertURL {
-                            Text(file.lastPathComponent)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-            } header: {
-                Text("ZSign Certificate File")
-            } footer: {
-                Text("Import a certificate package shared from another device")
-                    .font(.caption)
+        CardScreen {
+            CardGroup(L("ZSign Certificate File"),
+                      footnote: L("Import a certificate package shared from another device")) {
+                FilePickerButton(
+                    title: zsignCertURL == nil ? L("Select .zsigncert file") : L("Selected file"),
+                    selectedFile: zsignCertURL,
+                    action: { showFilePicker = true }
+                )
             }
             
             if zsignCertURL != nil {
-                Section {
-                    TextField("Nickname (Optional)", text: $nickname)
-                    Toggle("Set as Default", isOn: $isDefault)
+                CardGroup {
+                    CertInputRow(icon: "tag.fill",
+                                 title: L("Nickname (Optional)"),
+                                 text: $nickname)
+                    
+                    CardDivider()
+                    
+                    CardToggleRow(icon: "star.fill",
+                                  title: L("Set as Default"),
+                                  isOn: $isDefault)
                 }
                 
                 if isImporting {
-                    Section {
-                        HStack {
-                            ProgressView()
-                            Text("Importing...")
-                        }
+                    CardGroup {
+                        CertStatusRow(title: "Importing...")
                     }
                 }
                 
                 if let error = errorMessage {
-                    Section {
-                        Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
+                    CardGroup {
+                        CertErrorRow(message: error)
                     }
                 }
                 
-                Section {
-                    Button("Import Certificate") {
-                        importZSignCertificate()
-                    }
-                    .frame(maxWidth: .infinity)
-                    .disabled(zsignCertURL == nil || isImporting)
+                FilledButton(title: L("Import Certificate"),
+                             icon: "square.and.arrow.down.fill") {
+                    importZSignCertificate()
                 }
+                .disabled(zsignCertURL == nil || isImporting)
+                .opacity(isImporting ? 0.5 : 1)
+                .padding(.top, 4)
             }
         }
         .sheet(isPresented: $showFilePicker) {
@@ -598,72 +623,56 @@ struct ZipCertImportView: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        Form {
-            Section {
-                Button(action: { showFilePicker = true }) {
-                    HStack {
-                        Text(zipURL == nil ? "Select ZIP file" : "Selected file")
-                            .foregroundColor(zipURL == nil ? .accentColor : .secondary)
-                        Spacer()
-                        if let file = zipURL {
-                            Text(file.lastPathComponent)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-            } header: {
-                Text("ZIP File")
-            } footer: {
-                Text("Select a ZIP file containing .p12 and .mobileprovision files")
-                    .font(.caption)
+        CardScreen {
+            CardGroup(L("ZIP File"),
+                      footnote: L("Select a ZIP file containing .p12 and .mobileprovision files")) {
+                FilePickerButton(
+                    title: zipURL == nil ? L("Select ZIP file") : L("Selected file"),
+                    selectedFile: zipURL,
+                    action: { showFilePicker = true }
+                )
             }
             
             if zipURL != nil {
-                Section {
-                    SecureField("Password", text: $password)
-                        .textContentType(.password)
-                        .autocapitalization(.none)
-                } header: {
-                    Text("Certificate Password")
-                } footer: {
-                    Text("Enter the password for the .p12 certificate file")
-                        .font(.caption)
+                CardGroup(L("Certificate Password"),
+                          footnote: L("Enter the password for the .p12 certificate file")) {
+                    CertInputRow(icon: "lock.fill",
+                                 title: L("Password"),
+                                 text: $password,
+                                 secure: true)
                 }
                 
-                Section {
-                    TextField("Nickname (Optional)", text: $nickname)
-                    Toggle("Set as Default", isOn: $isDefault)
-                } footer: {
-                    Text("If nickname is not provided, the P12 filename will be used")
-                        .font(.caption)
+                CardGroup(footnote: L("If nickname is not provided, the P12 filename will be used")) {
+                    CertInputRow(icon: "tag.fill",
+                                 title: L("Nickname (Optional)"),
+                                 text: $nickname)
+                    
+                    CardDivider()
+                    
+                    CardToggleRow(icon: "star.fill",
+                                  title: L("Set as Default"),
+                                  isOn: $isDefault)
                 }
                 
                 if isImporting {
-                    Section {
-                        HStack {
-                            ProgressView()
-                            Text("Importing...")
-                        }
+                    CardGroup {
+                        CertStatusRow(title: "Importing...")
                     }
                 }
                 
                 if let error = errorMessage {
-                    Section {
-                        Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
+                    CardGroup {
+                        CertErrorRow(message: error)
                     }
                 }
                 
-                Section {
-                    Button("Import Certificate") {
-                        importZipCertificate()
-                    }
-                    .frame(maxWidth: .infinity)
-                    .disabled(zipURL == nil || isImporting)
+                FilledButton(title: L("Import Certificate"),
+                             icon: "square.and.arrow.down.fill") {
+                    importZipCertificate()
                 }
+                .disabled(zipURL == nil || isImporting)
+                .opacity(isImporting ? 0.5 : 1)
+                .padding(.top, 4)
             }
         }
         .sheet(isPresented: $showFilePicker) {
@@ -721,18 +730,102 @@ struct FilePickerButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack {
-                Text(title)
-                    .foregroundColor(selectedFile == nil ? .accentColor : .secondary)
-                Spacer()
-                if let file = selectedFile {
-                    Text(file.lastPathComponent)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+            CardRow(icon: selectedFile == nil ? "doc.badge.plus" : "checkmark.circle.fill",
+                    title: title,
+                    subtitle: selectedFile?.lastPathComponent,
+                    iconTint: selectedFile == nil ? Color.accentColor : .green) {
+                if selectedFile == nil {
+                    CardChevron()
                 }
             }
         }
+        .buttonStyle(.plain)
         .disabled(selectedFile != nil)
+    }
+}
+
+// MARK: - Ô nhập dùng trong các màn nhập chứng chỉ
+
+/// Hàng nhập liệu trong thẻ: nhãn nhỏ phía trên, ô nhập phía dưới.
+private struct CertInputRow: View {
+    let icon: String
+    let title: String
+    @Binding var text: String
+    var secure: Bool = false
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: Theme.Metric.iconBox, alignment: .center)
+            
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(Theme.ink2)
+                
+                if secure {
+                    SecureField("", text: $text)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.ink)
+                        .textContentType(.password)
+                        .autocapitalization(.none)
+                } else {
+                    TextField("", text: $text)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.ink)
+                }
+            }
+            
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, Theme.Metric.cardPadding)
+        .padding(.vertical, 10)
+        .frame(minHeight: Theme.Metric.rowHeight)
+    }
+}
+
+/// Hàng "đang xử lý" bên trong thẻ (khác với ProgressOverlay phủ toàn màn hình).
+private struct CertStatusRow: View {
+    let title: LocalizedStringKey
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ProgressView()
+                .frame(width: Theme.Metric.iconBox, alignment: .center)
+            
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(Theme.ink2)
+            
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, Theme.Metric.cardPadding)
+        .padding(.vertical, 12)
+        .frame(minHeight: Theme.Metric.rowHeight)
+    }
+}
+
+/// Hàng báo lỗi bên trong thẻ.
+private struct CertErrorRow: View {
+    let message: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                .foregroundStyle(.red)
+                .frame(width: Theme.Metric.iconBox, alignment: .center)
+            
+            Text(L(message))
+                .font(.caption)
+                .foregroundStyle(.red)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, Theme.Metric.cardPadding)
+        .padding(.vertical, 12)
+        .frame(minHeight: Theme.Metric.rowHeight)
     }
 }

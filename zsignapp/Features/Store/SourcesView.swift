@@ -2,6 +2,9 @@
 //  SourcesView.swift
 //  zsignapp
 //  Created by Sato on 26/10/25.
+//
+//  Vỏ điều hướng của tab AppStore + cache nguồn + view model dùng chung.
+//  Giao diện theo bộ thẻ chung (Theme + CardComponents).
 
 import SwiftUI
 import AltSourceKit
@@ -17,8 +20,7 @@ struct SourcesView: View {
             AllSourceAppsView()
                 .environmentObject(sourcesCache)
                 .environmentObject(viewModel)
-                .navigationTitle("AppStore")
-                .navigationBarTitleDisplayMode(.inline)
+                .screenChrome("AppStore")
         }
         .navigationViewStyle(.stack)
     }
@@ -128,11 +130,11 @@ struct DownloadProgressView: View {
             if download.status == .importing {
                 Text("Importing...")
                     .font(.caption2)
-                    .foregroundColor(.accentColor)
+                    .foregroundStyle(Color.accentColor)
             } else {
                 Text("\(Int(download.progress * 100))%")
                     .font(.caption2)
-                    .foregroundColor(.accentColor)
+                    .foregroundStyle(Color.accentColor)
                     .frame(width: 35)
             }
         }
@@ -146,6 +148,10 @@ struct DownloadButtonView: View {
     var body: some View {
         ZStack {
             Circle()
+                .stroke(Theme.hairline, lineWidth: 2.5)
+                .frame(width: 28, height: 28)
+            
+            Circle()
                 .trim(from: 0, to: download.progress)
                 .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
@@ -153,7 +159,7 @@ struct DownloadButtonView: View {
             
             Image(systemName: "xmark")
                 .font(.system(size: 10))
-                .foregroundColor(.accentColor)
+                .foregroundStyle(Color.accentColor)
         }
     }
 }

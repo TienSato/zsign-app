@@ -14,37 +14,34 @@ struct ProjectsListView: View {
     @ObservedObject private var store = ProjectStore.shared
     @State private var showNewPicker = false
 
+    // Giữ `List` vì có vuốt-để-xoá (.onDelete) — bỏ List là mất chức năng đó.
     var body: some View {
         List {
             if store.projects.isEmpty {
-                Text("No projects yet. Tap + to create one from an imported app.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                EmptyStateView(title: "No projects yet",
+                               systemImage: "square.stack.3d.up",
+                               message: "No projects yet. Tap + to create one from an imported app.",
+                               style: .compact)
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             }
             ForEach(store.projects) { p in
                 NavigationLink {
                     ProjectDetailView(project: p)
                 } label: {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(p.displayName).font(.headline)
-                        Text("\(p.bundleId) · v\(p.version)")
-                            .font(.caption).foregroundColor(.secondary)
-                        HStack(spacing: 10) {
-                            Label("\(p.detectedTweakCount + p.dylibs.count) tweak", systemImage: "puzzlepiece.extension")
-                            if let d = p.lastSignedAt {
-                                Text(L("signed:") + " \(d.formatted(date: .abbreviated, time: .shortened))")
-                            }
-                        }
-                        .font(.caption2).foregroundColor(.secondary)
-                        projectStatusBadge(p)
-                    }
+                    projectRow(p)
                 }
+                .listRowBackground(Theme.card)
             }
             .onDelete { idx in
                 for i in idx { store.delete(store.projects[i]) }
             }
         }
-        .navigationTitle("Projects")
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Theme.canvas.ignoresSafeArea())
+        .screenChrome("Projects")
         .toolbar {
             Button { showNewPicker = true } label: { Image(systemName: "plus") }
         }
@@ -54,17 +51,44 @@ struct ProjectsListView: View {
     }
 
     @ViewBuilder
+    private func projectRow(_ p: SignProject) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "shippingbox.fill")
+                .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: Theme.Metric.iconBox, alignment: .center)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(p.displayName)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.ink)
+                Text("\(p.bundleId) · v\(p.version)")
+                    .font(.caption).foregroundStyle(Theme.ink2)
+                HStack(spacing: 10) {
+                    Label("\(p.detectedTweakCount + p.dylibs.count) " + L("tweak"), systemImage: "puzzlepiece.extension")
+                    if let d = p.lastSignedAt {
+                        Text(L("signed:") + " \(d.formatted(date: .abbreviated, time: .shortened))")
+                    }
+                }
+                .font(.caption2).foregroundStyle(Theme.ink3)
+                projectStatusBadge(p)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
     private func projectStatusBadge(_ p: SignProject) -> some View {
         switch InstalledRegistry.status(bundleId: p.effectiveBundleId, availableVersion: p.version) {
         case .installed:
             Label("Installed", systemImage: "checkmark.circle.fill")
-                .font(.caption2).foregroundColor(.green)
+                .font(.caption2).foregroundStyle(.green)
         case .updateAvailable:
             Label("Needs re-signing (new build)", systemImage: "arrow.up.circle.fill")
-                .font(.caption2).foregroundColor(.orange)
+                .font(.caption2).foregroundStyle(.orange)
         case .notInstalled:
             Label("Not installed", systemImage: "circle")
-                .font(.caption2).foregroundColor(.secondary)
+                .font(.caption2).foregroundStyle(Theme.ink2)
         }
     }
 }
@@ -77,26 +101,34 @@ struct NewProjectPicker: View {
 
     var body: some View {
         NavigationView {
-            List {
+            CardScreen {
                 if apps.isEmpty {
-                    Text("No imported apps. Import an IPA from the Apps/Store tab first.")
-                        .foregroundColor(.secondary)
-                }
-                ForEach(apps, id: \.uuid) { app in
-                    Button {
-                        _ = store.addProject(from: app)
-                        dismiss()
-                    } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(app.name ?? "Unknown").foregroundColor(.primary)
-                            Text("\(app.identifier ?? "") · v\(app.version ?? "")")
-                                .font(.caption).foregroundColor(.secondary)
+                    EmptyStateView(title: "No imported apps",
+                                   systemImage: "square.and.arrow.down",
+                                   message: "No imported apps. Import an IPA from the Apps/Store tab first.",
+                                   style: .compact)
+                        .padding(.top, 32)
+                } else {
+                    CardGroup {
+                        ForEach(Array(apps.enumerated()), id: \.element.uuid) { index, app in
+                            Button {
+                                _ = store.addProject(from: app)
+                                dismiss()
+                            } label: {
+                                CardRow(icon: "app.badge",
+                                        title: app.name ?? L("Unknown"),
+                                        subtitle: "\(app.identifier ?? "") · v\(app.version ?? "")") {
+                                    CardChevron()
+                                }
+                            }
+                            .buttonStyle(.plain)
+
+                            if index < apps.count - 1 { CardDivider() }
                         }
                     }
                 }
             }
-            .navigationTitle("Select source app")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("Select source app")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
             .onAppear { apps = Storage.shared.fetchApps() }
         }
@@ -122,6 +154,8 @@ struct ProjectDetailView: View {
         return t.isEmpty ? [.data] : t
     }
 
+    // Giữ `Form` vì danh sách tweak có .onDelete/.onMove + EditButton —
+    // bỏ khung List là mất xoá và sắp xếp lại dylib.
     var body: some View {
         Form {
             Section {
@@ -137,6 +171,7 @@ struct ProjectDetailView: View {
                 Text("Upgrading an app: import the new IPA in the Apps tab, then swap the source here. Tweaks and certificate are KEPT, only the source changes.")
                     .font(.caption)
             }
+            .listRowBackground(Theme.card)
 
             Section {
                 Picker("Certificate", selection: Binding(
@@ -152,6 +187,7 @@ struct ProjectDetailView: View {
                     }
                 }
             } header: { Text("Signing Certificate") }
+            .listRowBackground(Theme.card)
 
             // MARK: - Cấu hình ký RIÊNG project
             Section {
@@ -172,6 +208,7 @@ struct ProjectDetailView: View {
                 Text("Changing the Bundle ID makes it a DIFFERENT APP (no in-place update). Leave blank to keep the original.")
                     .font(.caption)
             }
+            .listRowBackground(Theme.card)
 
             // MARK: - Icon riêng
             Section {
@@ -180,10 +217,11 @@ struct ProjectDetailView: View {
                         Image(uiImage: img).resizable().frame(width: 48, height: 48).cornerRadius(10)
                     } else {
                         Image(systemName: "app.dashed").font(.system(size: 38))
-                            .foregroundColor(.secondary).frame(width: 48, height: 48)
+                            .foregroundStyle(Theme.ink3).frame(width: 48, height: 48)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(project.hasCustomIcon ? "Custom Icon" : "Use original icon").font(.subheadline)
+                        Text(project.hasCustomIcon ? "Custom Icon" : "Use original icon")
+                            .font(.subheadline).foregroundStyle(Theme.ink)
                         PhotosPicker("Choose image...", selection: $pickedIconItem, matching: .images).font(.caption)
                     }
                     Spacer()
@@ -194,11 +232,12 @@ struct ProjectDetailView: View {
                     }
                 }
             } header: { Text("Custom Icon") }
+            .listRowBackground(Theme.card)
 
             Section {
                 if project.dylibs.isEmpty {
                     Text("No tweaks yet. Tap Add dylib/.deb.")
-                        .font(.caption).foregroundColor(.secondary)
+                        .font(.caption).foregroundStyle(Theme.ink2)
                 }
                 ForEach(project.dylibs) { d in
                     Toggle(isOn: Binding(
@@ -206,9 +245,9 @@ struct ProjectDetailView: View {
                         set: { v in toggleEnabled(d, v) }
                     )) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(d.fileName).font(.subheadline)
+                            Text(d.fileName).font(.subheadline).foregroundStyle(Theme.ink)
                             Text(d.weak ? "weak inject" : "normal inject")
-                                .font(.caption2).foregroundColor(.secondary)
+                                .font(.caption2).foregroundStyle(Theme.ink2)
                         }
                     }
                 }
@@ -226,6 +265,7 @@ struct ProjectDetailView: View {
                 Text("Enabled dylibs are INJECTED into the source IPA when signing. Adding a file with the same name overwrites it.")
                     .font(.caption)
             }
+            .listRowBackground(Theme.card)
 
             // MARK: - Tweak/mod SẴN CÓ trong app (tự quét)
             Section {
@@ -241,42 +281,62 @@ struct ProjectDetailView: View {
                             Spacer()
                             if !project.disabledTweaks.isEmpty {
                                 Text("\(project.disabledTweaks.count) " + L("off"))
-                                    .font(.caption).foregroundColor(.orange)
+                                    .font(.caption).foregroundStyle(.orange)
                             }
                         }
                     }
                 } else {
                     Text("Source app not found for scanning (removed from the Apps tab?).")
-                        .font(.caption).foregroundColor(.secondary)
+                        .font(.caption).foregroundStyle(Theme.ink2)
                 }
             } header: { Text("Tweaks Already in the App") } footer: {
                 Text("Automatically scans dylibs/frameworks/bundles already in the modded app. Turning one OFF REMOVES it on re-sign; ON keeps it.")
                     .font(.caption)
             }
+            .listRowBackground(Theme.card)
 
             Section {
                 Button {
                     Task { await signAndInstall() }
                 } label: {
-                    HStack {
-                        Spacer()
-                        if isSigning { ProgressView().padding(.trailing, 6) }
-                        Text(isSigning ? "Processing..." : "Sign & Install (update)").bold()
-                        Spacer()
+                    HStack(spacing: 8) {
+                        if isSigning {
+                            ProgressView().tint(.white)
+                        } else {
+                            Image(systemName: "square.and.arrow.down.on.square.fill")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        Text(isSigning ? "Processing..." : "Sign & Install (update)")
+                            .font(.subheadline.weight(.semibold))
                     }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(isSigning ? Theme.ink3 : Color.accentColor)
+                    )
                 }
+                .buttonStyle(.plain)
                 .disabled(isSigning)
+                .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                .listRowBackground(Color.clear)
 
                 if !status.isEmpty {
-                    Text(status).font(.caption).foregroundColor(.secondary)
+                    Text(status).font(.caption).foregroundStyle(Theme.ink2)
+                        .listRowBackground(Theme.card)
                 }
             } footer: {
                 Text("Re-signs from the source IPA and installs over it: same bundle id, so iOS updates in place and keeps app data.")
                     .font(.caption)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Theme.canvas.ignoresSafeArea())
         .navigationTitle(project.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Theme.canvas, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar { EditButton() }
         .onAppear {
             certificates = Storage.shared.fetchCertificates()
@@ -394,31 +454,31 @@ struct ChangeSourceSheet: View {
 
     var body: some View {
         NavigationView {
-            List {
-                Section {
-                    Text("Choose an imported IPA as the NEW SOURCE. Prefer the SAME bundle id with a newer version (green check = same bundle).")
-                        .font(.caption).foregroundColor(.secondary)
-                }
-                ForEach(apps, id: \.uuid) { app in
-                    Button {
-                        onPick(app); dismiss()
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(app.name ?? "Unknown").foregroundColor(.primary)
-                                Text("\(app.identifier ?? "") · v\(app.version ?? "")")
-                                    .font(.caption).foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            if app.identifier == currentBundleId {
-                                Image(systemName: "checkmark.seal.fill").foregroundColor(.green)
+            CardScreen {
+                Text("Choose an imported IPA as the NEW SOURCE. Prefer the SAME bundle id with a newer version (green check = same bundle).")
+                    .font(.caption).foregroundStyle(Theme.ink2)
+                    .cardStyle()
+
+                CardGroup {
+                    ForEach(Array(apps.enumerated()), id: \.element.uuid) { index, app in
+                        Button {
+                            onPick(app); dismiss()
+                        } label: {
+                            CardRow(icon: "shippingbox",
+                                    title: app.name ?? L("Unknown"),
+                                    subtitle: "\(app.identifier ?? "") · v\(app.version ?? "")") {
+                                if app.identifier == currentBundleId {
+                                    Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
+                                }
                             }
                         }
+                        .buttonStyle(.plain)
+
+                        if index < apps.count - 1 { CardDivider() }
                     }
                 }
             }
-            .navigationTitle("Replace Source IPA")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("Replace Source IPA")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
             .onAppear { apps = Storage.shared.fetchApps() }
         }

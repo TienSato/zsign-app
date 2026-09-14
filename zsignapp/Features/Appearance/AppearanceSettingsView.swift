@@ -1,7 +1,8 @@
 //
 //  AppearanceSettingsView.swift
 //  zsignapp
-//  Cài đặt → Giao diện: màu chủ đạo + chế độ sáng/tối. (Icon app thêm ở bước sau.)
+//  Cài đặt → Giao diện: màu chủ đạo, sáng/tối, ngôn ngữ và biểu tượng ứng dụng.
+//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents) thay cho Form.
 //
 
 import SwiftUI
@@ -17,96 +18,102 @@ struct AppearanceSettingsView: View {
     }
 
     var body: some View {
-        Form {
-            // Xem trước
-            Section {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 12) {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(effective)
-                            .frame(width: 46, height: 46)
-                            .overlay(Image(systemName: "signature").foregroundStyle(.white))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("zsignapp").font(.headline)
-                            Text("Accent color preview").font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                    }
-                    Button { } label: {
-                        Text("Sample Button").frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(effective)
-                    .allowsHitTesting(false)
+        CardScreen {
+            previewCard
+            languageGroup
+            accentGroup
+            schemeGroup
+            iconGroup
+        }
+        .screenChrome("Appearance")
+    }
+
+    // MARK: - Xem trước
+
+    private var previewCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(effective)
+                    .frame(width: 46, height: 46)
+                    .overlay(
+                        Image(systemName: "signature")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(.white)
+                    )
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("zsignapp")
+                        .font(.headline)
+                        .foregroundStyle(Theme.ink)
+                    Text("Accent color preview")
+                        .font(.caption)
+                        .foregroundStyle(Theme.ink2)
                 }
-                .padding(.vertical, 4)
+                Spacer(minLength: 8)
             }
 
-            // Ngôn ngữ
-            Section {
-                NavigationLink {
-                    LanguageSettingsView()
-                } label: {
-                    HStack {
-                        Text("Language")
-                        Spacer()
+            FilledButton(title: L("Sample Button"), tint: effective) { }
+                .allowsHitTesting(false)
+        }
+        .cardStyle()
+    }
+
+    // MARK: - Ngôn ngữ
+
+    private var languageGroup: some View {
+        CardGroup {
+            NavigationLink {
+                LanguageSettingsView()
+            } label: {
+                CardRow(icon: "globe", title: L("Language")) {
+                    HStack(spacing: 6) {
                         Text(loc.language.displayName)
-                            .foregroundStyle(.secondary)
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.ink2)
+                        CardChevron()
                     }
                 }
             }
+            .buttonStyle(.plain)
+        }
+    }
 
-            // Màu chủ đạo
-            Section {
-                Picker("Color source", selection: $appearance.mode) {
-                    ForEach(AccentMode.allCases) { Text($0.label).tag($0) }
-                }
-                .pickerStyle(.segmented)
+    // MARK: - Màu chủ đạo
 
-                switch appearance.mode {
-                case .auto:
-                    HStack(spacing: 12) {
-                        Circle().fill(deviceTheme.accent).frame(width: 26, height: 26)
-                            .overlay(Circle().strokeBorder(Color.primary.opacity(0.12)))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Follow device color")
-                            Text(deviceTheme.deviceName.isEmpty ? L("Detecting device...") : deviceTheme.deviceName)
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                case .preset:
-                    swatchGrid
-                case .custom:
-                    ColorPicker("Pick any color", selection: $appearance.customColor, supportsOpacity: false)
-                }
-            } header: {
-                Text("Accent Color")
-            } footer: {
-                Text("Applies to buttons, tabs and highlights across the app.")
+    private var accentGroup: some View {
+        CardGroup(L("Accent Color"),
+                  footnote: L("Applies to buttons, tabs and highlights across the app.")) {
+            Picker(L("Color source"), selection: $appearance.mode) {
+                ForEach(AccentMode.allCases) { Text($0.label).tag($0) }
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.vertical, 12)
 
-            // Sáng / Tối
-            Section {
-                Picker("Mode", selection: $appearance.appScheme) {
-                    ForEach(AppColorScheme.allCases) { Text($0.label).tag($0) }
+            CardDivider(inset: Theme.Metric.cardPadding)
+
+            switch appearance.mode {
+            case .auto:
+                CardRow(icon: "iphone",
+                        title: L("Follow device color"),
+                        subtitle: deviceTheme.deviceName.isEmpty
+                            ? L("Detecting device...")
+                            : deviceTheme.deviceName) {
+                    Circle()
+                        .fill(deviceTheme.accent)
+                        .frame(width: 24, height: 24)
+                        .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
                 }
-                .pickerStyle(.segmented)
-            } header: {
-                Text("Appearance")
-            }
-
-
-            // Biểu tượng ứng dụng
-            Section {
-                AppIconPicker()
-            } header: {
-                Text("App Icon")
-            } footer: {
-                Text("Changes the icon on the Home Screen. iOS shows a confirmation when it changes.")
+            case .preset:
+                swatchGrid
+            case .custom:
+                CardRow(icon: "eyedropper", title: L("Pick any color")) {
+                    ColorPicker("", selection: $appearance.customColor, supportsOpacity: false)
+                        .labelsHidden()
+                }
             }
         }
-        .navigationTitle("Appearance")
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var swatchGrid: some View {
@@ -132,7 +139,31 @@ struct AppearanceSettingsView: View {
                     }
             }
         }
-        .padding(.vertical, 8)
+        .padding(.horizontal, Theme.Metric.cardPadding)
+        .padding(.vertical, 16)
+    }
+
+    // MARK: - Sáng / Tối
+
+    private var schemeGroup: some View {
+        CardGroup(L("Light & Dark")) {
+            Picker(L("Mode"), selection: $appearance.appScheme) {
+                ForEach(AppColorScheme.allCases) { Text($0.label).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.vertical, 12)
+        }
+    }
+
+    // MARK: - Biểu tượng ứng dụng
+
+    private var iconGroup: some View {
+        CardGroup(L("App Icon"),
+                  footnote: L("Changes the icon on the Home Screen. iOS shows a confirmation when it changes.")) {
+            AppIconPicker()
+        }
     }
 }
 
@@ -171,12 +202,12 @@ struct AppIconPicker: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                            .strokeBorder(current == opt.id ? Color.accentColor : Color.primary.opacity(0.12),
+                                            .strokeBorder(current == opt.id ? Color.accentColor : Theme.hairline,
                                                           lineWidth: current == opt.id ? 3 : 1)
                                     )
                                 Text(opt.display)
                                     .font(.caption2)
-                                    .foregroundStyle(current == opt.id ? Color.primary : Color.secondary)
+                                    .foregroundStyle(current == opt.id ? Theme.ink : Theme.ink2)
                             }
                         }
                         .buttonStyle(.plain)
@@ -185,21 +216,25 @@ struct AppIconPicker: View {
                     }
                 }
                 .padding(.vertical, 6)
-                .padding(.horizontal, 2)
+                .padding(.horizontal, Theme.Metric.cardPadding)
             }
 
-            if isChanging {
-                Text("Changing icon...")
-                    .font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                if isChanging {
+                    Text("Changing icon...")
+                        .font(.caption).foregroundStyle(Theme.ink2)
+                }
+                if let e = errorText {
+                    Text(e).font(.caption).foregroundStyle(.red)
+                }
+                if !UIApplication.shared.supportsAlternateIcons {
+                    Text("This device does not support alternate icons.")
+                        .font(.caption).foregroundStyle(Theme.ink2)
+                }
             }
-            if let e = errorText {
-                Text(e).font(.caption).foregroundStyle(.red)
-            }
-            if !UIApplication.shared.supportsAlternateIcons {
-                Text("This device does not support alternate icons.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
+            .padding(.horizontal, Theme.Metric.cardPadding)
         }
+        .padding(.vertical, 10)
         .onAppear { syncCurrent() }
     }
 

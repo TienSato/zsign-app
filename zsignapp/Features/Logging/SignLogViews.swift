@@ -3,6 +3,10 @@
 //  zsignapp
 //  Overlay log realtime (trong màn hình ký) + trình xem log (trong Cài đặt).
 //
+//  Bảng nổi giữ nguyên tính chất "đè lên màn hình ký" cùng nút thu gọn / đóng;
+//  chỉ đổi màu sang bảng màu chung (Theme) thay cho màu mặc định của hệ thống.
+//  Nội dung nhật ký vẫn là chữ monospaced, gạch đầu dòng theo từng dòng log.
+//
 
 import SwiftUI
 import UIKit
@@ -28,37 +32,57 @@ struct SignLogOverlay: View {
 
     private var panel: some View {
         VStack(spacing: 0) {
+
+            // Thanh tiêu đề: tên bảng, số dòng, và các nút thao tác.
             HStack(spacing: 12) {
                 Text("Signing Log")
-                    .font(.caption).bold()
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Theme.ink)
+
                 Text("\(logger.lines.count)")
-                    .font(.caption2).foregroundColor(.secondary)
+                    .font(.caption2)
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.ink3)
+
                 Spacer()
+
                 Button("Copy") { UIPasteboard.general.string = logger.fullText }
                     .font(.caption)
+
                 Button("Clear") { logger.clear() }
                     .font(.caption)
+
                 Button { expanded = false } label: {
                     Image(systemName: "chevron.down")
+                        .font(.system(size: 13, weight: .semibold))
                 }
+
                 Button { present = false } label: {
                     Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .semibold))
                 }
             }
-            .padding(.horizontal, 12).padding(.vertical, 8)
-            Divider()
+            .tint(Color.accentColor)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+
+            Rectangle()
+                .fill(Theme.hairline)
+                .frame(height: 1)
+
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(logger.lines.enumerated()), id: \.offset) { idx, line in
                             Text(line)
                                 .font(.system(.caption2, design: .monospaced))
+                                .foregroundStyle(Theme.ink)
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .id(idx)
                         }
                     }
-                    .padding(10)
+                    .padding(12)
                 }
                 .onChange(of: logger.lines.count) { _ in
                     guard !logger.lines.isEmpty else { return }
@@ -67,11 +91,14 @@ struct SignLogOverlay: View {
             }
         }
         .frame(maxHeight: 340)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.secondary.opacity(0.25)))
+        .background(Theme.card)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Metric.cardRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Metric.cardRadius, style: .continuous)
+                .stroke(Theme.hairline, lineWidth: 1)
+        )
+        .shadow(color: Theme.cardShadow, radius: 12, y: 4)
         .padding(12)
-        .shadow(radius: 8)
     }
 
     private var collapsedPill: some View {
@@ -82,13 +109,15 @@ struct SignLogOverlay: View {
                     Image(systemName: "doc.plaintext")
                     Text(L("Log") + " (\(logger.lines.count))")
                 }
-                .font(.caption).bold()
-                .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(.ultraThinMaterial)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color.secondary.opacity(0.25)))
-                .shadow(radius: 4)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Theme.card, in: Capsule())
+                .overlay(Capsule().stroke(Theme.hairline, lineWidth: 1))
+                .shadow(color: Theme.cardShadow, radius: 6, y: 2)
             }
+            .buttonStyle(.plain)
             .padding(16)
         }
     }
@@ -102,9 +131,11 @@ struct SignLogViewerView: View {
     var body: some View {
         Group {
             if logger.lines.isEmpty {
-                ContentUnavailableCompat(
-                    title: L("No log yet"),
-                    message: L("Turn on the log and sign an app; the log will appear here.")
+                EmptyStateView(
+                    title: "No log yet",
+                    systemImage: "doc.plaintext",
+                    message: "Turn on the log and sign an app; the log will appear here.",
+                    style: .compact
                 )
             } else {
                 ScrollViewReader { proxy in
@@ -113,12 +144,15 @@ struct SignLogViewerView: View {
                             ForEach(Array(logger.lines.enumerated()), id: \.offset) { idx, line in
                                 Text(line)
                                     .font(.system(.caption2, design: .monospaced))
+                                    .foregroundStyle(Theme.ink)
                                     .textSelection(.enabled)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .id(idx)
                             }
                         }
-                        .padding(12)
+                        .cardStyle(padding: 14)
+                        .padding(.horizontal, Theme.Metric.screenPadding)
+                        .padding(.vertical, 8)
                     }
                     .onAppear {
                         if !logger.lines.isEmpty {
@@ -128,8 +162,9 @@ struct SignLogViewerView: View {
                 }
             }
         }
-        .navigationTitle("Log")
-        .navigationBarTitleDisplayMode(.inline)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.canvas.ignoresSafeArea())
+        .screenChrome("Log")
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 Button {
@@ -143,23 +178,5 @@ struct SignLogViewerView: View {
                 .disabled(logger.lines.isEmpty)
             }
         }
-    }
-}
-
-// Fallback cho ContentUnavailableView (chỉ có từ iOS 17).
-private struct ContentUnavailableCompat: View {
-    let title: String
-    let message: String
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "doc.plaintext")
-                .font(.largeTitle).foregroundColor(.secondary)
-            Text(title).font(.headline)
-            Text(message)
-                .font(.subheadline).foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

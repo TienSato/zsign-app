@@ -4,6 +4,10 @@
 //
 //  Created by Sato on 26/10/25.
 //
+//  Danh sách tweak sẽ được tiêm khi ký. Giữ `List` vì có `onDelete`
+//  (bỏ List là mất thao tác vuốt để xoá), chỉ thay nền và từng hàng
+//  sang bộ thẻ dùng chung.
+//
 
 import SwiftUI
 import UniformTypeIdentifiers
@@ -11,44 +15,41 @@ import UniformTypeIdentifiers
 struct TweakManagementView: View {
     @Binding var injectionFiles: [URL]
     @State private var showFilePicker = false
-    
+
     var body: some View {
         List {
             ForEach(injectionFiles, id: \.absoluteString) { url in
-                HStack {
-                    Image(systemName: iconForFileType(url.pathExtension))
-                        .foregroundColor(colorForFileType(url.pathExtension))
-                        .font(.title3)
-                        .frame(width: 30)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(url.lastPathComponent)
-                            .font(.system(size: 15, weight: .semibold))
-                        
-                        Text(url.pathExtension.uppercased())
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                    
+                CardRow(icon: iconForFileType(url.pathExtension),
+                        title: url.lastPathComponent,
+                        subtitle: url.pathExtension.uppercased(),
+                        iconTint: colorForFileType(url.pathExtension)) {
                     Button {
                         removeFile(url)
                     } label: {
                         Image(systemName: "trash")
-                            .foregroundColor(.red)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.red)
                     }
+                    .buttonStyle(.plain)
                 }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Theme.card)
             }
             .onDelete(perform: deleteFiles)
         }
-        .navigationTitle("Inject Tweaks")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarItems(trailing: Button(action: {
-            showFilePicker = true
-        }) {
-            Image(systemName: "plus")
-        })
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Theme.canvas.ignoresSafeArea())
+        .screenChrome("Inject Tweaks")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showFilePicker = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
         .sheet(isPresented: $showFilePicker) {
             FileImporterRepresentableView(
                 allowedContentTypes: [.data, .item],
@@ -66,6 +67,7 @@ struct TweakManagementView: View {
                     message: "Tap + to add .dylib, .deb, or .bundle files",
                     style: .compact
                 )
+                .background(Theme.canvas.ignoresSafeArea())
             }
         }
     }
@@ -138,7 +140,7 @@ struct TweakManagementView: View {
         case "framework":
             return .green
         default:
-            return .gray
+            return Theme.ink2
         }
     }
 }

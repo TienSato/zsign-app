@@ -4,6 +4,10 @@
 //
 //  Created by Sato on 26/10/25.
 //
+//  Liệt kê framework / dylib / bundle có sẵn trong IPA: bật-tắt cho lần ký,
+//  hoặc trích xuất ra thư mục Tweaks. Giao diện dựng bằng bộ thẻ dùng chung
+//  (Theme + CardComponents) thay cho Form.
+//
 
 import SwiftUI
 import ZsignSwift
@@ -37,7 +41,7 @@ struct AppTweaksManagerView: View {
     }
     
     var body: some View {
-        Form {
+        CardScreen {
             modeToggleSection
             instructionsSection
             if totalCount > 0 {
@@ -45,7 +49,7 @@ struct AppTweaksManagerView: View {
             }
             if !frameworks.isEmpty {
                 collapsibleSection(
-                    title: "Frameworks",
+                    title: L("Frameworks"),
                     count: frameworks.count,
                     items: frameworks,
                     isExpanded: $isFrameworksExpanded
@@ -53,7 +57,7 @@ struct AppTweaksManagerView: View {
             }
             if !dylibs.isEmpty {
                 collapsibleSection(
-                    title: "Dynamic Libraries",
+                    title: L("Dynamic Libraries"),
                     count: dylibs.count,
                     items: dylibs,
                     isExpanded: $isDylibsExpanded
@@ -61,7 +65,7 @@ struct AppTweaksManagerView: View {
             }
             if !bundles.isEmpty {
                 collapsibleSection(
-                    title: "Bundles",
+                    title: L("Bundles"),
                     count: bundles.count,
                     items: bundles,
                     isExpanded: $isBundlesExpanded
@@ -76,8 +80,7 @@ struct AppTweaksManagerView: View {
                 extractButtonSection
             }
         }
-        .navigationTitle("App Tweaks")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenChrome("App Tweaks")
         .toolbar {
             toolbarContent
         }
@@ -116,73 +119,78 @@ struct AppTweaksManagerView: View {
     }
 }
 
-// MARK: - View Components
+// MARK: - Các mảnh giao diện, hành động, nạp dữ liệu và trích xuất
 private extension AppTweaksManagerView {
+
+    // MARK: - View Components
     
     var modeToggleSection: some View {
-        Section {
+        CardGroup {
             Picker("Mode", selection: $showExtractMode) {
                 Text("Enable/Disable for Signing").tag(false)
                 Text("Extract Tweaks").tag(true)
             }
             .pickerStyle(.segmented)
+            .padding(Theme.Metric.cardPadding)
         }
     }
     
     var instructionsSection: some View {
-        Section {
-            Text(showExtractMode ?
-                 "Select tweaks to extract to your library" :
-                 "Enabled tweaks will be injected when signing")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
+        Text(showExtractMode ?
+             L("Select tweaks to extract to your library") :
+             L("Enabled tweaks will be injected when signing"))
+            .font(.caption)
+            .foregroundStyle(Theme.ink3)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
     }
     
     var summarySection: some View {
-        Section {
+        CardGroup(L("Overview")) {
             VStack(spacing: 12) {
                 HStack(spacing: 20) {
                     summaryItem(
                         count: frameworks.count,
-                        label: "Frameworks"
+                        label: L("Frameworks")
                     )
                     
-                    Divider()
-                        .frame(height: 40)
+                    Rectangle()
+                        .fill(Theme.hairline)
+                        .frame(width: 1, height: 40)
                     
                     summaryItem(
                         count: dylibs.count,
-                        label: "Dylibs"
+                        label: L("Dylibs")
                     )
                     
-                    Divider()
-                        .frame(height: 40)
+                    Rectangle()
+                        .fill(Theme.hairline)
+                        .frame(width: 1, height: 40)
                     
                     summaryItem(
                         count: bundles.count,
-                        label: "Bundles"
+                        label: L("Bundles")
                     )
                 }
                 
-                Divider()
+                Rectangle()
+                    .fill(Theme.hairline)
+                    .frame(height: 1)
                 
                 HStack {
                     Text("Total Tweaks")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink2)
                     
                     Spacer()
                     
                     Text("\(totalCount)")
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(Theme.ink)
                 }
             }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Overview")
+            .padding(Theme.Metric.cardPadding)
         }
     }
     
@@ -191,10 +199,11 @@ private extension AppTweaksManagerView {
             Text("\(count)")
                 .font(.title2)
                 .fontWeight(.bold)
+                .foregroundStyle(Theme.ink)
             
             Text(label)
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundStyle(Theme.ink2)
         }
         .frame(maxWidth: .infinity)
     }
@@ -205,37 +214,40 @@ private extension AppTweaksManagerView {
         items: [TweakFile],
         isExpanded: Binding<Bool>
     ) -> some View {
-        Section {
+        CardGroup {
             Button {
                 withAnimation {
                     isExpanded.wrappedValue.toggle()
                 }
             } label: {
                 HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(title)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.ink)
                         
-                        Text("\(count) item(s)")
+                        Text(String(format: L("%d item(s)"), count))
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink2)
                     }
                     
-                    Spacer()
+                    Spacer(minLength: 8)
                     
                     Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Theme.ink3)
                         .rotationEffect(.degrees(isExpanded.wrappedValue ? 90 : 0))
                 }
+                .padding(.horizontal, Theme.Metric.cardPadding)
+                .padding(.vertical, 12)
+                .frame(minHeight: Theme.Metric.rowHeight)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             
             if isExpanded.wrappedValue {
                 ForEach(items) { tweak in
+                    CardDivider()
                     if showExtractMode {
                         ExtractRow(
                             tweak: tweak,
@@ -255,39 +267,44 @@ private extension AppTweaksManagerView {
     }
     
     var emptyStateSection: some View {
-        Section {
-            VStack(spacing: 12) {
-                Text("No Tweaks Found")
-                    .font(.headline)
-                
-                Text("This app doesn't contain any tweaks")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 40)
-        }
+        EmptyStateView(
+            title: "No Tweaks Found",
+            systemImage: "wrench.and.screwdriver",
+            message: "This app doesn't contain any tweaks",
+            style: .compact
+        )
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .cardStyle()
     }
     
     var extractButtonSection: some View {
-        Section {
-            Button {
-                extractSelected()
-            } label: {
-                HStack {
-                    Spacer()
-                    if isExtracting {
-                        ProgressView()
-                            .padding(.trailing, 8)
-                    }
-                    Text(isExtracting ? "Extracting..." : "Extract \(selectedForExtraction.count) File(s)")
-                        .fontWeight(.semibold)
-                    Spacer()
+        Button {
+            extractSelected()
+        } label: {
+            HStack(spacing: 8) {
+                if isExtracting {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "tray.and.arrow.down.fill")
+                        .font(.system(size: 15, weight: .semibold))
                 }
+                Text(isExtracting
+                     ? L("Extracting...")
+                     : String(format: L("Extract %d File(s)"), selectedForExtraction.count))
+                    .font(.subheadline.weight(.semibold))
             }
-            .disabled(isExtracting)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.accentColor.opacity(isExtracting ? 0.5 : 1))
+            )
         }
+        .buttonStyle(.plain)
+        .disabled(isExtracting)
     }
     
     @ToolbarContentBuilder
@@ -322,10 +339,8 @@ private extension AppTweaksManagerView {
             }
         }
     }
-}
 
-// MARK: - Actions
-private extension AppTweaksManagerView {
+    // MARK: - Actions
     
     func toggleTweakEnabled(_ tweak: TweakFile) {
         if disabledTweaks.contains(tweak.relativePath) {
@@ -374,10 +389,8 @@ private extension AppTweaksManagerView {
             isBundlesExpanded = false
         }
     }
-}
 
-// MARK: - Data Loading
-private extension AppTweaksManagerView {
+    // MARK: - Data Loading
     
     func loadTweaks() {
         guard let appDirURL = Storage.shared.getAppDirectory(for: app) else {
@@ -535,10 +548,8 @@ private extension AppTweaksManagerView {
         
         return foundBundles.sorted { $0.name < $1.name }
     }
-}
 
-// MARK: - Extraction
-private extension AppTweaksManagerView {
+    // MARK: - Extraction
     
     func extractSelected() {
         guard !selectedForExtraction.isEmpty else { return }
@@ -592,23 +603,10 @@ struct ToggleRow: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: isEnabled ? "checkmark.circle.fill" : "xmark.circle")
-                    .foregroundColor(isEnabled ? .green : .red)
-                    .font(.title3)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(tweak.name)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                    
-                    Text(tweak.type.displayName)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
-            }
+            CardRow(icon: isEnabled ? "checkmark.circle.fill" : "xmark.circle",
+                    title: tweak.name,
+                    subtitle: tweak.type.displayName,
+                    iconTint: isEnabled ? .green : .red)
         }
         .buttonStyle(.plain)
     }
@@ -623,33 +621,37 @@ struct ExtractRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                    .foregroundColor(isSelected ? .accentColor : .gray)
-                    .font(.title3)
+                    .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                    .foregroundStyle(isSelected ? Color.accentColor : Theme.ink3)
+                    .frame(width: Theme.Metric.iconBox, alignment: .center)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(tweak.name)
-                        .font(.body)
-                        .foregroundColor(.primary)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Theme.ink)
                     
                     HStack(spacing: 6) {
                         Text(tweak.type.displayName)
                             .font(.caption2)
                             .fontWeight(.semibold)
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(tweak.type.color)
-                            .cornerRadius(4)
+                            .background(tweak.type.color, in: Capsule())
                         
                         Text(tweak.relativePath)
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink3)
                             .lineLimit(1)
                     }
                 }
                 
-                Spacer()
+                Spacer(minLength: 8)
             }
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.vertical, 12)
+            .frame(minHeight: Theme.Metric.rowHeight)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

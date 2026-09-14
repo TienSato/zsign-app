@@ -2,10 +2,54 @@
 //  AllSourceAppsView.swift
 //  zsignapp
 //
+//  Kho ứng dụng: danh sách tổng hợp, trang chi tiết kiểu App Store,
+//  quản lý nguồn. Giao diện dùng bộ thẻ chung (Theme + CardComponents).
+//
 import SwiftUI
 import AltSourceKit
 import Combine
 import UIKit
+
+// MARK: - Danh sách ứng dụng dùng chung (tổng hợp & theo nguồn)
+
+/// Một thẻ chứa toàn bộ hàng ứng dụng, có tiêu đề đếm số lượng phía trên.
+private struct StoreAppsList: View {
+    let apps: [ASRepository.App]
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("APPS")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.ink2)
+                    Spacer()
+                    Text("\(apps.count)")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.ink3)
+                }
+                .padding(.horizontal, 4)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(apps.enumerated()), id: \.element.currentUniqueId) { index, app in
+                        VStack(spacing: 0) {
+                            SourceAppRow(app: app)
+                            if index < apps.count - 1 {
+                                Divider().padding(.leading, 84)
+                            }
+                        }
+                    }
+                }
+                .cardStyle(padding: 0)
+            }
+            .padding(.horizontal, Theme.Metric.screenPadding)
+            .padding(.bottom, 32)
+        }
+        .background(Theme.canvas.ignoresSafeArea())
+    }
+}
 
 // MARK: - All Source Apps View (TAB 1 - Grid Layout)
 struct AllSourceAppsView: View {
@@ -25,6 +69,9 @@ struct AllSourceAppsView: View {
         appsList
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
+                // Toolbar KHÔNG truyền @EnvironmentObject sang đích của NavigationLink,
+                // nên ManageSourcesView vừa dùng singleton vừa được tiêm lại ở đây.
+                // Bỏ một trong hai là crash.
                 NavigationLink {
                     ManageSourcesView()
                         .environmentObject(viewModel)
@@ -68,72 +115,28 @@ struct AllSourceAppsView: View {
     
     @ViewBuilder
     private var appsListContent: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                HStack {
-                    Text("APPS")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(allApps.count)")
-                        .font(.system(size: 12.5))
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 6)
-                
-                ForEach(allApps, id: \.currentUniqueId) { app in
-                    VStack(spacing: 0) {
-                        SourceAppRow(app: app)
-                        Divider().padding(.leading, 84)
-                    }
-                }
-            }
-        }
-        .background(Color(.systemBackground))
+        StoreAppsList(apps: allApps)
     }
     
     @ViewBuilder
     private var emptyView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "square.stack.3d.up")
-                .font(.system(size: 70))
-                .foregroundColor(.gray)
-            
-            Text("No Sources Added")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("Add a source in the Sources tab to browse apps")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyStateView(title: "No Sources Added",
+                       systemImage: "square.stack.3d.up",
+                       message: "Add a source in the Sources tab to browse apps")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.canvas.ignoresSafeArea())
     }
     
     @ViewBuilder
     private var noAppsView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "app.badge")
-                .font(.system(size: 70))
-                .foregroundColor(.gray)
-            
-            Text("No Apps Available")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("Your sources don't have any apps yet")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyStateView(title: "No Apps Available",
+                       systemImage: "app.badge",
+                       message: "Your sources don't have any apps yet")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.canvas.ignoresSafeArea())
     }
 }
 
-// MARK: - Source App Grid Cell
 // MARK: - Source App Row (danh sách 1 cột)
 
 struct SourceAppRow: View {
@@ -152,20 +155,20 @@ struct SourceAppRow: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(app.currentName)
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
+                            .foregroundStyle(Theme.ink)
                             .lineLimit(1)
                         
                         if let dev = app.developer, !dev.isEmpty {
                             Text(dev)
                                 .font(.system(size: 12.5))
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Theme.ink2)
                                 .lineLimit(1)
                         }
                         
                         if !metaLine.isEmpty {
                             Text(metaLine)
                                 .font(.system(size: 11.5))
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Theme.ink3)
                                 .lineLimit(1)
                         }
                         
@@ -182,7 +185,7 @@ struct SourceAppRow: View {
             
             actionButton
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Theme.Metric.screenPadding)
         .padding(.vertical, 10)
         .onAppear { updateCurrentDownload() }
         .onChange(of: downloadManager.downloads.count) { _ in updateCurrentDownload() }
@@ -194,17 +197,17 @@ struct SourceAppRow: View {
         } placeholder: {
             ZStack {
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .fill(Color.gray.opacity(0.15))
+                    .fill(Theme.cardAlt)
                 Image(systemName: "app")
                     .font(.system(size: 22))
-                    .foregroundColor(.gray.opacity(0.6))
+                    .foregroundStyle(Theme.ink3)
             }
         }
         .frame(width: 56, height: 56)
         .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+                .strokeBorder(Theme.hairline, lineWidth: 0.5)
         )
     }
     
@@ -235,7 +238,7 @@ struct SourceAppRow: View {
             Button { startDownload() } label: {
                 Text(actionTitle)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(actionColor)
+                    .foregroundStyle(actionColor)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
                     .background(Capsule().fill(actionColor.opacity(0.14)))
@@ -257,7 +260,7 @@ struct SourceAppRow: View {
         switch installState {
         case .notInstalled:    return .accentColor
         case .updateAvailable: return .orange
-        case .installed:       return .secondary
+        case .installed:       return Theme.ink3
         }
     }
     
@@ -349,7 +352,7 @@ struct SourceAppDetailView: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Theme.canvas
                 .ignoresSafeArea()
             
             if isLoadingAppStore {
@@ -361,48 +364,38 @@ struct SourceAppDetailView: View {
                         heroSection
                         
                         // Content
-                        VStack(spacing: 0) {
+                        VStack(spacing: Theme.Metric.cardSpacing) {
                             // Stats Row (3 columns)
                             statsThreeColumn
-                                .padding(.vertical, 20)
-                                .background(Color(.systemBackground))
+                                .padding(.vertical, 18)
+                                .cardStyle(padding: 0)
+                                .padding(.horizontal, Theme.Metric.screenPadding)
                             
-                            Divider()
-                            
-                            // Screenshots
+                            // Screenshots — tràn hết bề ngang, không bọc thẻ
                             if !finalScreenshots.isEmpty {
                                 screenshotsSection
-                                    .padding(.top, 30)
                             }
-                            
-                            Divider()
-                                .padding(.vertical, 30)
                             
                             // What's New / Description
                             if let description = app.localizedDescription ?? app.description {
                                 whatsNewSection(description: description)
-                                    .padding(.horizontal, 20)
-                                    .padding(.vertical, 30)
-                                
-                                Divider()
+                                    .cardStyle()
+                                    .padding(.horizontal, Theme.Metric.screenPadding)
                             }
                             
                             // Ratings & Reviews
                             if let rating = finalRating, rating > 0 {
                                 ratingsSection
-                                    .padding(.horizontal, 20)
-                                    .padding(.bottom, 30)
-                                
-                                Divider()
+                                    .cardStyle()
+                                    .padding(.horizontal, Theme.Metric.screenPadding)
                             }
-                            
-                            
                             
                             // Information
                             informationSection
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 30)
+                                .cardStyle()
+                                .padding(.horizontal, Theme.Metric.screenPadding)
                         }
+                        .padding(.top, 16)
                         
                         Color.clear.frame(height: 40)
                     }
@@ -432,11 +425,13 @@ struct SourceAppDetailView: View {
                 .scaleEffect(1.5)
             Text("Loading info...")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(Theme.ink2)
         }
     }
     
     // MARK: - Hero Section
+    // Nền lấy màu từ icon app nên KHÔNG dùng Theme ở đây: chữ và nút phải
+    // trắng để đọc được trên bất kỳ màu chủ đạo nào (giống FilledButton).
     @ViewBuilder
     private var heroSection: some View {
         ZStack(alignment: .topLeading) {
@@ -447,7 +442,7 @@ struct SourceAppDetailView: View {
                         dominantColor.opacity(0.85),
                         dominantColor.opacity(0.65),
                         secondaryColor.opacity(0.55),
-                        Color(.systemBackground).opacity(0.3)
+                        Theme.canvas.opacity(0.3)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -455,9 +450,9 @@ struct SourceAppDetailView: View {
                 
                 LinearGradient(
                     colors: [
-                        Color.white.opacity(0.2),
-                        Color.white.opacity(0.1),
-                        Color.clear
+                        .white.opacity(0.2),
+                        .white.opacity(0.1),
+                        .clear
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -475,29 +470,29 @@ struct SourceAppDetailView: View {
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
                         RoundedRectangle(cornerRadius: 22)
-                            .fill(Color.white.opacity(0.3))
+                            .fill(.white.opacity(0.3))
                             .overlay(
                                 Image(systemName: "app.badge")
                                     .font(.system(size: 40))
-                                    .foregroundColor(.white.opacity(0.8))
+                                    .foregroundStyle(.white.opacity(0.8))
                             )
                     }
                     .frame(width: 100, height: 100)
                     .clipShape(RoundedRectangle(cornerRadius: 22))
-                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 0, y: 6)
+                    .shadow(color: Theme.cardShadow, radius: 12, x: 0, y: 6)
                     
                     VStack(alignment: .leading, spacing: 10) {
                         Text(app.currentName)
                             .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                             .lineLimit(2)
-                            .shadow(color: Color.black.opacity(0.3), radius: 3, x: 0, y: 2)
+                            .shadow(radius: 3, y: 2)
                         
                         if let developer = finalDeveloper {
                             Text(developer)
                                 .font(.system(size: 14))
-                                .foregroundColor(.white)
-                                .shadow(color: Color.black.opacity(0.3), radius: 3, x: 0, y: 2)
+                                .foregroundStyle(.white)
+                                .shadow(radius: 3, y: 2)
                         }
                         
                         Spacer()
@@ -522,10 +517,10 @@ struct SourceAppDetailView: View {
                 HStack(spacing: 8) {
                     ZStack {
                         Circle()
-                            .stroke(Color.white.opacity(0.4), lineWidth: 2)
+                            .stroke(.white.opacity(0.4), lineWidth: 2)
                         Circle()
                             .trim(from: 0, to: downloadProgress)
-                            .stroke(Color.white, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                            .stroke(.white, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                     }
                     .frame(width: 16, height: 16)
@@ -533,11 +528,11 @@ struct SourceAppDetailView: View {
                     if download.status == .importing {
                         Text("Import...")
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                     } else {
                         Text("\(Int(downloadProgress * 100))%")
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                     }
                     
                     Spacer()
@@ -547,8 +542,9 @@ struct SourceAppDetailView: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 16))
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                     }
+                    .buttonStyle(.plain)
                 }
                 
                 ProgressView(value: downloadProgress)
@@ -557,9 +553,9 @@ struct SourceAppDetailView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.3))
-                    .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(.white.opacity(0.3))
+                    .shadow(color: Theme.cardShadow, radius: 8, x: 0, y: 4)
             )
         } else {
             Button {
@@ -571,15 +567,16 @@ struct SourceAppDetailView: View {
                     Text("DOWNLOAD")
                         .font(.system(size: 13, weight: .bold))
                 }
-                .foregroundColor(dominantColor)
+                .foregroundStyle(dominantColor)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 7)
                 .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.white)
-                        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(.white)
+                        .shadow(color: Theme.cardShadow, radius: 8, x: 0, y: 4)
                 )
             }
+            .buttonStyle(.plain)
         }
     }
     
@@ -592,35 +589,37 @@ struct SourceAppDetailView: View {
                 if let ratingCount = finalRatingCount {
                     Text(formatNumber(ratingCount))
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink2)
                     Text("RATINGS")
                         .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink3)
                 }
                 
                 if let rating = finalRating, rating > 0 {
                     Spacer().frame(height: 8)
                     Text(String(format: "%.1f", rating))
                         .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(Theme.ink)
                     HStack(spacing: 3) {
                         ForEach(0..<5) { index in
                             Image(systemName: index < Int(rating) ? "star.fill" : "star")
                                 .font(.system(size: 11))
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Theme.ink2)
                         }
                     }
                 }
             }
             .frame(maxWidth: .infinity)
             
-            Divider()
-                .frame(height: 60)
+            Rectangle()
+                .fill(Theme.hairline)
+                .frame(width: 1, height: 60)
             
             // Awards
             VStack(spacing: 8) {
                 Text("AWARDS")
                     .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(Theme.ink3)
                 
                 VStack(spacing: 4) {
                     HStack(spacing: 4) {
@@ -629,42 +628,47 @@ struct SourceAppDetailView: View {
                         Image(systemName: "leaf.fill")
                             .font(.system(size: 14))
                     }
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(Theme.ink2)
                     
                     Text("Editors'")
                         .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Theme.ink)
                     Text("Choice")
                         .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Theme.ink)
                     
                     Text("Apps")
                         .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink3)
                 }
             }
             .frame(maxWidth: .infinity)
             
-            Divider()
-                .frame(height: 60)
+            Rectangle()
+                .fill(Theme.hairline)
+                .frame(width: 1, height: 60)
             
             // Age or Version
             VStack(spacing: 8) {
                 Text("AGES")
                     .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(Theme.ink3)
                 
                 if let ageRating = finalAgeRating {
                     Text(ageRating)
                         .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(Theme.ink)
                     Text("In-App Controls")
                         .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink3)
                         .multilineTextAlignment(.center)
                 } else if let version = app.currentVersion {
                     Text(version)
                         .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(Theme.ink)
                     Text("Version")
                         .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink3)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -683,34 +687,34 @@ struct SourceAppDetailView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 250)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                            .shadow(color: Theme.cardShadow, radius: 8, x: 0, y: 4)
                     } placeholder: {
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.gray.opacity(0.2))
+                            .fill(Theme.cardAlt)
                             .frame(width: 250, height: 450)
                             .overlay(ProgressView())
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Theme.Metric.screenPadding)
         }
     }
+    
     // MARK: - What's New Section
     @ViewBuilder
     private func whatsNewSection(description: String) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("What's New")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.ink)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+                CardChevron()
             }
             
             Text(description)
                 .font(.system(size: 15))
-                .foregroundColor(.primary)
+                .foregroundStyle(Theme.ink)
                 .lineLimit(showFullDescription ? nil : 3)
             
             if description.count > 150 {
@@ -723,8 +727,9 @@ struct SourceAppDetailView: View {
                     } label: {
                         Text(showFullDescription ? "less" : "more")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                     }
+                    .buttonStyle(.plain)
                 }
             }
             
@@ -732,40 +737,41 @@ struct SourceAppDetailView: View {
                 if let version = app.currentVersion {
                     Text("Version \(version)")
                         .font(.system(size: 13))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink3)
                 }
                 Spacer()
                 if let date = app.currentDate {
                     Text(formatDate(date.date))
                         .font(.system(size: 13))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink3)
                 }
             }
         }
     }
+    
     // MARK: - Ratings Section
     @ViewBuilder
     private var ratingsSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
                 Text("Ratings & Reviews")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.ink)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+                CardChevron()
             }
             
-            HStack(alignment: .top, spacing: 40) {
+            HStack(alignment: .top, spacing: 24) {
                 VStack(spacing: 6) {
                     Text(String(format: "%.1f", finalRating ?? 0))
-                        .font(.system(size: 56, weight: .bold))
+                        .font(.system(size: 52, weight: .bold))
+                        .foregroundStyle(Theme.ink)
                     
                     Text("out of 5")
                         .font(.system(size: 14))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink2)
                 }
-                .frame(minWidth: 100)
+                .frame(minWidth: 90)
                 
                 VStack(spacing: 8) {
                     RatingBar(stars: 5, percentage: 0.70)
@@ -779,8 +785,8 @@ struct SourceAppDetailView: View {
                     Spacer()
                     if let count = finalRatingCount {
                         Text("\(formatNumber(count)) Ratings")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.ink3)
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }
                 }
@@ -788,54 +794,59 @@ struct SourceAppDetailView: View {
         }
     }
     
-    
-    
     // MARK: - Information Section
     @ViewBuilder
     private var informationSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Information")
-                .font(.system(size: 22, weight: .bold))
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(Theme.ink)
             
             VStack(spacing: 16) {
                 if let developer = finalDeveloper {
-                    InfoRow(title: "Developer", value: developer)
+                    InfoRow(title: L("Developer"), value: developer)
                 }
                 
                 if let category = finalCategory {
-                    Divider()
-                    InfoRow(title: "Category", value: category)
+                    infoDivider
+                    InfoRow(title: L("Category"), value: category)
                 }
                 
                 if let size = app.size {
-                    Divider()
-                    InfoRow(title: "Size", value: formatSize(size))
+                    infoDivider
+                    InfoRow(title: L("Size"), value: formatSize(size))
                 }
                 
                 if let bundleId = app.id {
-                    Divider()
-                    InfoRow(title: "Bundle ID", value: bundleId)
+                    infoDivider
+                    InfoRow(title: L("Bundle ID"), value: bundleId)
                 }
                 
                 // Fix: Check cả nil, empty string VÀ URL hợp lệ
                 if let appStoreUrlString = finalAppStoreUrl,
                    !appStoreUrlString.isEmpty,
                    let url = URL(string: appStoreUrlString) {
-                    Divider()
+                    infoDivider
                     Link(destination: url) {
                         HStack {
                             Text("App Store")
-                                .foregroundColor(.primary)
+                                .font(.system(size: 15))
+                                .foregroundStyle(Theme.ink)
                             Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                            }
+                            CardChevron()
                         }
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+    
+    private var infoDivider: some View {
+        Rectangle()
+            .fill(Theme.hairline)
+            .frame(height: 1)
+    }
     
     // MARK: - Helper Functions
     private func formatSize(_ bytes: UInt) -> String {
@@ -922,7 +933,10 @@ struct SourceAppDetailView: View {
 }
 
 // MARK: - Manage Sources View (TAB 3)
+// Giữ List vì có swipe-to-delete (.onDelete) — LUẬT 3.
 struct ManageSourcesView: View {
+    // Toolbar không truyền EnvironmentObject xuống đích NavigationLink,
+    // nên màn này tự lấy singleton. GIỮ NGUYÊN, đừng đổi sang @EnvironmentObject.
     @ObservedObject private var viewModel = SourcesViewModel.shared
     @ObservedObject private var sourcesCache = SourcesCacheManager.shared
     @State private var isAddingPresenting = false
@@ -937,27 +951,29 @@ struct ManageSourcesView: View {
                 NavigationLink {
                     SourceAppsView(sources: sources, viewModel: viewModel)
                 } label: {
-                    HStack(spacing: 15) {
+                    HStack(spacing: 13) {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.accentColor)
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color.accentColor.opacity(0.15))
                                 .frame(width: 56, height: 56)
                             
                             Image(systemName: "square.stack.3d.up.fill")
                                 .font(.title2)
-                                .foregroundColor(.white)
+                                .foregroundStyle(Color.accentColor)
                         }
                         
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 3) {
                             Text("All Repositories")
-                                .font(.headline)
-                            Text("\(sources.count) sources")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Theme.ink)
+                            Text(String(format: L("%d sources"), sources.count))
+                                .font(.caption)
+                                .foregroundStyle(Theme.ink2)
                         }
                     }
                     .padding(.vertical, 4)
                 }
+                .listRowBackground(Theme.card)
             }
             
             Section {
@@ -967,51 +983,41 @@ struct ManageSourcesView: View {
                     } label: {
                         SourceCellView(source: source)
                     }
+                    .listRowBackground(Theme.card)
                 }
                 .onDelete(perform: deleteSources)
             } header: {
                 HStack {
                     Text("MY SOURCES")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.ink2)
                     Spacer()
                     Text("\(sources.count)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.ink3)
                 }
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Theme.canvas.ignoresSafeArea())
         .overlay {
             if sources.isEmpty {
-                VStack(spacing: 20) {
-                    Image(systemName: "externaldrive.badge.plus")
-                        .font(.system(size: 70))
-                        .foregroundColor(.gray)
+                VStack(spacing: 16) {
+                    EmptyStateView(title: "No Sources",
+                                   systemImage: "externaldrive.badge.plus",
+                                   message: "Tap + to add your first source",
+                                   style: .compact)
                     
-                    Text("No Sources")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    
-                    Text("Tap + to add your first source")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    Button {
+                    FilledButton(title: L("Add Source"), icon: "plus") {
                         isAddingPresenting = true
-                    } label: {
-                        Text("Add Source")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(width: 200, height: 50)
-                            .background(Color.accentColor)
-                            .cornerRadius(12)
                     }
-                    .padding(.top, 10)
+                    .frame(maxWidth: 240)
                 }
+                .padding(.horizontal, Theme.Metric.screenPadding)
             }
         }
-        .navigationTitle("Sources")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenChrome("Sources")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack(spacing: 16) {
@@ -1053,30 +1059,36 @@ struct SourceCellView: View {
     let source: AltSource
     
     var body: some View {
-        HStack(spacing: 15) {
+        HStack(spacing: 13) {
             AsyncImage(url: source.iconURL) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.2))
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Theme.cardAlt)
                     Image(systemName: "app.badge")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(Theme.ink3)
                 }
             }
             .frame(width: 56, height: 56)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Theme.hairline, lineWidth: 0.5)
+            )
             
-            VStack(alignment: .leading, spacing: 4) {
-                Text(source.name ?? "Unknown Source")
-                    .font(.headline)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(source.name ?? L("Unknown Source"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(1)
                 
                 if let date = source.date {
                     Text("Added \(date.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(Theme.ink2)
                 }
             }
         }
@@ -1094,50 +1106,43 @@ struct AddSourceView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section {
-                    TextField("https://example.com/source.json", text: $sourceURL)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                } header: {
-                    Text("Source URL")
-                } footer: {
-                    Text("Enter a valid AltStore/SideStore repository URL")
+            CardScreen {
+                CardGroup(L("Source URL"),
+                          footnote: L("Enter a valid AltStore/SideStore repository URL")) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "link")
+                            .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                            .foregroundStyle(Color.accentColor)
+                            .frame(width: Theme.Metric.iconBox, alignment: .center)
+                        
+                        TextField("https://example.com/source.json", text: $sourceURL)
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.ink)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    }
+                    .padding(.horizontal, Theme.Metric.cardPadding)
+                    .padding(.vertical, 14)
+                    .frame(minHeight: Theme.Metric.rowHeight)
                 }
                 
                 if let errorMessage = errorMessage {
-                    Section {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
-                            Text(errorMessage)
-                                .foregroundColor(.red)
-                                .font(.subheadline)
-                        }
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.red)
+                        Text(errorMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(.red)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
                     }
+                    .cardStyle()
                 }
                 
-                Section {
-                    Button {
-                        addSource()
-                    } label: {
-                        HStack {
-                            Spacer()
-                            if isLoading {
-                                ProgressView()
-                            } else {
-                                Text("Add Source")
-                                    .fontWeight(.semibold)
-                            }
-                            Spacer()
-                        }
-                    }
-                    .disabled(sourceURL.isEmpty || isLoading)
-                }
+                addButton
             }
-            .navigationTitle("Add Source")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("Add Source")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -1150,9 +1155,37 @@ struct AddSourceView: View {
         .navigationViewStyle(.stack)
     }
     
+    private var addButton: some View {
+        Button {
+            addSource()
+        } label: {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Add Source")
+                        .font(.subheadline.weight(.semibold))
+                }
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(sourceURL.isEmpty || isLoading ? Theme.ink3 : Color.accentColor)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(sourceURL.isEmpty || isLoading)
+        .padding(.top, 4)
+    }
+    
     private func addSource() {
         guard let url = URL(string: sourceURL.trimmingCharacters(in: .whitespaces)) else {
-            errorMessage = "Invalid URL format"
+            errorMessage = L("Invalid URL format")
             return
         }
         
@@ -1181,7 +1214,7 @@ struct AddSourceView: View {
             } catch {
                 await MainActor.run {
                     isLoading = false
-                    errorMessage = "Failed to load source. Please check the URL and try again."
+                    errorMessage = L("Failed to load source. Please check the URL and try again.")
                 }
             }
         }
@@ -1195,9 +1228,9 @@ struct SourceAppsView: View {
     
     private var navigationTitle: String {
         if sources.count == 1 {
-            return sources[0].name ?? "Source"
+            return sources[0].name ?? L("Source")
         }
-        return "All Repositories"
+        return L("All Repositories")
     }
     
     private var allApps: [ASRepository.App] {
@@ -1206,40 +1239,19 @@ struct SourceAppsView: View {
     }
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                HStack {
-                    Text("APPS")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(allApps.count)")
-                        .font(.system(size: 12.5))
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 6)
-                
-                ForEach(allApps, id: \.currentUniqueId) { app in
-                    VStack(spacing: 0) {
-                        SourceAppRow(app: app)
-                        Divider().padding(.leading, 84)
+        StoreAppsList(apps: allApps)
+            .navigationTitle(navigationTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Theme.canvas, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink {
+                        SearchAppsView(apps: allApps)
+                    } label: {
+                        Image(systemName: "magnifyingglass")
                     }
                 }
             }
-        }
-        .background(Color(.systemBackground))
-        .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink {
-                    SearchAppsView(apps: allApps)
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                }
-            }
-        }
     }
 }

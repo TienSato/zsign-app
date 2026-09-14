@@ -3,6 +3,10 @@
 //  zsignapp
 //  Created by Sato on 13/1/26.
 //
+//  Thư viện ứng dụng — dựng theo bộ thẻ dùng chung (Theme + CardComponents).
+//  Hai tab Unsigned/Signed vẫn giữ `List` vì có onDelete + chế độ chọn nhiều,
+//  chỉ thay nền và dựng nội dung từng hàng theo dáng CardRow.
+//
 
 import SwiftUI
 import CoreData
@@ -19,8 +23,7 @@ struct AppsView: View {
                     SignedAppsView(selectedTab: $selectedTab)
                 }
             }
-            .navigationTitle("Apps")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("Apps")
         }
         .navigationViewStyle(.stack)
     }
@@ -62,8 +65,9 @@ struct UnsignedAppsView: View {
                         Text("Signed").tag(1)
                     }
                     .pickerStyle(.segmented)
-                    .listRowInsets(EdgeInsets())
+                    .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 10, trailing: 0))
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
                 // ✅ THÊM SECTION NÀY (Downloads Section)
                             if !downloadManager.downloads.isEmpty {
@@ -72,8 +76,10 @@ struct UnsignedAppsView: View {
                                         DownloadListRow(download: download)
                                     }
                                 } header: {
-                                    Label("Active Downloads", systemImage: "arrow.down.circle.fill")
+                                    sectionHeader("Active Downloads", icon: "arrow.down.circle.fill")
                                 }
+                                .listRowBackground(Theme.card)
+                                .listRowSeparatorTint(Theme.hairline)
                             }
                 // Apps Section
                 Section {
@@ -91,10 +97,15 @@ struct UnsignedAppsView: View {
             } header: {
                 // ✅ THÊM ĐIỀU KIỆN NÀY CHO HEADER
                 if !downloadManager.downloads.isEmpty {
-                    Label("Imported Apps", systemImage: "app.badge")
+                    sectionHeader("Imported Apps", icon: "app.badge")
                 }
             }
+            .listRowBackground(Theme.card)
+            .listRowSeparatorTint(Theme.hairline)
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .canvasBackground()
             .overlay {
                 if apps.isEmpty {
                     EmptyStateView(
@@ -215,6 +226,14 @@ struct UnsignedAppsView: View {
         }
     }
     
+    /// Tiêu đề nhỏ của một Section trong List, cùng tông với CardGroup.
+    private func sectionHeader(_ title: LocalizedStringKey, icon: String) -> some View {
+        Label(title, systemImage: icon)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Theme.ink2)
+            .textCase(nil)
+    }
+    
     private func toggleSelection(_ app: ImportedApp) {
         if selectedApps.contains(app.objectID) {
             selectedApps.remove(app.objectID)
@@ -295,7 +314,7 @@ struct UnsignedAppRow: View {
                     onToggleSelection?()
                 } label: {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(isSelected ? .accentColor : .gray)
+                        .foregroundStyle(isSelected ? Color.accentColor : Theme.ink3)
                         .font(.system(size: 24))
                 }
                 .buttonStyle(.plain)
@@ -310,23 +329,23 @@ struct UnsignedAppRow: View {
             } label: {
                 HStack(spacing: 12) {
                     AppIconView(app: app, size: 60)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(app.name ?? "Unknown App")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(app.name ?? L("Unknown App"))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.ink)
                             .lineLimit(1)
                         
                         if let identifier = app.identifier {
                             Text(identifier)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Theme.ink2)
                                 .lineLimit(1)
                         }
                         
                         if let version = app.version {
                             Text("Version \(version)")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Theme.ink3)
                                 .lineLimit(1)
                         }
                     }
@@ -334,7 +353,7 @@ struct UnsignedAppRow: View {
             }
             .buttonStyle(.plain)
             
-            Spacer()
+            Spacer(minLength: 8)
             
             if !isSelectionMode {
                 NavigationLink(destination: SignAppView(app: app), isActive: $navigateToSign) {
@@ -348,18 +367,21 @@ struct UnsignedAppRow: View {
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: "signature")
-                            .font(.system(size: 24))
-                            .foregroundColor(.accentColor)
+                            .font(.system(size: 20, weight: .semibold))
                         Text("Sign")
-                            .font(.caption2)
-                            .foregroundColor(.accentColor)
+                            .font(.caption2.weight(.semibold))
                     }
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 58, height: 54)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Theme.cardAlt)
+                    )
                 }
                 .buttonStyle(.plain)
-                .frame(width: 60)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
         .confirmationDialog("Options", isPresented: $showActionSheet, titleVisibility: .hidden) {
             Button("Sign App") { navigateToSign = true }
             Button("Delete", role: .destructive) { showDeleteAlert = true }
@@ -387,22 +409,22 @@ struct AppIconView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: size, height: size)
-                .background(Color.gray.opacity(0.1))
+                .background(Theme.cardAlt)
                 .clipShape(RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous)
-                        .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                        .strokeBorder(Theme.hairline, lineWidth: 1)
                 )
         } else {
             Image(systemName: "app.fill")
                 .font(.system(size: size * 0.5))
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
                 .frame(width: size, height: size)
                 .background(Color.accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous)
-                        .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                        .strokeBorder(Theme.hairline, lineWidth: 1)
                 )
         }
     }
@@ -445,8 +467,9 @@ struct SignedAppsView: View {
                     Text("Signed").tag(1)
                 }
                 .pickerStyle(.segmented)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 10, trailing: 0))
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             }
             
             // Apps Section
@@ -463,7 +486,12 @@ struct SignedAppsView: View {
             }
             .onDelete(perform: deleteApps)
             }
+            .listRowBackground(Theme.card)
+            .listRowSeparatorTint(Theme.hairline)
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .canvasBackground()
         .overlay {
             if signedApps.isEmpty {
                 EmptyStateView(
@@ -571,9 +599,37 @@ struct SignedAppRow: View {
         guard let url = ipaURL,
               let attr = try? FileManager.default.attributesOfItem(atPath: url.path),
               let size = attr[.size] as? Int64 else {
-            return "Unknown"
+            return L("Unknown")
         }
         return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+    }
+    
+    /// Icon 60pt, bo góc theo tỉ lệ squircle 0.2237 của Apple.
+    @ViewBuilder
+    private var iconView: some View {
+        if let iconImage = loadIcon() {
+            Image(uiImage: iconImage)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .background(Theme.cardAlt)
+                .clipShape(RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous)
+                        .strokeBorder(Theme.hairline, lineWidth: 1)
+                )
+        } else {
+            Image(systemName: "app.fill")
+                .font(.system(size: 60 * 0.5))
+                .foregroundStyle(.white)
+                .frame(width: 60, height: 60)
+                .background(Color.accentColor)
+                .clipShape(RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous)
+                        .strokeBorder(Theme.hairline, lineWidth: 1)
+                )
+        }
     }
     
     var body: some View {
@@ -583,7 +639,7 @@ struct SignedAppRow: View {
                     onToggleSelection?()
                 } label: {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(isSelected ? .accentColor : .gray)
+                        .foregroundStyle(isSelected ? Color.accentColor : Theme.ink3)
                         .font(.system(size: 24))
                 }
                 .buttonStyle(.plain)
@@ -597,46 +653,24 @@ struct SignedAppRow: View {
                 }
             } label: {
                 HStack(spacing: 12) {
-                    if let iconImage = loadIcon() {
-                        Image(uiImage: iconImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 60, height: 60)
-                            .background(Color.gray.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous)
-                                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                    } else {
-                        Image(systemName: "app.fill")
-                            .font(.system(size: 60 * 0.5))
-                            .foregroundColor(.white)
-                            .frame(width: 60, height: 60)
-                            .background(Color.accentColor)
-                            .clipShape(RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous)
-                                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                    }
+                    iconView
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(app.name ?? "Unknown App")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(app.name ?? L("Unknown App"))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.ink)
                         
                         if let identifier = app.identifier {
                             Text(identifier)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Theme.ink2)
                                 .lineLimit(1)
                         }
                         
                         if let version = app.version {
                             Text("Version \(version)")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Theme.ink3)
                         }
                         
                         if let date = app.date {
@@ -646,7 +680,7 @@ struct SignedAppRow: View {
                                 Text(date, style: .date)
                                     .font(.caption2)
                             }
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink3)
                         }
                         
                         if let teamName = certificateDecoded?.TeamName {
@@ -657,7 +691,7 @@ struct SignedAppRow: View {
                                     .font(.caption2)
                                     .lineLimit(1)
                             }
-                            .foregroundColor(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                         }
                         
                         HStack(spacing: 4) {
@@ -666,38 +700,43 @@ struct SignedAppRow: View {
                             Text(fileSize)
                                 .font(.caption2)
                         }
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink3)
                     }
                 }
             }
             .buttonStyle(.plain)
             
-            Spacer()
+            Spacer(minLength: 8)
             
             if !isSelectionMode {
                 Button {
                     installApp()
                 } label: {
-                    if isInstalling {
-                        ProgressView()
-                            .scaleEffect(0.9)
-                    } else {
-                        VStack(spacing: 4) {
-                            Image(systemName: "arrow.down.circle.fill")
-                                .font(.system(size: 28))
-                                .foregroundColor(.accentColor)
-                            Text("Install")
-                                .font(.caption2)
-                                .foregroundColor(.accentColor)
+                    Group {
+                        if isInstalling {
+                            ProgressView()
+                                .scaleEffect(0.9)
+                        } else {
+                            VStack(spacing: 4) {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .font(.system(size: 22, weight: .semibold))
+                                Text("Install")
+                                    .font(.caption2.weight(.semibold))
+                            }
+                            .foregroundStyle(Color.accentColor)
                         }
                     }
+                    .frame(width: 58, height: 54)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Theme.cardAlt)
+                    )
                 }
                 .buttonStyle(.plain)
                 .disabled(isInstalling)
-                .frame(width: 60)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
         .confirmationDialog("Options", isPresented: $showActionSheet, titleVisibility: .hidden) {
             Button("Detail") { showDetailSheet = true }
             Button("Install") { installApp() }
@@ -819,48 +858,58 @@ struct SignedAppDetailView: View {
         guard let url = ipaURL,
               let attr = try? FileManager.default.attributesOfItem(atPath: url.path),
               let size = attr[.size] as? Int64 else {
-            return "Unknown"
+            return L("Unknown")
         }
         return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
     
     var body: some View {
         NavigationView {
-            List {
-                Section("App Information") {
-                    DetailRow(label: "Name", value: app.name ?? "Unknown")
-                    DetailRow(label: "Bundle ID", value: app.identifier ?? "Unknown")
-                    DetailRow(label: "Version", value: app.version ?? "Unknown")
-                    DetailRow(label: "File Size", value: fileSize)
+            CardScreen {
+                CardGroup(L("App Information")) {
+                    DetailRow(label: L("Name"), value: app.name ?? L("Unknown"))
+                    CardDivider(inset: Theme.Metric.cardPadding)
+                    DetailRow(label: L("Bundle ID"), value: app.identifier ?? L("Unknown"))
+                    CardDivider(inset: Theme.Metric.cardPadding)
+                    DetailRow(label: L("Version"), value: app.version ?? L("Unknown"))
+                    CardDivider(inset: Theme.Metric.cardPadding)
+                    DetailRow(label: L("File Size"), value: fileSize)
                     
                     if let date = app.date {
-                        DetailRow(label: "Signed Date", value: date.formatted(date: .long, time: .shortened))
+                        CardDivider(inset: Theme.Metric.cardPadding)
+                        DetailRow(label: L("Signed Date"), value: date.formatted(date: .long, time: .shortened))
                     }
                 }
                 
                 if let decoded = certificateDecoded {
-                    Section("Certificate Information") {
-                        DetailRow(label: "Team Name", value: decoded.TeamName)
-                        DetailRow(label: "Team ID", value: decoded.TeamIdentifier.first ?? "Unknown")
-                        DetailRow(label: "Profile Name", value: decoded.Name)
-                        DetailRow(label: "Expiration", value: decoded.ExpirationDate.formatted(date: .long, time: .omitted))
+                    CardGroup(L("Certificate Information")) {
+                        DetailRow(label: L("Team Name"), value: decoded.TeamName)
+                        CardDivider(inset: Theme.Metric.cardPadding)
+                        DetailRow(label: L("Team ID"), value: decoded.TeamIdentifier.first ?? L("Unknown"))
+                        CardDivider(inset: Theme.Metric.cardPadding)
+                        DetailRow(label: L("Profile Name"), value: decoded.Name)
+                        CardDivider(inset: Theme.Metric.cardPadding)
+                        DetailRow(label: L("Expiration"), value: decoded.ExpirationDate.formatted(date: .long, time: .omitted))
                         
                         if let ppq = decoded.PPQCheck {
-                            DetailRow(label: "PPQ Check", value: ppq ? "Enabled" : "Disabled")
+                            CardDivider(inset: Theme.Metric.cardPadding)
+                            DetailRow(label: L("PPQ Check"), value: ppq ? L("Enabled") : L("Disabled"))
                         }
                     }
                 }
                 
                 if let url = ipaURL {
-                    Section("File Location") {
+                    CardGroup(L("File Location")) {
                         Text(url.path)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, Theme.Metric.cardPadding)
+                            .padding(.vertical, 12)
                     }
                 }
             }
-            .navigationTitle("App Details")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("App Details")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
@@ -878,14 +927,19 @@ struct DetailRow: View {
     let value: String
     
     var body: some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(label)
-                .foregroundColor(.secondary)
-            Spacer()
+                .font(.subheadline)
+                .foregroundStyle(Theme.ink2)
+            Spacer(minLength: 8)
             Text(value)
-                .foregroundColor(.primary)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.trailing)
         }
+        .padding(.horizontal, Theme.Metric.cardPadding)
+        .padding(.vertical, 12)
+        .frame(minHeight: Theme.Metric.rowHeight)
     }
 }
 
@@ -933,43 +987,54 @@ struct BatchSignView: View {
     
     var body: some View {
         ZStack {
-            Form {
-                Section {
-                    Text("\(selectedApps.count) app(s) selected")
-                        .font(.headline)
-                } header: {
-                    Text("Batch Signing")
+            CardScreen {
+                CardGroup(L("Batch Signing")) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "square.stack.3d.up.fill")
+                            .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                            .foregroundStyle(Color.accentColor)
+                            .frame(width: Theme.Metric.iconBox, alignment: .center)
+                        Text("\(selectedApps.count) app(s) selected")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.ink)
+                        Spacer(minLength: 8)
+                    }
+                    .padding(.horizontal, Theme.Metric.cardPadding)
+                    .padding(.vertical, 12)
+                    .frame(minHeight: Theme.Metric.rowHeight)
                 }
                 
-                Section {
-                    ForEach(selectedApps, id: \.objectID) { app in
+                CardGroup(L("Apps & Certificates"),
+                          footnote: L("Customize app info and select certificates. Leave fields empty to keep original values.")) {
+                    ForEach(selectedApps.indices, id: \.self) { index in
+                        let app = selectedApps[index]
+                        
                         VStack(spacing: 12) {
                             HStack(spacing: 12) {
                                 AppIconView(app: app, size: 50)
                                 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(app.name ?? "Unknown")
-                                        .font(.headline)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(app.name ?? L("Unknown"))
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(Theme.ink)
                                         .lineLimit(1)
                                     
                                     if let identifier = app.identifier {
                                         Text(identifier)
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundStyle(Theme.ink2)
                                             .lineLimit(1)
                                     }
                                     
                                     if let version = app.version {
                                         Text("Version \(version)")
                                             .font(.caption2)
-                                            .foregroundColor(.secondary)
+                                            .foregroundStyle(Theme.ink3)
                                     }
                                 }
                                 
-                                Spacer()
+                                Spacer(minLength: 8)
                             }
-                            
-                            Divider()
                             
                             // Custom App Info
                             if !isSigning {
@@ -978,24 +1043,42 @@ struct BatchSignView: View {
                                         get: { appCustomNames[app.objectID] ?? "" },
                                         set: { appCustomNames[app.objectID] = $0 }
                                     ))
-                                    .textFieldStyle(.roundedBorder)
                                     .font(.subheadline)
+                                    .foregroundStyle(Theme.ink)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .fill(Theme.cardAlt)
+                                    )
                                     
                                     TextField("Bundle ID", text: Binding(
                                         get: { appCustomBundleIDs[app.objectID] ?? "" },
                                         set: { appCustomBundleIDs[app.objectID] = $0 }
                                     ))
-                                    .textFieldStyle(.roundedBorder)
                                     .font(.subheadline)
+                                    .foregroundStyle(Theme.ink)
                                     .autocapitalization(.none)
                                     .autocorrectionDisabled()
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .fill(Theme.cardAlt)
+                                    )
                                     
                                     TextField("Version", text: Binding(
                                         get: { appCustomVersions[app.objectID] ?? "" },
                                         set: { appCustomVersions[app.objectID] = $0 }
                                     ))
-                                    .textFieldStyle(.roundedBorder)
                                     .font(.subheadline)
+                                    .foregroundStyle(Theme.ink)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .fill(Theme.cardAlt)
+                                    )
                                 }
                             }
                             
@@ -1022,56 +1105,61 @@ struct BatchSignView: View {
                                 } label: {
                                     HStack {
                                         Image(systemName: "signature")
-                                            .foregroundColor(.accentColor)
+                                            .foregroundStyle(Color.accentColor)
                                         
                                         if let cert = appCertificates[app.objectID] ?? nil {
                                             Text(cert.nickname ?? L("Certificate"))
-                                                .foregroundColor(.primary)
+                                                .font(.subheadline)
+                                                .foregroundStyle(Theme.ink)
                                         } else {
                                             Text("Select Certificate")
-                                                .foregroundColor(.secondary)
+                                                .font(.subheadline)
+                                                .foregroundStyle(Theme.ink2)
                                         }
                                         
                                         Spacer()
                                         
                                         Image(systemName: "chevron.up.chevron.down")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundStyle(Theme.ink3)
                                     }
-                                    .padding(.vertical, 8)
+                                    .padding(.vertical, 10)
                                     .padding(.horizontal, 12)
-                                    .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .fill(Theme.cardAlt)
+                                    )
                                 }
                             } else {
                                 HStack {
                                     Image(systemName: "signature")
-                                        .foregroundColor(.accentColor)
+                                        .foregroundStyle(Color.accentColor)
                                     
                                     if let cert = appCertificates[app.objectID] ?? nil {
                                         Text(cert.nickname ?? L("Certificate"))
-                                            .foregroundColor(.primary)
+                                            .font(.subheadline)
+                                            .foregroundStyle(Theme.ink)
                                     }
                                     
                                     Spacer()
                                 }
-                                .padding(.vertical, 8)
+                                .padding(.vertical, 10)
                                 .padding(.horizontal, 12)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .fill(Theme.cardAlt)
+                                )
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(Theme.Metric.cardPadding)
+                        
+                        if index < selectedApps.count - 1 {
+                            CardDivider(inset: 0)
+                        }
                     }
-                } header: {
-                    Text("Apps & Certificates")
-                } footer: {
-                    Text("Customize app info and select certificates. Leave fields empty to keep original values.")
-                        .font(.caption)
                 }
             }
-            .navigationTitle("Batch Sign")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("Batch Sign")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     if !isSigning {

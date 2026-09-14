@@ -12,115 +12,141 @@ struct StorageManagementView: View {
     @State private var storageSize: String = "Calculating..."
     @State private var isCalculating = false
     
+    /// Nút dọn bị khoá khi đang dọn, đang tính, hoặc không còn gì để xoá.
+    private var isCleanupDisabled: Bool {
+        isCleaningUp || storageSize == "0 bytes" || isCalculating
+    }
+
     var body: some View {
-        Form {
-            // MARK: - Storage Overview Section
-            Section {
-                StorageInfoRow()
-            } header: {
-                Text("Storage Overview")
-            } footer: {
-                Text("Total space used by Zsign app data (excluding certificates)")
-                    .font(.caption)
+        CardScreen {
+            overviewGroup
+            breakdownGroup
+            cleanupGroup
+        }
+        .screenChrome("Storage Management")
+        .onAppear {
+            updateStorageSize()
+        }
+        .alert(Text(String(format: L("Delete %@?"), L(selectedCleanupType.displayName))),
+               isPresented: $showCleanupAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                performCleanup(type: selectedCleanupType)
             }
-            
-            // MARK: - Storage Breakdown Section
-            Section {
-                StorageBreakdownView()
-            } header: {
-                Text("Storage Breakdown")
-            } footer: {
-                Text("Detailed view of storage usage by category")
-                    .font(.caption)
-            }
-            
-            // MARK: - Cleanup Section
-            Section {
-                // Picker for cleanup type
-                Picker("Cleanup Type", selection: $selectedCleanupType) {
+        } message: {
+            Text(L(selectedCleanupType.alertMessage))
+        }
+    }
+
+    // MARK: - Tổng quan dung lượng
+
+    private var overviewGroup: some View {
+        CardGroup(L("Storage Overview"),
+                  footnote: L("Total space used by Zsign app data (excluding certificates)")) {
+            StorageInfoRow()
+                .padding(.horizontal, Theme.Metric.cardPadding)
+                .padding(.vertical, 14)
+        }
+    }
+
+    // MARK: - Chi tiết theo nhóm
+
+    private var breakdownGroup: some View {
+        CardGroup(L("Storage Breakdown"),
+                  footnote: L("Detailed view of storage usage by category")) {
+            StorageBreakdownView()
+                .padding(.horizontal, Theme.Metric.cardPadding)
+                .padding(.vertical, 14)
+        }
+    }
+
+    // MARK: - Dọn dẹp
+
+    private var cleanupGroup: some View {
+        CardGroup(L("Storage Cleanup"),
+                  footnote: L("Certificates will never be deleted. Only app files and temporary data will be removed.")) {
+            // Chọn kiểu dọn
+            CardRow(icon: "trash.fill",
+                    title: L("Cleanup Type"),
+                    iconTint: selectedCleanupType.iconColor) {
+                Picker("", selection: $selectedCleanupType) {
                     ForEach([
                         CleanupType.unsignedApps,
                         CleanupType.signedApps,
                         CleanupType.tempFiles,
                         CleanupType.all
                     ], id: \.self) { type in
-                        Text(type.displayName).tag(type)
+                        Text(L(type.displayName)).tag(type)
                     }
                 }
+                .labelsHidden()
                 .pickerStyle(.menu)
                 .onChange(of: selectedCleanupType) { _ in
                     updateStorageSize()
                 }
-                
-                // Description & Size
-                HStack(spacing: 8) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(selectedCleanupType.description)
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                        
-                        if isCalculating {
-                            HStack(spacing: 6) {
-                                ProgressView()
-                                    .scaleEffect(0.7)
-                                Text("Calculating...")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        } else {
-                            Text(storageSize)
-                                .font(.headline)
-                                .foregroundColor(selectedCleanupType.iconColor)
-                                .bold()
-                        }
-                    }
-                    
-                    Spacer()
-                }
-                .padding(.vertical, 8)
-                
-                // Clean button
-                Button {
-                    showCleanupAlert = true
-                } label: {
-                    HStack {
-                        Spacer()
-                        if isCleaningUp {
+            }
+
+            CardDivider()
+
+            // Mô tả & dung lượng sẽ giải phóng
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L(selectedCleanupType.description))
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.ink)
+
+                    if isCalculating {
+                        HStack(spacing: 6) {
                             ProgressView()
-                                .padding(.trailing, 8)
-                            Text(cleanupMessage)
-                        } else {
-                            Text("Clean Now")
-                                .bold()
+                                .scaleEffect(0.7)
+                            Text("Calculating...")
+                                .font(.caption)
+                                .foregroundStyle(Theme.ink2)
                         }
-                        Spacer()
+                    } else {
+                        Text(storageSize)
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(selectedCleanupType.iconColor)
                     }
                 }
-                .disabled(isCleaningUp || storageSize == "0 bytes" || isCalculating)
-                .foregroundColor(isCleaningUp || storageSize == "0 bytes" || isCalculating ? .gray : .red)
-                
-            } header: {
-                Text("Storage Cleanup")
-            } footer: {
-                Text("Certificates will never be deleted. Only app files and temporary data will be removed.")
-                    .font(.caption)
+
+                Spacer()
             }
-        }
-        .navigationTitle("Storage Management")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            updateStorageSize()
-        }
-        .alert("Delete \(selectedCleanupType.displayName)?", isPresented: $showCleanupAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
-                performCleanup(type: selectedCleanupType)
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.vertical, 12)
+
+            // Nút dọn
+            Button {
+                showCleanupAlert = true
+            } label: {
+                HStack(spacing: 8) {
+                    if isCleaningUp {
+                        ProgressView()
+                            .tint(.white)
+                        Text(L(cleanupMessage))
+                    } else {
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text("Clean Now")
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 15)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(isCleanupDisabled ? Theme.ink3 : Color.red)
+                )
             }
-        } message: {
-            Text(selectedCleanupType.alertMessage)
+            .buttonStyle(.plain)
+            .disabled(isCleanupDisabled)
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.bottom, Theme.Metric.cardPadding)
+            .padding(.top, 2)
         }
     }
-    
+
     // MARK: - Functions
     
     private func updateStorageSize() {
@@ -236,41 +262,42 @@ struct StorageBreakdownView: View {
                         size: breakdown.unsignedAppsSize,
                         color: .orange
                     )
-                    
-                    Divider()
-                    
+
+                    CardDivider(inset: 0)
+
                     StorageBreakdownRow(
                         title: "Signed Apps",
                         size: breakdown.signedAppsSize,
                         color: .accentColor
                     )
-                    
-                    Divider()
-                    
+
+                    CardDivider(inset: 0)
+
                     StorageBreakdownRow(
                         title: "Other Files",
                         size: breakdown.filesSize,
                         color: .green
                     )
-                    
-                    Divider()
-                    
+
+                    CardDivider(inset: 0)
+
                     StorageBreakdownRow(
                         title: "Temp Files",
                         size: breakdown.tempFilesSize,
                         color: .purple
                     )
-                    
-                    Divider()
+
+                    CardDivider(inset: 0)
                         .padding(.vertical, 4)
-                    
+
                     HStack {
                         Text("Total Used")
-                            .font(.headline)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.ink)
                         Spacer()
                         Text(breakdown.totalFormatted)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Theme.ink)
                     }
                 }
             }
@@ -309,16 +336,21 @@ struct StorageBreakdownRow: View {
     }
     
     var body: some View {
-        HStack(spacing: 12) {
-            Text(title)
+        HStack(spacing: 10) {
+            Circle()
+                .fill(size > 0 ? color : Theme.ink3.opacity(0.35))
+                .frame(width: 8, height: 8)
+
+            Text(L(title))
                 .font(.subheadline)
-            
+                .foregroundStyle(Theme.ink)
+
             Spacer()
-            
+
             Text(sizeFormatted)
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(size > 0 ? color : .secondary)
+                .foregroundStyle(size > 0 ? color : Theme.ink2)
         }
     }
 }
@@ -496,33 +528,35 @@ struct StorageInfoRow: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Used")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink2)
                         Text(info.usedSpaceFormatted)
                             .font(.subheadline)
                             .bold()
+                            .foregroundStyle(Theme.ink)
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(alignment: .center, spacing: 4) {
                         Text("Total")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink2)
                         Text(info.totalSpaceFormatted)
                             .font(.subheadline)
                             .bold()
+                            .foregroundStyle(Theme.ink)
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Available")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink2)
                         Text(info.availableSpaceFormatted)
                             .font(.subheadline)
                             .bold()
-                            .foregroundColor(.green)
+                            .foregroundStyle(.green)
                     }
                 }
             }
@@ -561,8 +595,8 @@ struct StorageBar: View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.2))
-                
+                    .fill(Theme.cardAlt)
+
                 RoundedRectangle(cornerRadius: 4)
                     .fill(
                         LinearGradient(

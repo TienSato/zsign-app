@@ -8,6 +8,9 @@
 //    3. Quyền (entitlements) - gom nhóm, có tên dễ hiểu (EntitlementCatalog)
 //    4. UDID thiết bị       - danh sách máy được cấp phép
 //
+//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents) thay cho List.
+//  Danh sách quyền rất dài nên các thẻ quyền dùng LazyVStack.
+//
 
 import SwiftUI
 import UIKit
@@ -23,7 +26,7 @@ struct CertificateDetailView: View {
     @Environment(\.locale) private var locale
 
     var body: some View {
-        List {
+        CardScreen {
             if let provision {
                 p12Section
                 profileSection(provision)
@@ -37,9 +40,7 @@ struct CertificateDetailView: View {
                 }
             }
         }
-        .listStyle(.insetGrouped)
-        .navigationTitle("Certificate Details")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenChrome("Certificate Details")
         .onAppear(perform: load)
     }
 
@@ -47,29 +48,35 @@ struct CertificateDetailView: View {
 
     @ViewBuilder
     private var p12Section: some View {
-        Section {
+        DetailCard(header: SectionHeader(L("Certificate (P12)"),
+                                         icon: "lock.doc",
+                                         color: .accentColor)) {
             if let x509 {
-                CertRow("Common Name", x509.commonName)
-                CertRow("Organization", x509.organization)
-                CertRow("OU", x509.organizationalUnit)
-                CertRow("UID / Team ID", x509.teamID)
-                CertRow("Country", x509.country)
-                CertRow("Serial", x509.serial, mono: true)
-                CertRow("SHA-1", x509.sha1, mono: true, copyable: true)
-                CertRow("Not Before", format(x509.notBefore))
-                CertRow("Not After", format(x509.notAfter),
-                        valueColor: x509.isExpired ? .red : .primary)
-                CertRow("Issuer", x509.issuer)
-                CertRow("OCSP",
-                        certificate.revoked ? L("Revoked") : L("Valid (OCSP verified)"),
-                        valueColor: certificate.revoked ? .red : .green)
+                fieldRows([
+                    CertField(label: "Common Name", value: x509.commonName),
+                    CertField(label: "Organization", value: x509.organization),
+                    CertField(label: "OU", value: x509.organizationalUnit),
+                    CertField(label: "UID / Team ID", value: x509.teamID),
+                    CertField(label: "Country", value: x509.country),
+                    CertField(label: "Serial", value: x509.serial, mono: true),
+                    CertField(label: "SHA-1", value: x509.sha1, mono: true, copyable: true),
+                    CertField(label: "Not Before", value: format(x509.notBefore)),
+                    CertField(label: "Not After", value: format(x509.notAfter),
+                              valueColor: x509.isExpired ? .red : Theme.ink),
+                    CertField(label: "Issuer", value: x509.issuer),
+                    CertField(label: "OCSP",
+                              value: certificate.revoked ? L("Revoked") : L("Valid (OCSP verified)"),
+                              valueColor: certificate.revoked ? .red : .green)
+                ])
             } else {
                 Text("Could not read the X.509 certificate inside this profile.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Theme.Metric.cardPadding)
+                    .padding(.vertical, 14)
             }
-        } header: {
-            SectionHeader(L("Certificate (P12)"), icon: "lock.doc", color: .blue)
         }
     }
 
@@ -77,22 +84,42 @@ struct CertificateDetailView: View {
 
     @ViewBuilder
     private func profileSection(_ p: Certificate) -> some View {
-        Section {
-            CertRow("Name", p.Name)
-            CertRow("App ID Name", p.AppIDName)
-            CertRow("Bundle ID", bundleID(p), mono: true, copyable: true)
-            CertRow("Team", p.TeamName)
-            CertRow("Team ID", p.TeamIdentifier.joined(separator: ", "))
-            CertRow("Type", profileType(p))
-            CertRow("UUID", p.UUID, mono: true, copyable: true)
-            CertRow("Version", "\(p.Version)")
-            CertRow("Creation", format(p.CreationDate))
-            CertRow("Expiration", format(p.ExpirationDate),
-                    valueColor: p.ExpirationDate < Date() ? .red : .primary)
-            CertRow("Devices", "\(p.ProvisionedDevices?.count ?? 0)")
-            CertRow("Platform", p.Platform.joined(separator: ", "))
-        } header: {
-            SectionHeader(L("Provisioning Profile"), icon: "doc.badge.gearshape", color: .red)
+        DetailCard(header: SectionHeader(L("Provisioning Profile"),
+                                         icon: "doc.badge.gearshape",
+                                         color: .accentColor)) {
+            fieldRows([
+                CertField(label: "Name", value: p.Name),
+                CertField(label: "App ID Name", value: p.AppIDName),
+                CertField(label: "Bundle ID", value: bundleID(p), mono: true, copyable: true),
+                CertField(label: "Team", value: p.TeamName),
+                CertField(label: "Team ID", value: p.TeamIdentifier.joined(separator: ", ")),
+                CertField(label: "Type", value: profileType(p)),
+                CertField(label: "UUID", value: p.UUID, mono: true, copyable: true),
+                CertField(label: "Version", value: "\(p.Version)"),
+                CertField(label: "Creation", value: format(p.CreationDate)),
+                CertField(label: "Expiration", value: format(p.ExpirationDate),
+                          valueColor: p.ExpirationDate < Date() ? .red : Theme.ink),
+                CertField(label: "Devices", value: "\(p.ProvisionedDevices?.count ?? 0)"),
+                CertField(label: "Platform", value: p.Platform.joined(separator: ", "))
+            ])
+        }
+    }
+
+    /// Bỏ những dòng không có giá trị rồi mới chèn kẻ mảnh, để thẻ không bao giờ
+    /// có hai đường kẻ dính nhau.
+    @ViewBuilder
+    private func fieldRows(_ fields: [CertField]) -> some View {
+        let shown = fields.filter { !($0.value ?? "").isEmpty }
+
+        ForEach(Array(shown.enumerated()), id: \.element.id) { index, field in
+            if index > 0 {
+                CardDivider(inset: Theme.Metric.cardPadding)
+            }
+            CertRow(field.label,
+                    field.value,
+                    mono: field.mono,
+                    copyable: field.copyable,
+                    valueColor: field.valueColor)
         }
     }
 
@@ -105,12 +132,16 @@ struct CertificateDetailView: View {
         ForEach(EntitlementCategory.allCases, id: \.rawValue) { category in
             let items = entitlements(in: category, granted: granted)
             if !items.isEmpty {
-                Section {
-                    ForEach(items) { item in
+                DetailCard(header: SectionHeader(category.title,
+                                                 icon: category.icon,
+                                                 color: Theme.ink2),
+                           isLazy: true) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        if index > 0 {
+                            CardDivider()
+                        }
                         EntitlementRow(info: item.info, value: item.value)
                     }
-                } header: {
-                    SectionHeader(category.title, icon: category.icon, color: .secondary)
                 }
             }
         }
@@ -137,23 +168,30 @@ struct CertificateDetailView: View {
     @ViewBuilder
     private func deviceSection(_ p: Certificate) -> some View {
         if let devices = p.ProvisionedDevices, !devices.isEmpty {
-            Section {
+            DetailCard(header: SectionHeader(L("Provisioned Devices"),
+                                             icon: "iphone",
+                                             color: .accentColor,
+                                             badge: "\(devices.count)"),
+                       isLazy: true) {
                 ForEach(Array(devices.enumerated()), id: \.offset) { index, udid in
+                    if index > 0 {
+                        CardDivider(inset: Theme.Metric.cardPadding)
+                    }
                     HStack(spacing: 10) {
                         Text("\(index + 1)")
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.ink3)
                             .frame(width: 20, alignment: .leading)
                         Text(udid)
                             .font(.system(.footnote, design: .monospaced))
+                            .foregroundStyle(Theme.ink)
                             .textSelection(.enabled)
                         Spacer(minLength: 8)
                         CopyButton(udid)
                     }
+                    .padding(.horizontal, Theme.Metric.cardPadding)
+                    .padding(.vertical, 10)
                 }
-            } header: {
-                SectionHeader(L("Provisioned Devices"), icon: "iphone",
-                              color: .red, badge: "\(devices.count)")
             }
         }
     }
@@ -215,6 +253,42 @@ struct CertificateDetailView: View {
 
 // MARK: - Thành phần dùng lại trong màn hình này
 
+/// Một phần của màn hình: tiêu đề có icon phía trên + một thẻ chứa các hàng.
+/// Thay cho `Section { } header: { }` của List.
+private struct DetailCard<Content: View>: View {
+    let header: SectionHeader
+    /// Bật cho các thẻ rất dài (danh sách quyền, danh sách UDID) để chỉ dựng
+    /// những hàng thật sự lọt vào khung nhìn.
+    var isLazy: Bool = false
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            header
+                .padding(.horizontal, 4)
+
+            Group {
+                if isLazy {
+                    LazyVStack(spacing: 0) { content }
+                } else {
+                    VStack(spacing: 0) { content }
+                }
+            }
+            .cardStyle(padding: 0)
+        }
+    }
+}
+
+/// Mô tả một dòng nhãn/giá trị trước khi dựng, để lọc dòng rỗng rồi mới chèn kẻ.
+private struct CertField: Identifiable {
+    let id = UUID()
+    let label: LocalizedStringKey
+    let value: String?
+    var mono: Bool = false
+    var copyable: Bool = false
+    var valueColor: Color = Theme.ink
+}
+
 /// Một dòng quyền: thông tin từ danh mục + giá trị thực tế (nil = chưa cấp).
 private struct EntitlementItem: Identifiable {
     let info: EntitlementInfo
@@ -225,10 +299,10 @@ private struct EntitlementItem: Identifiable {
 private struct SectionHeader: View {
     let title: String
     let icon: String
-    var color: Color = .secondary
+    var color: Color = Theme.ink2
     var badge: String? = nil
 
-    init(_ title: String, icon: String, color: Color = .secondary, badge: String? = nil) {
+    init(_ title: String, icon: String, color: Color = Theme.ink2, badge: String? = nil) {
         self.title = title
         self.icon = icon
         self.color = color
@@ -240,12 +314,13 @@ private struct SectionHeader: View {
             Image(systemName: icon)
                 .foregroundStyle(color)
             Text(title)
+                .foregroundStyle(Theme.ink2)
             if let badge {
                 Text("(\(badge))")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.ink3)
             }
         }
-        .font(.subheadline.weight(.semibold))
+        .font(.footnote.weight(.semibold))
         .textCase(nil)
     }
 }
@@ -255,10 +330,10 @@ private struct CertRow: View {
     let value: String?
     var mono: Bool = false
     var copyable: Bool = false
-    var valueColor: Color = .primary
+    var valueColor: Color = Theme.ink
 
     init(_ label: LocalizedStringKey, _ value: String?,
-         mono: Bool = false, copyable: Bool = false, valueColor: Color = .primary) {
+         mono: Bool = false, copyable: Bool = false, valueColor: Color = Theme.ink) {
         self.label = label
         self.value = value
         self.mono = mono
@@ -271,7 +346,7 @@ private struct CertRow: View {
             HStack(alignment: .top, spacing: 10) {
                 Text(label)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.ink2)
                     .frame(width: 112, alignment: .leading)
 
                 Text(value)
@@ -284,7 +359,8 @@ private struct CertRow: View {
                     CopyButton(value)
                 }
             }
-            .padding(.vertical, 1)
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.vertical, 10)
         }
     }
 }
@@ -297,36 +373,42 @@ private struct EntitlementRow: View {
     private var isGranted: Bool { value != nil }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 12) {
             Image(systemName: isGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .foregroundStyle(isGranted ? Color.green : Color.secondary.opacity(0.5))
-                .font(.system(size: 18))
+                .foregroundStyle(isGranted ? Color.green : Theme.ink3)
+                .font(.system(size: Theme.Metric.iconSize))
+                .frame(width: Theme.Metric.iconBox, alignment: .center)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(info.title)
                     .font(.subheadline)
+                    .foregroundStyle(Theme.ink)
 
                 if !info.detail.isEmpty {
                     Text(info.detail)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if let value, !value.isEmpty {
                     Text(value)
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.primary.opacity(0.75))
+                        .foregroundStyle(Theme.ink)
                         .textSelection(.enabled)
                 }
 
                 Text(info.key)
                     .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary.opacity(0.7))
+                    .foregroundStyle(Theme.ink3)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
+
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, 3)
+        .padding(.horizontal, Theme.Metric.cardPadding)
+        .padding(.vertical, 11)
     }
 }
 
@@ -346,7 +428,7 @@ private struct CopyButton: View {
         } label: {
             Image(systemName: copied ? "checkmark" : "doc.on.doc")
                 .font(.footnote)
-                .foregroundStyle(copied ? Color.green : Color.secondary)
+                .foregroundStyle(copied ? Color.green : Theme.ink3)
         }
         .buttonStyle(.plain)
     }

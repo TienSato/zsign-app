@@ -2,6 +2,10 @@
 //  SearchViewModel.swift
 //  zsignapp
 //  Created by Sato on 26/10/25.
+//
+//  Hai màn tìm kiếm (ứng dụng / nguồn) dùng chung một bộ vỏ: thanh tìm kiếm,
+//  màn chờ, màn đang tìm, màn không có kết quả. Chỉ phần KẾT QUẢ là riêng:
+//  ứng dụng dùng ScrollView + LazyVStack, nguồn dùng List (giữ kiểu inset).
 
 import SwiftUI
 import AltSourceKit
@@ -38,6 +42,188 @@ class SearchViewModel: ObservableObject {
     }
 }
 
+// MARK: - Vỏ dùng chung cho hai màn tìm kiếm
+
+/// Thanh tìm kiếm + ba trạng thái rỗng, phần kết quả do màn gọi truyền vào.
+private struct SearchScaffold<Results: View>: View {
+    @ObservedObject var viewModel: SearchViewModel
+    @FocusState.Binding var isFocused: Bool
+    
+    let placeholder: LocalizedStringKey
+    let idleTitle: LocalizedStringKey
+    let idleMessage: LocalizedStringKey
+    let idleFootnote: LocalizedStringKey
+    let noResultsMessage: LocalizedStringKey
+    let hasResults: Bool
+    let results: Results
+    
+    init(viewModel: SearchViewModel,
+         isFocused: FocusState<Bool>.Binding,
+         placeholder: LocalizedStringKey,
+         idleTitle: LocalizedStringKey,
+         idleMessage: LocalizedStringKey,
+         idleFootnote: LocalizedStringKey,
+         noResultsMessage: LocalizedStringKey,
+         hasResults: Bool,
+         @ViewBuilder results: () -> Results) {
+        self._viewModel = ObservedObject(wrappedValue: viewModel)
+        self._isFocused = isFocused
+        self.placeholder = placeholder
+        self.idleTitle = idleTitle
+        self.idleMessage = idleMessage
+        self.idleFootnote = idleFootnote
+        self.noResultsMessage = noResultsMessage
+        self.hasResults = hasResults
+        self.results = results()
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            searchBar
+            
+            Rectangle()
+                .fill(Theme.hairline)
+                .frame(height: 1)
+            
+            if viewModel.isSearching {
+                searchingView
+            } else if !viewModel.hasSearched {
+                idleView
+            } else if !hasResults {
+                noResultsView
+            } else {
+                results
+            }
+        }
+        .background(Theme.canvas.ignoresSafeArea())
+    }
+    
+    // MARK: - Thanh tìm kiếm
+    @ViewBuilder
+    private var searchBar: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                .foregroundStyle(Theme.ink3)
+            
+            TextField(placeholder, text: $viewModel.searchText)
+                .font(.subheadline)
+                .foregroundStyle(Theme.ink)
+                .focused($isFocused)
+                .submitLabel(.search)
+                .onSubmit {
+                    viewModel.performSearch()
+                }
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            
+            if !viewModel.searchText.isEmpty {
+                Button {
+                    viewModel.clearSearch()
+                    isFocused = true
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(Theme.ink3)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            Button {
+                isFocused = false
+                viewModel.performSearch()
+            } label: {
+                Text("Search")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule().fill(
+                            viewModel.searchText.trimmingCharacters(in: .whitespaces).isEmpty
+                            ? Theme.ink3
+                            : Color.accentColor
+                        )
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.searchText.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .padding(.horizontal, Theme.Metric.screenPadding)
+        .padding(.vertical, 12)
+        .background(Theme.card)
+    }
+    
+    // MARK: - Chưa tìm lần nào
+    @ViewBuilder
+    private var idleView: some View {
+        VStack(spacing: 10) {
+            EmptyStateView(title: idleTitle,
+                           systemImage: "magnifyingglass",
+                           message: idleMessage,
+                           style: .compact)
+            
+            Text(idleFootnote)
+                .font(.caption)
+                .foregroundStyle(Theme.ink3)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: - Đang tìm
+    @ViewBuilder
+    private var searchingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.3)
+            
+            Text("Searching...")
+                .font(.subheadline)
+                .foregroundStyle(Theme.ink2)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: - Không có kết quả
+    @ViewBuilder
+    private var noResultsView: some View {
+        VStack(spacing: 16) {
+            EmptyStateView(title: "No Results",
+                           systemImage: "exclamationmark.magnifyingglass",
+                           message: noResultsMessage,
+                           style: .compact)
+            
+            Button {
+                viewModel.clearSearch()
+                isFocused = true
+            } label: {
+                Text("Try Another Search")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Nút "tìm lại từ đầu" dùng ở cuối cả hai danh sách kết quả.
+private struct NewSearchButton: View {
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.counterclockwise")
+                Text("New Search")
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(Color.accentColor)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Search Apps View (Grid Layout)
 struct SearchAppsView: View {
     let apps: [ASRepository.App]
@@ -67,194 +253,64 @@ struct SearchAppsView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Custom Search Bar
-            searchBar
-            
-            Divider()
-            
-            // Content
-            if viewModel.isSearching {
-                searchingView
-            } else if !viewModel.hasSearched {
-                initialView
-            } else if filteredApps.isEmpty {
-                noResultsView
-            } else {
-                resultsGrid
-            }
+        SearchScaffold(
+            viewModel: viewModel,
+            isFocused: $isSearchFieldFocused,
+            placeholder: "Enter app name...",
+            idleTitle: "Search Apps",
+            idleMessage: "Enter app name and tap Search",
+            idleFootnote: "\(apps.count) apps available",
+            noResultsMessage: "No apps found for \"\(viewModel.performedSearchText)\"",
+            hasResults: !filteredApps.isEmpty
+        ) {
+            resultsGrid
         }
-        .navigationTitle("Search Apps")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenChrome("Search Apps")
         .onAppear {
             isSearchFieldFocused = true
         }
     }
     
-    // MARK: - Search Bar
-    @ViewBuilder
-    private var searchBar: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            
-            TextField("Enter app name...", text: $viewModel.searchText)
-                .focused($isSearchFieldFocused)
-                .submitLabel(.search)
-                .onSubmit {
-                    viewModel.performSearch()
-                }
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            
-            if !viewModel.searchText.isEmpty {
-                Button {
-                    viewModel.clearSearch()
-                    isSearchFieldFocused = true
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            Button {
-                isSearchFieldFocused = false
-                viewModel.performSearch()
-            } label: {
-                Text("Search")
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        viewModel.searchText.trimmingCharacters(in: .whitespaces).isEmpty
-                        ? Color.gray
-                        : Color.accentColor
-                    )
-                    .cornerRadius(8)
-            }
-            .disabled(viewModel.searchText.trimmingCharacters(in: .whitespaces).isEmpty)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-    }
-    
-    // MARK: - Initial View
-    @ViewBuilder
-    private var initialView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 70))
-                .foregroundColor(.gray)
-            
-            Text("Search Apps")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("Enter app name and tap Search")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-            
-            Text("\(apps.count) apps available")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, 4)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    // MARK: - Searching View
-    @ViewBuilder
-    private var searchingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-            
-            Text("Searching...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    // MARK: - No Results View
-    @ViewBuilder
-    private var noResultsView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.magnifyingglass")
-                .font(.system(size: 70))
-                .foregroundColor(.orange)
-            
-            Text("No Results")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("No apps found for \"\(viewModel.performedSearchText)\"")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            
-            Button {
-                viewModel.clearSearch()
-                isSearchFieldFocused = true
-            } label: {
-                Text("Try Another Search")
-                    .fontWeight(.semibold)
-                    .foregroundColor(.accentColor)
-            }
-            .padding(.top, 8)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    // MARK: - Results Grid
+    // MARK: - Results (ScrollView + LazyVStack)
     @ViewBuilder
     private var resultsGrid: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Header
                 HStack {
                     Text("RESULTS FOR \"\(viewModel.performedSearchText.uppercased())\"")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.ink2)
                     Spacer()
                     Text("\(filteredApps.count)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.ink3)
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 12)
-                .background(Color(.systemGroupedBackground))
+                .padding(.horizontal, 4)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
                 
-                // Danh sách
                 LazyVStack(spacing: 0) {
-                    ForEach(filteredApps, id: \.currentUniqueId) { app in
+                    ForEach(Array(filteredApps.enumerated()), id: \.element.currentUniqueId) { index, app in
                         VStack(spacing: 0) {
                             SourceAppRow(app: app)
-                            Divider().padding(.leading, 84)
+                            if index < filteredApps.count - 1 {
+                                Divider().padding(.leading, 84)
+                            }
                         }
                     }
                 }
+                .cardStyle(padding: 0)
                 
-                // New Search Button
-                Button {
+                NewSearchButton {
                     viewModel.clearSearch()
                     isSearchFieldFocused = true
-                } label: {
-                    HStack {
-                        Image(systemName: "arrow.counterclockwise")
-                        Text("New Search")
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(.accentColor)
                 }
                 .padding(.top, 20)
             }
+            .padding(.horizontal, Theme.Metric.screenPadding)
+            .padding(.bottom, 32)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.canvas)
     }
 }
 
@@ -282,178 +338,48 @@ struct SearchSourcesView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Custom Search Bar
-            searchBar
-            
-            Divider()
-            
-            // Content
-            if viewModel.isSearching {
-                searchingView
-            } else if !viewModel.hasSearched {
-                initialView
-            } else if filteredSources.isEmpty {
-                noResultsView
-            } else {
-                resultsList
-            }
+        SearchScaffold(
+            viewModel: viewModel,
+            isFocused: $isSearchFieldFocused,
+            placeholder: "Enter source name...",
+            idleTitle: "Search Sources",
+            idleMessage: "Enter source name and tap Search",
+            idleFootnote: "\(sources.count) sources available",
+            noResultsMessage: "No sources found for \"\(viewModel.performedSearchText)\"",
+            hasResults: !filteredSources.isEmpty
+        ) {
+            resultsList
         }
-        .navigationTitle("Search Sources")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenChrome("Search Sources")
         .onAppear {
             isSearchFieldFocused = true
         }
     }
     
-    // MARK: - Search Bar
-    @ViewBuilder
-    private var searchBar: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            
-            TextField("Enter source name...", text: $viewModel.searchText)
-                .focused($isSearchFieldFocused)
-                .submitLabel(.search)
-                .onSubmit {
-                    viewModel.performSearch()
-                }
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            
-            if !viewModel.searchText.isEmpty {
-                Button {
-                    viewModel.clearSearch()
-                    isSearchFieldFocused = true
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            Button {
-                isSearchFieldFocused = false
-                viewModel.performSearch()
-            } label: {
-                Text("Search")
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        viewModel.searchText.trimmingCharacters(in: .whitespaces).isEmpty
-                        ? Color.gray
-                        : Color.accentColor
-                    )
-                    .cornerRadius(8)
-            }
-            .disabled(viewModel.searchText.trimmingCharacters(in: .whitespaces).isEmpty)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-    }
-    
-    // MARK: - Initial View
-    @ViewBuilder
-    private var initialView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 70))
-                .foregroundColor(.gray)
-            
-            Text("Search Sources")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("Enter source name and tap Search")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-            
-            Text("\(sources.count) sources available")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, 4)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    // MARK: - Searching View
-    @ViewBuilder
-    private var searchingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-            
-            Text("Searching...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    // MARK: - No Results View
-    @ViewBuilder
-    private var noResultsView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.magnifyingglass")
-                .font(.system(size: 70))
-                .foregroundColor(.orange)
-            
-            Text("No Results")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("No sources found for \"\(viewModel.performedSearchText)\"")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            
-            Button {
-                viewModel.clearSearch()
-                isSearchFieldFocused = true
-            } label: {
-                Text("Try Another Search")
-                    .fontWeight(.semibold)
-                    .foregroundColor(.accentColor)
-            }
-            .padding(.top, 8)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    // MARK: - Results List
+    // MARK: - Results (List giữ nguyên)
     @ViewBuilder
     private var resultsList: some View {
         List {
             Section {
                 ForEach(filteredSources) { source in
                     SourceCellView(source: source)
+                        .listRowBackground(Theme.card)
                 }
             } header: {
                 HStack {
                     Text("RESULTS FOR \"\(viewModel.performedSearchText.uppercased())\"")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.ink2)
                     Spacer()
                     Text("\(filteredSources.count)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.ink3)
                 }
             } footer: {
                 if filteredSources.count > 0 {
-                    Button {
+                    NewSearchButton {
                         viewModel.clearSearch()
                         isSearchFieldFocused = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "arrow.counterclockwise")
-                            Text("New Search")
-                        }
-                        .font(.subheadline)
-                        .foregroundColor(.accentColor)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 12)
@@ -461,5 +387,7 @@ struct SearchSourcesView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Theme.canvas)
     }
 }

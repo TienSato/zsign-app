@@ -2,6 +2,7 @@
 //  LanguagePickerView.swift
 //  zsignapp
 //  Màn chọn ngôn ngữ: dùng cho cả lần đầu mở app và trong Cài đặt → Giao diện.
+//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents).
 //
 
 import SwiftUI
@@ -16,18 +17,22 @@ private struct LanguageRow: View {
         HStack(spacing: 12) {
             Text(language.flag)
                 .font(.system(size: 22))
-                .frame(width: 28)
+                .frame(width: Theme.Metric.iconBox, alignment: .center)
             Text(language.displayName)
-                .foregroundStyle(.primary)
-            Spacer()
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Theme.ink)
+            Spacer(minLength: 8)
             if isSelected {
                 Image(systemName: "checkmark")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Color.accentColor)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
+        .padding(.horizontal, Theme.Metric.cardPadding)
+        .padding(.vertical, 12)
+        .frame(minHeight: Theme.Metric.rowHeight)
+        // Hai dòng dưới BẮT BUỘC giữ: thiếu là hàng không bấm được.
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
     }
 }
@@ -38,33 +43,23 @@ struct LanguageSettingsView: View {
     @ObservedObject private var loc = LocalizationManager.shared
 
     var body: some View {
-        Form {
-            Section {
-                ForEach(AppLanguage.allCases) { lang in
+        CardScreen {
+            CardGroup(footnote: L("The app switches language immediately. Choosing Follow System uses your device language.")) {
+                ForEach(Array(AppLanguage.allCases.enumerated()), id: \.element.id) { idx, lang in
                     Button {
                         loc.language = lang
                     } label: {
-                        HStack(spacing: 12) {
-                            Text(lang.flag).font(.system(size: 20)).frame(width: 26)
-                            Text(lang.displayName).foregroundStyle(.primary)
-                            Spacer()
-                            if loc.language == lang {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(Color.accentColor)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
+                        LanguageRow(language: lang, isSelected: loc.language == lang)
                     }
                     .buttonStyle(.plain)
+
+                    if idx < AppLanguage.allCases.count - 1 {
+                        CardDivider()
+                    }
                 }
-            } footer: {
-                Text("The app switches language immediately. Choosing Follow System uses your device language.")
             }
         }
-        .navigationTitle("Language")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenChrome("Language")
     }
 }
 
@@ -86,11 +81,12 @@ struct FirstLaunchLanguageView: View {
 
             Text("Choose Language")
                 .font(.title2).bold()
+                .foregroundStyle(Theme.ink)
                 .padding(.top, 18)
 
             Text("You can change this later in Settings.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.ink2)
                 .multilineTextAlignment(.center)
                 .padding(.top, 5)
                 .padding(.horizontal, 34)
@@ -105,32 +101,25 @@ struct FirstLaunchLanguageView: View {
                     .buttonStyle(.plain)
 
                     if idx < AppLanguage.allCases.count - 1 {
-                        Divider().padding(.leading, 56)
+                        CardDivider()
                     }
                 }
             }
-            .background(Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .cardStyle(padding: 0)
             .padding(.horizontal, 20)
             .padding(.top, 26)
 
             Spacer()
 
-            Button {
+            FilledButton(title: L("Continue")) {
                 loc.language = selection
                 loc.hasChosen = true
                 onDone()
-            } label: {
-                Text("Continue")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
             .padding(.horizontal, 20)
             .padding(.bottom, 26)
         }
-        .background(Color(.systemBackground).ignoresSafeArea())
+        .background(Theme.canvas.ignoresSafeArea())
         .interactiveDismissDisabled(true)
     }
 }

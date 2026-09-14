@@ -19,11 +19,11 @@ extension Image {
             .resizable()
             .scaledToFit()
             .frame(width: size, height: size)
-            .background(Color.gray.opacity(0.1))
+            .background(Theme.cardAlt)
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: lineWidth)
+                    .strokeBorder(Theme.hairline, lineWidth: lineWidth)
             )
     }
 }

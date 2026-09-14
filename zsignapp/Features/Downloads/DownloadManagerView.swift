@@ -4,6 +4,10 @@
 //
 //  Created by Sato on 13/1/26.
 //
+//  Màn hình tải IPA: nhập link, xem hàng đợi tải, và trình duyệt nhúng để
+//  bấm nút tải trên trang web. Giao diện SwiftUI bao quanh dựng bằng bộ thẻ
+//  dùng chung (Theme + CardComponents); phần cầu nối WKWebView giữ nguyên.
+//
 
 import SwiftUI
 import WebKit
@@ -22,66 +26,16 @@ struct DownloadManagerView: View {
     @State private var isProcessing = false
     
     var body: some View {
-        NavigationView {
-            Form {
-                Section {
-                    TextField("https://example.com/app.ipa", text: $downloadURL)
-                        .autocapitalization(.none)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                        .textContentType(.URL)
-                    
-                    TextField("Custom file name (optional)", text: $customFileName)
-                        .autocapitalization(.none)
-                        .autocorrectionDisabled()
-                } header: {
-                    Text("Download Information")
-                } footer: {
-                    Text("Paste any link. Browser opens - click download to start.")
-                }
-                
+        NavigationStack {
+            CardScreen {
+                urlGroup
                 if !downloadManager.downloads.isEmpty {
-                    Section("Active Downloads") {
-                        ForEach(downloadManager.downloads) { download in
-                            DownloadProgressRow(download: download)
-                        }
-                    }
+                    downloadsGroup
                 }
-                
-                Section {
-                    Button {
-                        startDownload()
-                    } label: {
-                        HStack {
-                            Spacer()
-                            if isProcessing {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                Text("Processing...")
-                                    .fontWeight(.semibold)
-                            } else {
-                                Text(downloadManager.downloads.isEmpty ? "Start Download" : "Add to Queue")
-                                    .fontWeight(.semibold)
-                            }
-                            Spacer()
-                        }
-                    }
-                    .disabled(downloadURL.isEmpty || !isValidURL(downloadURL) || isProcessing)
-                }
-                
-                Section {
-                    HStack(spacing: 8) {
-                        Image(systemName: "")
-                            .foregroundColor(.accentColor)
-                            .font(.caption)
-                        Text("Supports direct download links")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                startButton
+                hintFootnote
             }
-            .navigationTitle("Download IPA")
-            .navigationBarTitleDisplayMode(.inline)
+            .screenChrome("Download IPA")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
@@ -90,7 +44,7 @@ struct DownloadManagerView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK") {}
             } message: {
-                Text(errorMessage)
+                Text(L(errorMessage))
             }
             .sheet(isPresented: $showWebView) {
                 if let url = webViewURL {
@@ -110,7 +64,112 @@ struct DownloadManagerView: View {
             }
         }
     }
-    
+
+    // MARK: - Ô nhập liên kết
+
+    private var urlGroup: some View {
+        CardGroup(L("Download Information"),
+                  footnote: L("Paste any link. Browser opens - click download to start.")) {
+            HStack(spacing: 12) {
+                Image(systemName: "link")
+                    .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: Theme.Metric.iconBox, alignment: .center)
+
+                TextField("https://example.com/app.ipa", text: $downloadURL)
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled()
+                    .keyboardType(.URL)
+                    .textContentType(.URL)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.ink)
+            }
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.vertical, 12)
+            .frame(minHeight: Theme.Metric.rowHeight)
+
+            CardDivider()
+
+            HStack(spacing: 12) {
+                Image(systemName: "textformat")
+                    .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: Theme.Metric.iconBox, alignment: .center)
+
+                TextField("Custom file name (optional)", text: $customFileName)
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled()
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.ink)
+            }
+            .padding(.horizontal, Theme.Metric.cardPadding)
+            .padding(.vertical, 12)
+            .frame(minHeight: Theme.Metric.rowHeight)
+        }
+    }
+
+    // MARK: - Hàng đợi đang tải
+
+    private var downloadsGroup: some View {
+        CardGroup(L("Active Downloads")) {
+            ForEach(Array(downloadManager.downloads.enumerated()), id: \.element.id) { index, download in
+                if index > 0 {
+                    CardDivider()
+                }
+                DownloadProgressRow(download: download)
+                    .padding(.horizontal, Theme.Metric.cardPadding)
+                    .padding(.vertical, 12)
+            }
+        }
+    }
+
+    // MARK: - Nút bắt đầu
+
+    private var startButton: some View {
+        Button {
+            startDownload()
+        } label: {
+            HStack(spacing: 8) {
+                if isProcessing {
+                    ProgressView()
+                        .tint(.white)
+                    Text("Processing...")
+                        .font(.subheadline.weight(.semibold))
+                } else {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text(downloadManager.downloads.isEmpty ? L("Start Download") : L("Add to Queue"))
+                        .font(.subheadline.weight(.semibold))
+                }
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.accentColor.opacity(
+                        (downloadURL.isEmpty || !isValidURL(downloadURL) || isProcessing) ? 0.5 : 1))
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(downloadURL.isEmpty || !isValidURL(downloadURL) || isProcessing)
+    }
+
+    // MARK: - Ghi chú cuối màn
+
+    private var hintFootnote: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "info.circle")
+                .foregroundStyle(Color.accentColor)
+                .font(.caption)
+            Text("Supports direct download links")
+                .font(.caption)
+                .foregroundStyle(Theme.ink3)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 4)
+    }
+
     private func isValidURL(_ string: String) -> Bool {
         // ✅ NEW: Support itms-services
         if string.lowercased().hasPrefix("itms-services://") {
@@ -272,25 +331,26 @@ struct DownloadWebView: View {
                     Button { coordinator.goBack() } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(canGoBack ? .accentColor : .gray)
+                            .foregroundStyle(canGoBack ? Color.accentColor : Theme.ink3)
                     }
                     .disabled(!canGoBack)
                     
                     Button { coordinator.goForward() } label: {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(canGoForward ? .accentColor : .gray)
+                            .foregroundStyle(canGoForward ? Color.accentColor : Theme.ink3)
                     }
                     .disabled(!canGoForward)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(pageTitle.isEmpty ? "Loading..." : pageTitle)
+                        Text(pageTitle.isEmpty ? L("Loading...") : pageTitle)
                             .font(.caption)
                             .fontWeight(.medium)
+                            .foregroundStyle(Theme.ink)
                             .lineLimit(1)
                         Text(coordinator.currentURL?.host ?? url.host ?? "")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Theme.ink2)
                             .lineLimit(1)
                     }
                     
@@ -302,13 +362,13 @@ struct DownloadWebView: View {
                         Button { coordinator.reload() } label: {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.accentColor)
+                                .foregroundStyle(Color.accentColor)
                         }
                     }
                 }
                 .padding()
-                .background(Color(.systemBackground))
-                .overlay(Rectangle().fill(Color(.separator)).frame(height: 0.5), alignment: .bottom)
+                .background(Theme.card)
+                .overlay(Rectangle().fill(Theme.hairline).frame(height: 1), alignment: .bottom)
                 
                 SimpleWebView(
                     url: url,
@@ -328,14 +388,14 @@ struct DownloadWebView: View {
                 
                 HStack(spacing: 8) {
                     Image(systemName: "hand.tap.fill")
-                        .foregroundColor(.accentColor)
+                        .foregroundStyle(Color.accentColor)
                         .font(.caption)
                     Text("Click download - progress will show in the list above")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(Theme.ink2)
                 }
                 .padding()
-                .background(Color(.secondarySystemGroupedBackground))
+                .background(Theme.cardAlt)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -552,30 +612,44 @@ struct DownloadProgressRow: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: iconName).foregroundColor(iconColor).font(.title2)
+            HStack(spacing: 12) {
+                Image(systemName: iconName)
+                    .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+                    .foregroundStyle(iconColor)
+                    .frame(width: Theme.Metric.iconBox, alignment: .center)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(download.appName).font(.headline).lineLimit(1)
-                    Text(statusText).font(.caption).foregroundColor(.secondary)
+                    Text(download.appName)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Theme.ink)
+                        .lineLimit(1)
+                    Text(L(statusText))
+                        .font(.caption)
+                        .foregroundStyle(Theme.ink2)
                 }
-                Spacer()
+                Spacer(minLength: 8)
                 if download.status == .downloading {
                     Button { DownloadManager.shared.cancelDownload(download) } label: {
-                        Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.red)
                     }
+                    .buttonStyle(.plain)
                 }
             }
             if download.status == .downloading || download.status == .importing {
                 ProgressView(value: download.progress).tint(.accentColor)
                 HStack {
                     Text(ByteCountFormatter.string(fromByteCount: download.bytesDownloaded, countStyle: .file))
-                        .font(.caption2).foregroundColor(.secondary)
+                        .font(.caption2).foregroundStyle(Theme.ink3)
                     if download.totalBytes > 0 {
                         Text("/ \(ByteCountFormatter.string(fromByteCount: download.totalBytes, countStyle: .file))")
-                            .font(.caption2).foregroundColor(.secondary)
+                            .font(.caption2).foregroundStyle(Theme.ink3)
                     }
                     Spacer()
-                    Text("\(Int(download.progress * 100))%").font(.caption).fontWeight(.bold)
+                    Text("\(Int(download.progress * 100))%")
+                        .font(.caption.weight(.bold))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.ink2)
                 }
             }
         }
@@ -592,15 +666,26 @@ struct DownloadListRow: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: iconName).foregroundColor(iconColor)
+            HStack(spacing: 12) {
+                Image(systemName: iconName)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(iconColor)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(download.appName).font(.subheadline).fontWeight(.medium).lineLimit(1)
-                    Text(statusText).font(.caption2).foregroundColor(.secondary)
+                    Text(download.appName)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(Theme.ink)
+                        .lineLimit(1)
+                    Text(L(statusText))
+                        .font(.caption2)
+                        .foregroundStyle(Theme.ink2)
                 }
-                Spacer()
+                Spacer(minLength: 8)
                 if download.status == .downloading || download.status == .importing {
-                    Text("\(Int(download.progress * 100))%").font(.caption).fontWeight(.bold).foregroundColor(iconColor)
+                    Text("\(Int(download.progress * 100))%")
+                        .font(.caption.weight(.bold))
+                        .monospacedDigit()
+                        .foregroundStyle(iconColor)
                 }
             }
             if download.status == .downloading || download.status == .importing {
@@ -632,7 +717,7 @@ extension Download.DownloadStatus {
         case .importing: return .orange
         case .completed: return .green
         case .failed: return .red
-        case .cancelled: return .gray
+        case .cancelled: return Theme.ink3
         }
     }
 

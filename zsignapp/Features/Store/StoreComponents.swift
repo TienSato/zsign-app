@@ -136,7 +136,7 @@ struct RatingBar: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.2))
+                        .fill(Theme.cardAlt)
                         .frame(height: 4)
                     
                     Rectangle()
