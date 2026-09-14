@@ -2,18 +2,21 @@
 //  ProgressOverlay.swift
 //  zsignapp
 //
-//  Hộp thoại tiến trình dùng chung cho TOÀN BỘ app: nhập IPA, ký, ký hàng loạt,
+//  Lớp phủ tiến trình dùng chung cho TOÀN BỘ app: nhập IPA, ký, ký hàng loạt,
 //  tự động ký & cài, kiểm tra chứng chỉ, xuất chứng chỉ...
 //
-//  Muốn đổi giao diện hộp thoại tiến trình ở bất kỳ đâu trong app thì SỬA
-//  DUY NHẤT FILE NÀY. Các màn hình chỉ truyền nội dung vào, không tự vẽ hộp.
+//  Muốn đổi giao diện lớp phủ tiến trình ở bất kỳ đâu trong app thì SỬA
+//  DUY NHẤT FILE NÀY. Các màn hình chỉ truyền nội dung vào, không tự vẽ.
+//
+//  Bố cục: làm mờ nền màn hình, KHÔNG có hộp/thẻ. Icon app đập theo nhịp ở
+//  giữa, nội dung tiến trình nằm bên dưới.
 //
 //  Cách dùng:
 //      if isImporting {
-//          ProgressOverlay(title: "Importing", step: L(importStep), progress: importProgress)
+//          ProgressOverlay(title: "Importing App", step: L(importStep), progress: importProgress)
 //      }
 //
-//  - progress = nil  -> chỉ xoay icon, không có thanh (việc không đo được tiến độ)
+//  - progress = nil  -> chỉ có icon đập, không có thanh (việc không đo được tiến độ)
 //  - progress != nil -> có thanh + phần trăm bên dưới
 //
 
@@ -31,100 +34,70 @@ struct ProgressOverlay: View {
     /// Nhãn phụ bên trái thanh, ví dụ "3/10".
     var trailingLabel: String? = nil
 
-    @State private var isSpinning = false
+    @State private var beat = false
 
-    private let iconSize: CGFloat = 64
+    private let iconSize: CGFloat = 78
     private let barWidth: CGFloat = 220
 
     var body: some View {
         ZStack {
-            backdrop
-            card
+            // Làm mờ toàn bộ màn hình phía sau và chặn mọi thao tác chạm.
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { }
+
+            VStack(spacing: 26) {
+                icon
+                labels
+                if let progress {
+                    progressBar(progress)
+                }
+            }
+            .padding(.horizontal, 32)
         }
-        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+        .transition(.opacity)
     }
 
-    // MARK: - Nền
+    // MARK: - Icon đập theo nhịp
 
-    /// Làm mờ toàn bộ màn hình phía sau và chặn mọi thao tác chạm.
-    private var backdrop: some View {
-        Rectangle()
-            .fill(.ultraThinMaterial)
-            .overlay(Color.black.opacity(0.20))
-            .ignoresSafeArea()
-            .contentShape(Rectangle())
-            .onTapGesture { }   // nuốt cú chạm, không cho bấm xuyên xuống dưới
+    private var icon: some View {
+        Image("IconPreviewDefault")
+            .resizable()
+            .scaledToFit()
+            .frame(width: iconSize, height: iconSize)
+            .clipShape(RoundedRectangle(cornerRadius: iconSize * 0.2237, style: .continuous))
+            .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
+            .scaleEffect(beat ? 1.08 : 0.94)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true)) {
+                    beat = true
+                }
+            }
     }
 
-    // MARK: - Thẻ nội dung
+    // MARK: - Chữ
 
-    private var card: some View {
-        VStack(spacing: 18) {
-            spinningIcon
+    private var labels: some View {
+        VStack(spacing: 6) {
+            Text(title)
+                .font(.headline)
+                .multilineTextAlignment(.center)
 
-            VStack(spacing: 6) {
-                Text(title)
-                    .font(.headline)
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+
+            if let step, !step.isEmpty {
+                Text(step)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-
-                if let subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
-
-                if let step, !step.isEmpty {
-                    Text(step)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-            }
-
-            if let progress {
-                progressBar(progress)
-            }
-        }
-        .padding(.horizontal, 32)
-        .padding(.vertical, 28)
-        .frame(maxWidth: 320)
-        .adaptiveGlass(cornerRadius: 24)
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.28), radius: 28, y: 10)
-        .padding(.horizontal, 24)
-    }
-
-    // MARK: - Icon xoay
-
-    private var spinningIcon: some View {
-        ZStack {
-            // quầng sáng theo màu chủ đạo người dùng chọn
-            Circle()
-                .fill(Color.accentColor.opacity(0.22))
-                .frame(width: iconSize * 1.5, height: iconSize * 1.5)
-                .blur(radius: 18)
-
-            Image("IconPreviewDefault")
-                .resizable()
-                .scaledToFit()
-                .frame(width: iconSize, height: iconSize)
-                .clipShape(RoundedRectangle(cornerRadius: iconSize * 0.2237, style: .continuous))
-                .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
-                .rotation3DEffect(
-                    .degrees(isSpinning ? 360 : 0),
-                    axis: (x: 0, y: 1, z: 0),
-                    perspective: 0.35
-                )
-        }
-        .frame(height: iconSize * 1.5)
-        .onAppear {
-            withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
-                isSpinning = true
             }
         }
     }
@@ -137,12 +110,12 @@ struct ProgressOverlay: View {
         return VStack(spacing: 8) {
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.primary.opacity(0.12))
-                    .frame(height: 6)
+                    .fill(Color.primary.opacity(0.14))
+                    .frame(height: 5)
 
                 Capsule()
                     .fill(Color.accentColor)
-                    .frame(width: barWidth * clamped, height: 6)
+                    .frame(width: barWidth * clamped, height: 5)
                     .animation(.linear(duration: 0.3), value: clamped)
             }
             .frame(width: barWidth)
