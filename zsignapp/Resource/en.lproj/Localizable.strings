@@ -792,3 +792,6 @@
 
 /* Store: cache + nguon */
 "Loading apps..." = "Loading apps...";
+
+/* Tim ung dung ngay tren man Store */
+"No app matches what you typed" = "No app matches what you typed";

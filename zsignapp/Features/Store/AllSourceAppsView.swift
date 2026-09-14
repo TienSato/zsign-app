@@ -17,19 +17,35 @@ private struct StoreAppsList: View {
     let apps: [StoreApp]
     /// Hiện tên nguồn ở mỗi dòng (tắt khi đang xem đúng một nguồn).
     var showsSource: Bool = true
+    /// Do nút kính lúp trên thanh công cụ bật/tắt.
+    @Binding var isSearching: Bool
+
+    @State private var query = ""
+    /// nil = không lọc, hiện tất cả. Lưu sẵn kết quả thay vì lọc trong body.
+    @State private var results: [StoreApp]?
+    @FocusState private var focused: Bool
+
+    private var visible: [StoreApp] { results ?? apps }
 
     var body: some View {
-        // Tính MỘT lần cho cả danh sách thay vì gọi apps.count trong vòng lặp.
-        let firstID = apps.first?.id
+        // Tính MỘT lần cho cả danh sách thay vì gọi trong vòng lặp.
+        let list = visible
+        let firstID = list.first?.id
 
         ScrollView {
             VStack(spacing: 0) {
+                if isSearching {
+                    searchBar
+                        .padding(.top, 10)
+                        .padding(.bottom, 4)
+                }
+
                 HStack {
-                    Text("APPS")
+                    Text(isSearching && !query.isEmpty ? "RESULTS" : "APPS")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(Theme.ink2)
                     Spacer()
-                    Text("\(apps.count)")
+                    Text("\(list.count)")
                         .font(.footnote)
                         .foregroundStyle(Theme.ink3)
                 }
@@ -37,21 +53,106 @@ private struct StoreAppsList: View {
                 .padding(.top, 12)
                 .padding(.bottom, 8)
 
-                LazyVStack(spacing: 0) {
-                    // Duyệt thẳng mảng: không Array(enumerated()), không dựng
-                    // lại chuỗi id cho từng phần tử ở mỗi lần vẽ.
-                    ForEach(apps) { item in
-                        SourceAppRow(item: item,
-                                     showsSource: showsSource,
-                                     showsDivider: item.id != firstID)
+                if list.isEmpty {
+                    EmptyStateView(
+                        title: "No Results",
+                        systemImage: "magnifyingglass",
+                        message: "No app matches what you typed",
+                        style: .compact
+                    )
+                    .padding(.top, 40)
+                } else {
+                    LazyVStack(spacing: 0) {
+                        // Duyệt thẳng mảng: không Array(enumerated()), không dựng
+                        // lại chuỗi id cho từng phần tử ở mỗi lần vẽ.
+                        ForEach(list) { item in
+                            SourceAppRow(item: item,
+                                         showsSource: showsSource,
+                                         showsDivider: item.id != firstID)
+                        }
                     }
+                    .cardStyle(padding: 0)
                 }
-                .cardStyle(padding: 0)
             }
             .padding(.horizontal, Theme.Metric.screenPadding)
             .padding(.bottom, 32)
         }
         .background(Theme.canvas.ignoresSafeArea())
+        .scrollDismissesKeyboard(.interactively)
+        // Đổi query hoặc đổi danh sách nguồn thì lọc lại. .task(id:) tự huỷ
+        // lượt trước nên việc chờ 220ms bên dưới thành ra là chống gõ dồn.
+        .task(id: "\(query)#\(apps.count)") { await applyFilter() }
+        .onChange(of: isSearching) { searching in
+            if searching {
+                focused = true
+            } else {
+                query = ""
+                results = nil
+            }
+        }
+    }
+
+    // MARK: - Thanh tìm kiếm ngay tại chỗ
+
+    private var searchBar: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.ink3)
+
+                TextField("Search apps", text: $query)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.ink)
+                    .focused($focused)
+                    .submitLabel(.search)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+
+                if !query.isEmpty {
+                    Button { query = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 15))
+                            .foregroundStyle(Theme.ink3)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 13)
+            .padding(.vertical, 10)
+            .background(Capsule().fill(Theme.card))
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isSearching = false }
+            } label: {
+                Text("Cancel")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.accentColor)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Lọc
+
+    private func applyFilter() async {
+        let term = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !term.isEmpty else {
+            results = nil
+            return
+        }
+
+        // Chờ một nhịp: gõ tiếp thì .task(id:) huỷ lượt này, không lọc thừa.
+        try? await Task.sleep(nanoseconds: 220_000_000)
+        guard !Task.isCancelled else { return }
+
+        let source = apps
+        let filtered = await Task.detached(priority: .userInitiated) {
+            source.filter { $0.searchName.contains(term) }
+        }.value
+
+        guard !Task.isCancelled else { return }
+        results = filtered
     }
 }
 
@@ -59,6 +160,7 @@ private struct StoreAppsList: View {
 struct AllSourceAppsView: View {
     @EnvironmentObject private var viewModel: SourcesViewModel
     @EnvironmentObject private var sourcesCache: SourcesCacheManager
+    @State private var isSearching = false
     
     private var sources: [AltSource] {
         sourcesCache.cachedSources
@@ -89,10 +191,11 @@ struct AllSourceAppsView: View {
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink {
-                    SearchAppsView(apps: allApps)
+                // Mở ô tìm ngay trên màn này, không đẩy sang màn khác.
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { isSearching.toggle() }
                 } label: {
-                    Image(systemName: "magnifyingglass")
+                    Image(systemName: isSearching ? "magnifyingglass.circle.fill" : "magnifyingglass")
                 }
             }
         }
@@ -123,7 +226,7 @@ struct AllSourceAppsView: View {
     
     @ViewBuilder
     private var appsListContent: some View {
-        StoreAppsList(apps: allApps)
+        StoreAppsList(apps: allApps, isSearching: $isSearching)
     }
     
     @ViewBuilder
@@ -1242,6 +1345,7 @@ struct AddSourceView: View {
 struct SourceAppsView: View {
     let sources: [AltSource]
     @ObservedObject var viewModel: SourcesViewModel
+    @State private var isSearching = false
     
     private var navigationTitle: String {
         if sources.count == 1 {
@@ -1261,17 +1365,19 @@ struct SourceAppsView: View {
     }
 
     var body: some View {
-        StoreAppsList(apps: allApps, showsSource: sources.count > 1)
+        StoreAppsList(apps: allApps,
+                      showsSource: sources.count > 1,
+                      isSearching: $isSearching)
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Theme.canvas, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink {
-                        SearchAppsView(apps: allApps)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) { isSearching.toggle() }
                     } label: {
-                        Image(systemName: "magnifyingglass")
+                        Image(systemName: isSearching ? "magnifyingglass.circle.fill" : "magnifyingglass")
                     }
                 }
             }

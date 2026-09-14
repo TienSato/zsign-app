@@ -3,9 +3,8 @@
 //  zsignapp
 //  Created by Sato on 26/10/25.
 //
-//  Hai màn tìm kiếm (ứng dụng / nguồn) dùng chung một bộ vỏ: thanh tìm kiếm,
-//  màn chờ, màn đang tìm, màn không có kết quả. Chỉ phần KẾT QUẢ là riêng:
-//  ứng dụng dùng ScrollView + LazyVStack, nguồn dùng List (giữ kiểu inset).
+//  Màn tìm NGUỒN. Tìm ỨNG DỤNG đã chuyển thành ô nhập ngay trên màn Store
+//  (xem StoreAppsList trong AllSourceAppsView.swift) nên không còn màn riêng.
 
 import SwiftUI
 import AltSourceKit
@@ -221,90 +220,6 @@ private struct NewSearchButton: View {
             .foregroundStyle(Color.accentColor)
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Search Apps View (Grid Layout)
-struct SearchAppsView: View {
-    let apps: [StoreApp]
-    
-    @Environment(\.dismiss) var dismiss
-    @StateObject private var viewModel = SearchViewModel()
-    @FocusState private var isSearchFieldFocused: Bool
-    
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
-    
-    private var filteredApps: [StoreApp] {
-        guard viewModel.hasSearched else { return [] }
-
-        let searchTerm = viewModel.performedSearchText
-            .trimmingCharacters(in: .whitespaces)
-            .lowercased()
-        guard !searchTerm.isEmpty else { return [] }
-
-        // So trên chuỗi đã hạ chữ hoa sẵn lúc dựng danh sách — nhanh hơn
-        // localizedCaseInsensitiveContains rất nhiều trên hàng chục nghìn mục.
-        return apps.filter { $0.searchName.contains(searchTerm) }
-    }
-    
-    var body: some View {
-        SearchScaffold(
-            viewModel: viewModel,
-            isFocused: $isSearchFieldFocused,
-            placeholder: "Enter app name...",
-            idleTitle: "Search Apps",
-            idleMessage: "Enter app name and tap Search",
-            idleFootnote: "\(apps.count) apps available",
-            noResultsMessage: "No apps found for \"\(viewModel.performedSearchText)\"",
-            hasResults: !filteredApps.isEmpty
-        ) {
-            resultsGrid
-        }
-        .screenChrome("Search Apps")
-        .onAppear {
-            isSearchFieldFocused = true
-        }
-    }
-    
-    // MARK: - Results (ScrollView + LazyVStack)
-    @ViewBuilder
-    private var resultsGrid: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                HStack {
-                    Text("RESULTS FOR \"\(viewModel.performedSearchText.uppercased())\"")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Theme.ink2)
-                    Spacer()
-                    Text("\(filteredApps.count)")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.ink3)
-                }
-                .padding(.horizontal, 4)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
-                
-                LazyVStack(spacing: 0) {
-                    let firstID = filteredApps.first?.id
-                    ForEach(filteredApps) { item in
-                        SourceAppRow(item: item, showsDivider: item.id != firstID)
-                    }
-                }
-                .cardStyle(padding: 0)
-                
-                NewSearchButton {
-                    viewModel.clearSearch()
-                    isSearchFieldFocused = true
-                }
-                .padding(.top, 20)
-            }
-            .padding(.horizontal, Theme.Metric.screenPadding)
-            .padding(.bottom, 32)
-        }
-        .background(Theme.canvas)
     }
 }
 

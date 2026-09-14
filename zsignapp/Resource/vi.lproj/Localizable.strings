@@ -976,3 +976,6 @@
 
 /* Store: cache + nguon */
 "Loading apps..." = "Đang tải ứng dụng...";
+
+/* Tim ung dung ngay tren man Store */
+"No app matches what you typed" = "Không có ứng dụng nào khớp với từ bạn nhập";
