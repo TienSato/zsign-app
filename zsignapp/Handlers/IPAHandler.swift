@@ -16,17 +16,12 @@ class IPAHandler {
     
     func importIPA(from url: URL) async throws {
         await updateProgress(0.0, "Starting import...")
-        print(" ========== START IMPORT ==========")
-        print(" Input URL: \(url)")
         
-        // Enable background audio at the start
-        BackgroundAudioManager.shared.startBackgroundAudio()
-        print("Background audio enabled for import")
+        BackgroundAudioManager.shared.startBackgroundAudio(force: true)
         
         defer {
             if !UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
                 BackgroundAudioManager.shared.stopBackgroundAudio()
-                print("Background audio auto-stopped after import")
             }
         }
         
@@ -44,16 +39,13 @@ class IPAHandler {
         // 1. Create work directory
         await updateProgress(0.05, "Creating workspace...")
         try fileManager.createDirectory(at: workDir, withIntermediateDirectories: true)
-        print(" Work dir: \(workDir.path)")
         
         // 2. Copy file
         await updateProgress(0.1, "Copying IPA file...")
         let copiedIPA = workDir.appendingPathComponent(url.lastPathComponent)
         
-        print("Copying from: \(url.path)")
         try? fileManager.removeItem(at: copiedIPA)
         try fileManager.copyItem(at: url, to: copiedIPA)
-        print(" Copied successfully")
         
         guard fileManager.fileExists(atPath: copiedIPA.path) else {
             throw IPAError.unzipFailed
@@ -64,7 +56,6 @@ class IPAHandler {
         
         // 4. Unzip with progress
         await updateProgress(0.2, "Extracting IPA archive...")
-        print(" Unzipping...")
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             DispatchQueue.global(qos: .utility).async { [weak self] in
@@ -75,7 +66,6 @@ class IPAHandler {
                         overwrite: true,
                         password: nil,
                         progress: { progress in
-                            //  Report unzip progress (20% - 70%)
                             let mappedProgress = 0.2 + (progress * 0.5)
                             Task { @MainActor in
                                 self?.progressCallback?(mappedProgress)
@@ -85,19 +75,12 @@ class IPAHandler {
                                     self?.stepCallback?("Extracting: \(percentage)%")
                                 }
                             }
-                            
-                            let p = Int(progress * 100)
-                            if p % 20 == 0 {
-                                print(" Unzip: \(p)%")
-                            }
                         }
                     )
                     
-                    print("Unzipped successfully")
                     continuation.resume()
                     
                 } catch {
-                    print("Unzip error: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -108,11 +91,8 @@ class IPAHandler {
         let payloadURL = workDir.appendingPathComponent("Payload")
         
         guard fileManager.fileExists(atPath: payloadURL.path) else {
-            print("Payload not found!")
             throw IPAError.noPayload
         }
-        
-        print("Found Payload")
         
         // 6. Find .app bundle
         let contents = try fileManager.contentsOfDirectory(
@@ -122,20 +102,13 @@ class IPAHandler {
         )
         
         guard let appBundle = contents.first(where: { $0.pathExtension == "app" }) else {
-            print("No .app bundle")
             throw IPAError.noAppBundle
         }
-        
-        print("App bundle: \(appBundle.lastPathComponent)")
         
         // 7. Read app info
         await updateProgress(0.8, "Reading app information...")
         let bundle = Bundle(url: appBundle)
         let appInfo = extractAppInfo(from: bundle)
-        
-        print(" Name: \(appInfo.name ?? "Unknown")")
-        print("ID: \(appInfo.identifier ?? "Unknown")")
-        print(" Version: \(appInfo.version ?? "Unknown")")
         
         // 8. Extract icon
         await updateProgress(0.85, "Extracting app icon...")
@@ -150,12 +123,8 @@ class IPAHandler {
         let finalDestination = fileManager.appDirectory(uuid)
         let finalAppPath = finalDestination.appendingPathComponent(appBundle.lastPathComponent)
         
-        print("Moving to: \(finalAppPath.path)")
-        
         try? fileManager.removeItem(at: finalAppPath)
         try fileManager.moveItem(at: appBundle, to: finalAppPath)
-        
-        print("Moved successfully")
         
         // 10. Save to database
         await updateProgress(0.95, "Saving to database...")
@@ -169,16 +138,11 @@ class IPAHandler {
             )
         }
         
-        print("Saved to database")
-        
         // 11. Cleanup
         await updateProgress(0.98, "Cleaning up...")
         try? fileManager.removeItem(at: workDir)
-        print(" Cleaned up")
         
         await updateProgress(1.0, "Import complete!")
-        print("========== IMPORT SUCCESS ==========")
-        print("\(appInfo.name ?? "Unknown")")
     }
     
     // Progress helper
@@ -207,7 +171,6 @@ class IPAHandler {
         let iconFiles = findIconFiles(in: appBundle, bundle: bundle)
         
         guard let largestIcon = findLargestIcon(from: iconFiles, in: appBundle) else {
-            print("No icon found")
             return nil
         }
         
@@ -220,7 +183,6 @@ class IPAHandler {
         
         if let pngData = iconImage.pngData() {
             try pngData.write(to: savedPath)
-            print("Icon saved")
             return "icon.png"
         }
         
@@ -252,7 +214,7 @@ class IPAHandler {
             iconFiles = ["AppIcon60x60", "AppIcon76x76", "Icon", "icon"]
         }
         
-        // 5. Nếu vẫn trống → quét trong thư mục tìm file có chứa "Logo"
+        // 5. Quét thư mục tìm file có chứa "Logo"
         if iconFiles.isEmpty {
             do {
                 let contents = try FileManager.default.contentsOfDirectory(atPath: appBundle.path)
@@ -264,7 +226,30 @@ class IPAHandler {
                     iconFiles.append(contentsOf: logoFiles)
                 }
             } catch {
-                print("Không thể đọc thư mục appBundle: \(error)")
+                // Ignore error
+            }
+        }
+        
+        // 6. Nếu vẫn không có → quét tất cả file ảnh
+        if iconFiles.isEmpty {
+            do {
+                let contents = try FileManager.default.contentsOfDirectory(atPath: appBundle.path)
+                let allImageFiles = contents.filter { filename in
+                    let lowercased = filename.lowercased()
+                    return lowercased.hasSuffix(".png") ||
+                    lowercased.hasSuffix(".jpg") ||
+                    lowercased.hasSuffix(".jpeg")
+                }.map {
+                    $0.replacingOccurrences(of: ".png", with: "")
+                        .replacingOccurrences(of: ".jpg", with: "")
+                        .replacingOccurrences(of: ".jpeg", with: "")
+                }
+                
+                if !allImageFiles.isEmpty {
+                    iconFiles.append(contentsOf: allImageFiles)
+                }
+            } catch {
+                // Ignore error
             }
         }
         
@@ -285,7 +270,10 @@ class IPAHandler {
                 "\(iconName)@3x.png",
                 "\(iconName).jpg",
                 "\(iconName)@2x.jpg",
-                "\(iconName)@3x.jpg"
+                "\(iconName)@3x.jpg",
+                "\(iconName).jpeg",
+                "\(iconName)@2x.jpeg",
+                "\(iconName)@3x.jpeg"
             ]
             
             for variation in variations {
@@ -293,11 +281,36 @@ class IPAHandler {
                 
                 if fileManager.fileExists(atPath: iconPath.path),
                    let image = UIImage(contentsOfFile: iconPath.path) {
-                    foundIcons.append((iconPath, image.size))
+                    let size = image.size
+                    
+                    // Filter: Phải hình vuông (tỷ lệ gần 1:1)
+                    let ratio = size.width / size.height
+                    let isSquare = ratio >= 0.9 && ratio <= 1.1
+                    
+                    // Filter: Kích thước hợp lý (29-1024px)
+                    let isValidSize = size.width >= 29 && size.width <= 1024
+                    
+                    if isSquare && isValidSize {
+                        foundIcons.append((iconPath, size))
+                    }
                 }
             }
         }
         
+        guard !foundIcons.isEmpty else {
+            return nil
+        }
+        
+        // Ưu tiên icon 60-180px (kích thước chuẩn iOS)
+        let preferredIcons = foundIcons.filter {
+            $0.size.width >= 60 && $0.size.width <= 180
+        }
+        
+        if !preferredIcons.isEmpty {
+            return preferredIcons.max(by: { $0.size.width < $1.size.width })?.url
+        }
+        
+        // Fallback: Icon lớn nhất
         return foundIcons.max(by: { $0.size.width < $1.size.width })?.url
     }
 }

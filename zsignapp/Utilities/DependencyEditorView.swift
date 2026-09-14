@@ -145,7 +145,7 @@ struct DependencyEditorView: View {
                 // Edit icon
                 Image(systemName: "pencil.circle.fill")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
             .padding(12)
             .background(
@@ -176,7 +176,7 @@ struct DependencyEditorView: View {
         if dep.contains("CydiaSubstrate") || dep.contains("ElleKit") {
             return .orange
         } else if dep.contains(".framework") {
-            return .blue
+            return .accentColor
         } else if dep.contains("@rpath") || dep.contains("@executable_path") {
             return .purple
         } else {

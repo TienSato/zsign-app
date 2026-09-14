@@ -27,6 +27,7 @@ struct AppTweaksManagerView: View {
     @State private var isExtracting = false
     @State private var showSuccess = false
     @State private var extractedCount = 0
+    @State private var extractedPath = ""
     
     private var allTweaks: [TweakFile] {
         frameworks + dylibs + bundles
@@ -34,6 +35,7 @@ struct AppTweaksManagerView: View {
     private var totalCount: Int {
         allTweaks.count
     }
+    
     var body: some View {
         Form {
             modeToggleSection
@@ -46,9 +48,7 @@ struct AppTweaksManagerView: View {
                     title: "Frameworks",
                     count: frameworks.count,
                     items: frameworks,
-                    isExpanded: $isFrameworksExpanded,
-                    icon: "cube.box.fill",
-                    color: .purple
+                    isExpanded: $isFrameworksExpanded
                 )
             }
             if !dylibs.isEmpty {
@@ -56,9 +56,7 @@ struct AppTweaksManagerView: View {
                     title: "Dynamic Libraries",
                     count: dylibs.count,
                     items: dylibs,
-                    isExpanded: $isDylibsExpanded,
-                    icon: "gear.circle.fill",
-                    color: .blue
+                    isExpanded: $isDylibsExpanded
                 )
             }
             if !bundles.isEmpty {
@@ -66,9 +64,7 @@ struct AppTweaksManagerView: View {
                     title: "Bundles",
                     count: bundles.count,
                     items: bundles,
-                    isExpanded: $isBundlesExpanded,
-                    icon: "shippingbox.fill",
-                    color: .green
+                    isExpanded: $isBundlesExpanded
                 )
             }
             
@@ -85,13 +81,38 @@ struct AppTweaksManagerView: View {
         .toolbar {
             toolbarContent
         }
-        .onAppear(perform: loadTweaks)
+        .onAppear {
+            frameworks = []
+            dylibs = []
+            bundles = []
+            isFrameworksExpanded = false
+            isDylibsExpanded = false
+            isBundlesExpanded = false
+            selectedForExtraction = []
+            
+            loadTweaks()
+        }
         .alert("Extraction Complete", isPresented: $showSuccess) {
             Button("OK") {}
+            Button("Show in Files") {
+                showInFiles()
+            }
         } message: {
-            Text("Extracted \(extractedCount) file(s) to Tweaks folder")
+            Text("Extracted \(extractedCount) file(s) to:\n\(extractedPath)")
         }
         .animation(.easeInOut, value: showExtractMode)
+    }
+    
+    private func showInFiles() {
+        let documentsURL = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )[0]
+        let tweaksURL = documentsURL.appendingPathComponent("Tweaks")
+        
+        if let url = URL(string: "shareddocuments://\(tweaksURL.path)") {
+            UIApplication.shared.open(url)
+        }
     }
 }
 
@@ -110,16 +131,11 @@ private extension AppTweaksManagerView {
     
     var instructionsSection: some View {
         Section {
-            HStack(spacing: 8) {
-                Image(systemName: showExtractMode ? "arrow.down.doc.fill" : "checkmark.circle.fill")
-                    .foregroundColor(showExtractMode ? .blue : .green)
-                
-                Text(showExtractMode ?
-                     "Select tweaks to extract to your library" :
-                     "Enabled tweaks will be injected when signing")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+            Text(showExtractMode ?
+                 "Select tweaks to extract to your library" :
+                 "Enabled tweaks will be injected when signing")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
     
@@ -128,8 +144,6 @@ private extension AppTweaksManagerView {
             VStack(spacing: 12) {
                 HStack(spacing: 20) {
                     summaryItem(
-                        icon: "cube.box.fill",
-                        color: .purple,
                         count: frameworks.count,
                         label: "Frameworks"
                     )
@@ -138,8 +152,6 @@ private extension AppTweaksManagerView {
                         .frame(height: 40)
                     
                     summaryItem(
-                        icon: "gear.circle.fill",
-                        color: .blue,
                         count: dylibs.count,
                         label: "Dylibs"
                     )
@@ -148,8 +160,6 @@ private extension AppTweaksManagerView {
                         .frame(height: 40)
                     
                     summaryItem(
-                        icon: "shippingbox.fill",
-                        color: .green,
                         count: bundles.count,
                         label: "Bundles"
                     )
@@ -176,12 +186,8 @@ private extension AppTweaksManagerView {
         }
     }
     
-    func summaryItem(icon: String, color: Color, count: Int, label: String) -> some View {
+    func summaryItem(count: Int, label: String) -> some View {
         VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(color)
-            
             Text("\(count)")
                 .font(.title2)
                 .fontWeight(.bold)
@@ -197,9 +203,7 @@ private extension AppTweaksManagerView {
         title: String,
         count: Int,
         items: [TweakFile],
-        isExpanded: Binding<Bool>,
-        icon: String,
-        color: Color
+        isExpanded: Binding<Bool>
     ) -> some View {
         Section {
             Button {
@@ -208,11 +212,6 @@ private extension AppTweaksManagerView {
                 }
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: icon)
-                        .font(.title3)
-                        .foregroundColor(color)
-                        .frame(width: 30)
-                    
                     VStack(alignment: .leading, spacing: 4) {
                         Text(title)
                             .font(.headline)
@@ -258,10 +257,6 @@ private extension AppTweaksManagerView {
     var emptyStateSection: some View {
         Section {
             VStack(spacing: 12) {
-                Image(systemName: "tray")
-                    .font(.system(size: 48))
-                    .foregroundColor(.secondary)
-                
                 Text("No Tweaks Found")
                     .font(.headline)
                 
@@ -399,8 +394,6 @@ private extension AppTweaksManagerView {
         }
         
         self.bundles = loadBundles(appURL: appURL)
-        
-        Summary()
     }
     
     func findAppFile(in directory: URL) -> URL? {
@@ -425,12 +418,32 @@ private extension AppTweaksManagerView {
             return nil
         }
         
-        let execPath = appURL.appendingPathComponent(execURL.relativePath).path
+        let execPath: String
+        if execURL.path.hasPrefix(appURL.path) {
+            execPath = execURL.path
+        } else {
+            execPath = appURL.appendingPathComponent(execURL.relativePath).path
+        }
+        
         guard FileManager.default.fileExists(atPath: execPath) else {
             return nil
         }
         
-        let allDylibs = Zsign.listDylibs(appExecutable: execPath).map { $0 as String }
+        var allDylibs: [String] = []
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            usleep(100_000)
+            let result = Zsign.listDylibs(appExecutable: execPath).map { $0 as String }
+            allDylibs = result
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        guard !allDylibs.isEmpty else {
+            return nil
+        }
         
         var foundFrameworks: [TweakFile] = []
         var foundDylibs: [TweakFile] = []
@@ -522,9 +535,6 @@ private extension AppTweaksManagerView {
         
         return foundBundles.sorted { $0.name < $1.name }
     }
-    
-    func Summary() {
-    }
 }
 
 // MARK: - Extraction
@@ -560,10 +570,10 @@ private extension AppTweaksManagerView {
                 await MainActor.run {
                     self.isExtracting = false
                     self.extractedCount = count
+                    self.extractedPath = "Documents/Tweaks"
                     self.showSuccess = true
                     self.selectedForExtraction.removeAll()
                 }
-                
                 
             } catch {
                 await MainActor.run {
@@ -613,7 +623,7 @@ struct ExtractRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                    .foregroundColor(isSelected ? .blue : .gray)
+                    .foregroundColor(isSelected ? .accentColor : .gray)
                     .font(.title3)
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -677,7 +687,7 @@ enum TweakFileType {
     
     var color: Color {
         switch self {
-        case .dylib: return .blue
+        case .dylib: return .accentColor
         case .framework: return .purple
         case .bundle: return .green
         }

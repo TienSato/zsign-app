@@ -44,13 +44,7 @@ struct SignedAppIconView: View {
             } else {
                 // Placeholder icon
                 RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Color.accentColor)
                     .frame(width: size, height: size)
                     .overlay(
                         Image(systemName: "app.fill")

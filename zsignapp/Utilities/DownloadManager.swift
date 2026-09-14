@@ -42,9 +42,10 @@ class Download: Identifiable, ObservableObject {
     
     enum DownloadType {
         case ipaToLibrary
-        case fileToDirectory   
+        case fileToDirectory
     }
 }
+
 // MARK: - Download Manager
 class DownloadManager: NSObject, ObservableObject {
     static let shared = DownloadManager()
@@ -59,6 +60,7 @@ class DownloadManager: NSObject, ObservableObject {
         config.timeoutIntervalForRequest = 300
         session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
     }
+    
     // MARK: - Start Download (IPA to Library - Original)
     func startDownload(url: URL, id: String, appName: String) -> Download {
         // Check if already downloading
@@ -88,10 +90,12 @@ class DownloadManager: NSObject, ObservableObject {
     func downloadFile(from url: URL, fileName: String? = nil, to destinationDir: URL) -> Download {
         let finalFileName = fileName ?? url.lastPathComponent
         let destinationURL = destinationDir.appendingPathComponent(finalFileName)
+        
         // Check if already downloading
         if let existing = downloads.first(where: { $0.url == url && $0.downloadType == .fileToDirectory }) {
             return existing
         }
+        
         let downloadId = "file_\(UUID().uuidString)"
         let download = Download(
             id: downloadId,
@@ -100,6 +104,7 @@ class DownloadManager: NSObject, ObservableObject {
             destinationURL: destinationURL,
             downloadType: .fileToDirectory
         )
+        
         let task = session.downloadTask(with: url)
         download.task = task
         
@@ -124,22 +129,31 @@ class DownloadManager: NSObject, ObservableObject {
             
             self.updateBackgroundAudio()
         }
-        
     }
+    
     // MARK: - Get Download
     func getDownload(by id: String) -> Download? {
         return downloads.first(where: { $0.id == id })
     }
+    
+    // ✅ THAY ĐỔI CHÍNH: Logic tự động bật/tắt background mode
     private func updateBackgroundAudio() {
         DispatchQueue.main.async {
             if !self.downloads.isEmpty {
-                BackgroundAudioManager.shared.startBackgroundAudio()
-            } else if !UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
-                BackgroundAudioManager.shared.stopBackgroundAudio()
+                // ✅ CÓ DOWNLOAD: Tự động bật background mode (bypass flag)
+                BackgroundAudioManager.shared.startBackgroundAudio(force: true)
+            } else {
+                // ✅ KHÔNG CÒN DOWNLOAD: Kiểm tra user setting
+                if !UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
+                    // User KHÔNG bật toggle → Tắt background mode
+                    BackgroundAudioManager.shared.stopBackgroundAudio()
+                }
+                // User ĐÃ BẬT toggle → Giữ background mode tiếp
             }
         }
     }
 }
+
 // MARK: - URLSessionDownloadDelegate
 extension DownloadManager: URLSessionDownloadDelegate {
     
@@ -195,7 +209,6 @@ extension DownloadManager: URLSessionDownloadDelegate {
         }
     }
     
-    
     private func handleFileDownload(location: URL, download: Download) {
         guard let destinationURL = download.destinationURL else {
             DispatchQueue.main.async {
@@ -211,7 +224,6 @@ extension DownloadManager: URLSessionDownloadDelegate {
             
             // Move downloaded file to destination
             try FileManager.default.moveItem(at: location, to: destinationURL)
-            
             
             DispatchQueue.main.async {
                 download.status = .completed
@@ -232,7 +244,6 @@ extension DownloadManager: URLSessionDownloadDelegate {
     }
     
     // MARK: - Handle IPA Download (Original)
-    
     private func handleIPADownload(location: URL, download: Download) {
         // Move file to temp location
         let tempURL = FileManager.default.temporaryDirectory
@@ -242,7 +253,6 @@ extension DownloadManager: URLSessionDownloadDelegate {
         do {
             try? FileManager.default.removeItem(at: tempURL)
             try FileManager.default.copyItem(at: location, to: tempURL)
-            
             
             // Import IPA in background
             Task {
@@ -258,7 +268,6 @@ extension DownloadManager: URLSessionDownloadDelegate {
     }
     
     // MARK: - Import IPA (Original)
-    
     private func importIPA(_ url: URL, for download: Download) async {
         do {
             try await IPAHandler().importIPA(from: url)
@@ -266,17 +275,18 @@ extension DownloadManager: URLSessionDownloadDelegate {
             await MainActor.run {
                 download.status = .completed
                 download.objectWillChange.send()
-                
+                // ✅ THÊM: Trigger auto sign nếu cần
+                    self.handleAutoSignIfNeeded(for: download)
                 // Remove from list after delay
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     self.removeDownload(download)
                 }
             }
+            
             // Cleanup
             try? FileManager.default.removeItem(at: url)
             
         } catch {
-            
             await MainActor.run {
                 download.status = .failed
                 self.removeDownload(download)
@@ -291,7 +301,32 @@ extension DownloadManager: URLSessionDownloadDelegate {
             if let index = self.downloads.firstIndex(where: { $0.id == download.id }) {
                 self.downloads.remove(at: index)
             }
+            // ✅ Tự động kiểm tra và tắt background mode nếu cần
             self.updateBackgroundAudio()
+        }
+    }
+}
+// MARK: - Auto Sign Integration
+extension DownloadManager {
+    
+    // ✅ THÊM: Handler được gọi sau khi import IPA xong
+    private func handleAutoSignIfNeeded(for download: Download) {
+        let settings = AppSettings.shared
+        
+        // Chỉ xử lý với IPA downloads
+        guard download.downloadType == .ipaToLibrary,
+              settings.autoSignAfterDownload else {
+            return
+        }
+        
+        print("🎯 Triggering auto sign for: \(download.appName)")
+        
+        // Gọi auto sign helper
+        Task {
+            await AutoSignHelper.shared.handleDownloadCompletion(
+                downloadId: download.id,
+                appName: download.appName
+            )
         }
     }
 }

@@ -1,7 +1,7 @@
 //
 //  AppsView.swift
 //  zsignapp
-//  Created by Sato on 26/10/25.
+//  Created by Sato on 13/1/26.
 //
 
 import SwiftUI
@@ -12,34 +12,23 @@ struct AppsView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Custom Tab Selector - Compact hơn
-                Picker("", selection: $selectedTab) {
-                    Text("Unsigned").tag(0)
-                    Text("Signed").tag(1)
+            Group {
+                if selectedTab == 0 {
+                    UnsignedAppsView(selectedTab: $selectedTab)
+                } else {
+                    SignedAppsView(selectedTab: $selectedTab)
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                
-                // Content
-                TabView(selection: $selectedTab) {
-                    UnsignedAppsView()
-                        .tag(0)
-                    
-                    SignedAppsView()
-                        .tag(1)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
             }
             .navigationTitle("Apps")
             .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationViewStyle(.stack)
     }
 }
 
 // MARK: - Unsigned Apps View
 struct UnsignedAppsView: View {
+    @Binding var selectedTab: Int
     @StateObject private var storage = Storage.shared
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \ImportedApp.date, ascending: false)],
@@ -48,6 +37,9 @@ struct UnsignedAppsView: View {
     private var apps: FetchedResults<ImportedApp>
     
     @State private var showFilePicker = false
+    // ✅ THÊM 2 DÒNG NÀY
+    @State private var showDownloadManager = false
+    @StateObject private var downloadManager = DownloadManager.shared
     @State private var isImporting = false
     @State private var importError: String?
     
@@ -63,7 +55,29 @@ struct UnsignedAppsView: View {
     var body: some View {
         ZStack {
             List {
-                ForEach(apps) { app in
+                // Picker Section
+                Section {
+                    Picker("", selection: $selectedTab) {
+                        Text("Unsigned").tag(0)
+                        Text("Signed").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+                // ✅ THÊM SECTION NÀY (Downloads Section)
+                            if !downloadManager.downloads.isEmpty {
+                                Section {
+                                    ForEach(downloadManager.downloads) { download in
+                                        DownloadListRow(download: download)
+                                    }
+                                } header: {
+                                    Label("Active Downloads", systemImage: "arrow.down.circle.fill")
+                                }
+                            }
+                // Apps Section
+                Section {
+                    ForEach(apps) { app in
                     UnsignedAppRow(
                         app: app,
                         isSelectionMode: isSelectionMode,
@@ -74,6 +88,12 @@ struct UnsignedAppsView: View {
                     )
                 }
                 .onDelete(perform: deleteApps)
+            } header: {
+                // ✅ THÊM ĐIỀU KIỆN NÀY CHO HEADER
+                if !downloadManager.downloads.isEmpty {
+                    Label("Imported Apps", systemImage: "app.badge")
+                }
+            }
             }
             .overlay {
                 if apps.isEmpty {
@@ -119,7 +139,7 @@ struct UnsignedAppsView: View {
                                 navigateToBatchSign = true
                             }) {
                                 Image(systemName: "signature")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                             .disabled(selectedApps.isEmpty)
                             
@@ -138,17 +158,28 @@ struct UnsignedAppsView: View {
                                 }
                             }
                             
-                            Button(action: {
-                                showFilePicker = true
-                            }) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 18, weight: .semibold))
+                            // ✅ THAY BUTTON NÀY BẰNG MENU
+                                            Menu {
+                                                Button {
+                                                    showFilePicker = true
+                                                } label: {
+                                                    Label("Import from Files", systemImage: "folder")
+                                                }
+                                                
+                                                Button {
+                                                    showDownloadManager = true
+                                                } label: {
+                                                    Label("Download from URL", systemImage: "arrow.down.circle")
+                                                }
+                                            } label: {
+                                                Image(systemName: "plus")
+                                                    .font(.system(size: 18, weight: .semibold))
+                                            }
+                                            .disabled(isImporting)
+                                        }
+                                    }
+                                }
                             }
-                            .disabled(isImporting)
-                        }
-                    }
-                }
-            }
             
             NavigationLink(
                 destination: BatchSignView(selectedApps: getSelectedApps()),
@@ -161,7 +192,7 @@ struct UnsignedAppsView: View {
             // Loading overlay
             if isImporting {
                 VStack(spacing: 12) {
-                    Text(importStep)
+                    Text(L(importStep))
                         .font(.subheadline)
                         .foregroundColor(.primary)
                     
@@ -172,13 +203,7 @@ struct UnsignedAppsView: View {
                                 .frame(height: 8)
                             
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                                .fill(Color.accentColor)
                                 .frame(width: 200 * importProgress, height: 8)
                                 .animation(.linear(duration: 0.3), value: importProgress)
                         }
@@ -206,6 +231,10 @@ struct UnsignedAppsView: View {
                 }
             )
             .ignoresSafeArea()
+        }
+        // ✅ THÊM SHEET NÀY
+        .sheet(isPresented: $showDownloadManager) {
+            DownloadManagerView()
         }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ImportIPAFromShare"))) { notification in
                 if let url = notification.object as? URL {
@@ -316,7 +345,7 @@ struct UnsignedAppRow: View {
                     onToggleSelection?()
                 } label: {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(isSelected ? .blue : .gray)
+                        .foregroundColor(isSelected ? .accentColor : .gray)
                         .font(.system(size: 24))
                 }
                 .buttonStyle(.plain)
@@ -370,10 +399,10 @@ struct UnsignedAppRow: View {
                     VStack(spacing: 4) {
                         Image(systemName: "signature")
                             .font(.system(size: 24))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         Text("Sign")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                     }
                 }
                 .buttonStyle(.plain)
@@ -419,13 +448,7 @@ struct AppIconView: View {
                 .font(.system(size: size * 0.5))
                 .foregroundColor(.white)
                 .frame(width: size, height: size)
-                .background(
-                    LinearGradient(
-                        colors: [.blue, .purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .background(Color.accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous)
@@ -450,6 +473,7 @@ struct AppIconView: View {
 
 // MARK: - Signed Apps View
 struct SignedAppsView: View {
+    @Binding var selectedTab: Int
     @StateObject private var storage = Storage.shared
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \SignedApp.date, ascending: false)],
@@ -464,7 +488,20 @@ struct SignedAppsView: View {
     
     var body: some View {
         List {
-            ForEach(signedApps) { app in
+            // Picker Section
+            Section {
+                Picker("", selection: $selectedTab) {
+                    Text("Unsigned").tag(0)
+                    Text("Signed").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+            
+            // Apps Section
+            Section {
+                ForEach(signedApps) { app in
                 SignedAppRow(
                     app: app,
                     isSelectionMode: isSelectionMode,
@@ -475,6 +512,7 @@ struct SignedAppsView: View {
                 )
             }
             .onDelete(perform: deleteApps)
+            }
         }
         .overlay {
             if signedApps.isEmpty {
@@ -565,7 +603,7 @@ struct SignedAppsView: View {
     }
 }
 
-// MARK: - Signed App Row
+// MARK: - Signed App Row (FIXED)
 struct SignedAppRow: View {
     let app: SignedApp
     var isSelectionMode: Bool = false
@@ -613,7 +651,7 @@ struct SignedAppRow: View {
                     onToggleSelection?()
                 } label: {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(isSelected ? .blue : .gray)
+                        .foregroundColor(isSelected ? .accentColor : .gray)
                         .font(.system(size: 24))
                 }
                 .buttonStyle(.plain)
@@ -627,7 +665,29 @@ struct SignedAppRow: View {
                 }
             } label: {
                 HStack(spacing: 12) {
-                    SignedAppIconView(app: app, size: 60)
+                    if let iconImage = loadIcon() {
+                        Image(uiImage: iconImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 60, height: 60)
+                            .background(Color.gray.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous)
+                                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                    } else {
+                        Image(systemName: "app.fill")
+                            .font(.system(size: 60 * 0.5))
+                            .foregroundColor(.white)
+                            .frame(width: 60, height: 60)
+                            .background(Color.accentColor)
+                            .clipShape(RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 60 * 0.2237, style: .continuous)
+                                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                    }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(app.name ?? "Unknown App")
@@ -665,7 +725,7 @@ struct SignedAppRow: View {
                                     .font(.caption2)
                                     .lineLimit(1)
                             }
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         }
                         
                         HStack(spacing: 4) {
@@ -693,10 +753,10 @@ struct SignedAppRow: View {
                         VStack(spacing: 4) {
                             Image(systemName: "arrow.down.circle.fill")
                                 .font(.system(size: 28))
-                                .foregroundColor(.green)
+                                .foregroundColor(.accentColor)
                             Text("Install")
                                 .font(.caption2)
-                                .foregroundColor(.green)
+                                .foregroundColor(.accentColor)
                         }
                     }
                 }
@@ -737,6 +797,41 @@ struct SignedAppRow: View {
         }
     }
     
+    // ✅ LOGIC ĐÚNG: Kiểm tra custom icon trước, nếu không có thì dùng icon từ source app
+    private func loadIcon() -> UIImage? {
+        guard let uuid = app.uuid,
+              let iconFileName = app.iconFileName else {
+            return nil
+        }
+        
+        // 1️⃣ Nếu là custom_icon.png → đọc từ SignedApps/<uuid>/Icons/
+        if iconFileName == "custom_icon.png" {
+            let signedAppDir = FileManager.default.signedAppDirectory(uuid)
+            let customIconPath = signedAppDir
+                .appendingPathComponent("Icons")
+                .appendingPathComponent(iconFileName)
+            
+            if FileManager.default.fileExists(atPath: customIconPath.path),
+               let image = UIImage(contentsOfFile: customIconPath.path) {
+                return image
+            }
+        }
+        
+        // 2️⃣ Nếu không phải custom icon → đọc từ source app: Apps/<sourceUUID>/Icons/
+        if let sourceUUID = app.sourceUUID {
+            let sourceIconPath = FileManager.default
+                .iconsDirectory(for: sourceUUID)
+                .appendingPathComponent(iconFileName)
+            
+            if FileManager.default.fileExists(atPath: sourceIconPath.path),
+               let image = UIImage(contentsOfFile: sourceIconPath.path) {
+                return image
+            }
+        }
+        
+        return nil
+    }
+    
     private func installApp() {
         isInstalling = true
         installError = nil
@@ -772,7 +867,6 @@ struct SignedAppRow: View {
         }
     }
 }
-
 // MARK: - Detail View
 struct SignedAppDetailView: View {
     let app: SignedApp
@@ -843,6 +937,7 @@ struct SignedAppDetailView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack) // FIX: Force stack style cho iPad
     }
 }
 
@@ -980,7 +1075,7 @@ struct BatchSignView: View {
                                             appCertificates[app.objectID] = cert
                                         } label: {
                                             HStack {
-                                                Text(cert.nickname ?? "Certificate")
+                                                Text(cert.nickname ?? L("Certificate"))
                                                 if cert.isDefault {
                                                     Text("(Default)")
                                                         .font(.caption)
@@ -995,10 +1090,10 @@ struct BatchSignView: View {
                                 } label: {
                                     HStack {
                                         Image(systemName: "signature")
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.accentColor)
                                         
                                         if let cert = appCertificates[app.objectID] ?? nil {
-                                            Text(cert.nickname ?? "Certificate")
+                                            Text(cert.nickname ?? L("Certificate"))
                                                 .foregroundColor(.primary)
                                         } else {
                                             Text("Select Certificate")
@@ -1019,10 +1114,10 @@ struct BatchSignView: View {
                             } else {
                                 HStack {
                                     Image(systemName: "signature")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                     
                                     if let cert = appCertificates[app.objectID] ?? nil {
-                                        Text(cert.nickname ?? "Certificate")
+                                        Text(cert.nickname ?? L("Certificate"))
                                             .foregroundColor(.primary)
                                     }
                                     
@@ -1090,7 +1185,7 @@ struct BatchSignView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         
-                        Text(currentAppProgress)
+                        Text(L(currentAppProgress))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

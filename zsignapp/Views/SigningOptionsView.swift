@@ -9,12 +9,21 @@ import SwiftUI
 
 struct SigningOptionsView: View {
     @StateObject private var optionsManager = SigningOptionsManager.shared
+    @StateObject private var settings = AppSettings.shared
+    @State private var certificates: [CertificatePair] = []
     @State private var showResetAlert = false
     
     var body: some View {
         Form {
-            
-            
+            // MARK: - Auto Sign & Install (chuyển từ Cài đặt)
+            AutoSignSection(
+                settings: settings,
+                certificates: certificates
+            )
+
+            // MARK: - IPA Compression (chuyển từ Cài đặt)
+            compressionSection
+
             // MARK: - Appearance & Requirements
             Section {
                 Picker("App Appearance", selection: $optionsManager.options.appAppearance) {
@@ -186,6 +195,53 @@ struct SigningOptionsView: View {
         }
         .onChange(of: optionsManager.options) { _ in
             optionsManager.saveOptions()
+        }
+        .onAppear {
+            certificates = Storage.shared.fetchCertificates()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CertificatesDidChange"))) { _ in
+            certificates = Storage.shared.fetchCertificates()
+        }
+    }
+
+    // MARK: - Compression Section (chuyển từ SettingsView)
+    @ViewBuilder
+    private var compressionSection: some View {
+        Section {
+            Picker("Compression Level", selection: $settings.compressionLevel) {
+                ForEach([
+                    (0, "None", CompressionLevel.NoCompression),
+                    (1, "Speed", CompressionLevel.BestSpeed),
+                    (2, "Default", CompressionLevel.DefaultCompression),
+                    (3, "Best", CompressionLevel.BestCompression)
+                ], id: \.0) { value, label, _ in
+                    Text(label).tag(value)
+                }
+            }
+            .pickerStyle(.menu)
+
+            HStack(spacing: 8) {
+                Image(systemName: settings.compressionType.icon)
+                    .foregroundColor(colorForCompression(settings.compressionType))
+                Text(settings.compressionType.description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 4)
+        } header: {
+            Label("IPA Compression", systemImage: "archivebox")
+        } footer: {
+            Text("Choose compression level for IPA creation. For large apps (2-5GB), 'Speed' or 'Default' is recommended.")
+                .font(.caption)
+        }
+    }
+
+    private func colorForCompression(_ level: CompressionLevel) -> Color {
+        switch level.color {
+        case "green": return .green
+        case "orange": return .orange
+        case "red": return .red
+        default: return .accentColor
         }
     }
 }

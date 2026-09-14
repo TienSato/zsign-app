@@ -5,6 +5,44 @@
 #include "sys/stat.h"
 #include "sys/types.h"
 
+#include <thread>
+#include <atomic>
+#include <algorithm>
+#include <map>
+#include <functional>
+#include <mutex>
+
+// ============================================================================
+// [MỚI - KÝ SONG SONG] Bật/tắt nhanh. Đặt 0 để quay lại đường ký tuần tự cũ.
+#ifndef ZBUNDLE_PARALLEL_SIGN
+#define ZBUNDLE_PARALLEL_SIGN 1
+#endif
+
+// Chạy body(0..count-1) song song trên tối đa hardware_concurrency luồng.
+static void ZParallelFor(size_t count, const std::function<void(size_t)>& body)
+{
+	if (0 == count) return;
+	unsigned hw = std::thread::hardware_concurrency();
+	if (0 == hw) hw = 4;
+	size_t nthreads = std::min<size_t>((size_t)hw, count);
+	if (nthreads <= 1) { for (size_t i = 0; i < count; i++) body(i); return; }
+	std::atomic<size_t> next(0);
+	std::vector<std::thread> pool;
+	pool.reserve(nthreads);
+	for (size_t th = 0; th < nthreads; th++) {
+		pool.emplace_back([&]() {
+			for (;;) {
+				size_t i = next.fetch_add(1);
+				if (i >= count) break;
+				body(i);
+			}
+		});
+	}
+	for (auto& th : pool) th.join();
+}
+// ============================================================================
+
+
 ZBundle::ZBundle()
 {
 	m_pSignAsset = NULL;
@@ -260,35 +298,10 @@ void ZBundle::GetNodeChangedFiles(jvalue& jvNode, bool excludeProvisioning)
 	}
 }
 
-bool ZBundle::SignNode(jvalue& jvNode)
+// [MỚI] Ký phần thân MỘT bundle (CodeResources + executable), KHÔNG đệ quy con.
+// An toàn khi gọi song song trên các node khác nhau (mỗi node = 1 thư mục riêng).
+bool ZBundle::SignSingleBundle(jvalue& jvNode)
 {
-	if (jvNode.has("files")) {
-		for (size_t i = 0; i < jvNode["files"].size(); i++) {
-			string strFile = jvNode["files"][i];
-			ZLog::PrintV(">>> SignFile: \t%s\n", strFile.c_str());
-			ZMachO macho;
-			if (macho.InitV("%s/%s", m_strAppFolder.c_str(), strFile.c_str())) {
-				if (!macho.Sign(m_pSignAsset, m_bForceSign, "", "", "", "")) {
-					signFailedFiles += strFile;
-					signFailedFiles += "\n";
-//					return false;
-				}
-			} else {
-				signFailedFiles += strFile;
-				signFailedFiles += "\n";
-//				return false;
-			}
-		}
-	}
-	
-	if (jvNode.has("folders")) {
-		for (size_t i = 0; i < jvNode["folders"].size(); i++) {
-			if (!SignNode(jvNode["folders"][i])) {
-				return false;
-			}
-		}
-	}
-
 	jbase64 b64;
 	string strInfoSHA1;
 	string strInfoSHA256;
@@ -386,6 +399,86 @@ bool ZBundle::SignNode(jvalue& jvNode)
 
 	return true;
 }
+
+// Đường ký TUẦN TỰ (fallback) - hành vi y hệt bản gốc.
+bool ZBundle::SignNode(jvalue& jvNode)
+{
+	if (jvNode.has("files")) {
+		for (size_t i = 0; i < jvNode["files"].size(); i++) {
+			string strFile = jvNode["files"][i];
+			ZLog::PrintV(">>> SignFile: \t%s\n", strFile.c_str());
+			ZMachO macho;
+			if (macho.InitV("%s/%s", m_strAppFolder.c_str(), strFile.c_str())) {
+				if (!macho.Sign(m_pSignAsset, m_bForceSign, "", "", "", "")) {
+					signFailedFiles += strFile;
+					signFailedFiles += "\n";
+				}
+			} else {
+				signFailedFiles += strFile;
+				signFailedFiles += "\n";
+			}
+		}
+	}
+
+	if (jvNode.has("folders")) {
+		for (size_t i = 0; i < jvNode["folders"].size(); i++) {
+			if (!SignNode(jvNode["folders"][i])) {
+				return false;
+			}
+		}
+	}
+
+	return SignSingleBundle(jvNode);
+}
+
+// [MỚI] Ký SONG SONG: dylib song song -> bundle theo tầng (sâu trước) song song -> app cuối.
+// Giữ đúng thứ tự phụ thuộc: con phải ký xong trước khi CodeResources của cha băm chúng.
+static void ZCollectNodes(jvalue& node, size_t depth,
+    std::map<size_t, std::vector<jvalue*>, std::greater<size_t> >& out)
+{
+    out[depth].push_back(&node);
+    if (node.has("folders")) {
+        for (size_t i = 0; i < node["folders"].size(); i++) {
+            ZCollectNodes(node["folders"][i], depth + 1, out);
+        }
+    }
+}
+
+bool ZBundle::SignRootParallel(jvalue& jvRoot)
+{
+    // Gom mọi bundle theo ĐỘ SÂU CÂY: sâu nhất ký TRƯỚC (con trước cha),
+    // trong cùng tầng các bundle độc lập -> ký SONG SONG. Đúng thứ tự seal của Apple.
+    std::map<size_t, std::vector<jvalue*>, std::greater<size_t> > byDepth;
+    ZCollectNodes(jvRoot, 0, byDepth);
+
+    std::atomic<bool> bOk(true);
+    for (auto it = byDepth.begin(); it != byDepth.end(); ++it) {
+        std::vector<jvalue*>& lvl = it->second;
+        ZParallelFor(lvl.size(), [&](size_t k) {
+            if (!bOk) return;
+            jvalue& node = *lvl[k];
+            // 1) ký các mach-o rời trong node TRƯỚC (CodeResources của bundle băm chúng)
+            if (node.has("files")) {
+                for (size_t i = 0; i < node["files"].size(); i++) {
+                    string strFile = node["files"][i].as_string();
+                    ZLog::PrintV(">>> SignFile: \t%s\n", strFile.c_str());
+                    ZMachO macho;
+                    bool s = macho.InitV("%s/%s", m_strAppFolder.c_str(), strFile.c_str());
+                    if (s) s = macho.Sign(m_pSignAsset, m_bForceSign, "", "", "", "");
+                    if (!s) {
+                        std::lock_guard<std::mutex> lk(m_failMutex);
+                        signFailedFiles += strFile; signFailedFiles += "\n";
+                    }
+                }
+            }
+            // 2) ký bundle của chính node
+            if (!SignSingleBundle(node)) bOk = false;
+        });
+        if (!bOk) return false;
+    }
+    return bOk;
+}
+
 
 bool ZBundle::ModifyPluginsBundleId(const string& strOldBundleId, const string& strNewBundleId)
 {
@@ -591,7 +684,13 @@ bool ZBundle::SignFolder(ZSignAsset* pSignAsset,
 	ZLog::PrintV(">>> ReadCache: \t%s\n", m_bForceSign ? "NO" : "YES");
 	ZLog::PrintV(">>> Exclude MobileProvision: \t%s\n", excludeProvisioning ? "NO" : "YES");
 
-	if (SignNode(jvRoot)) {
+	bool bSignOk =
+#if ZBUNDLE_PARALLEL_SIGN
+		SignRootParallel(jvRoot);
+#else
+		SignNode(jvRoot);
+#endif
+	if (bSignOk) {
 		if (bEnableCache) {
 			ZFile::CreateFolder("./.zsign_cache");
 			jvRoot.style_write_to_file("./.zsign_cache/%s.json", strCacheName.c_str());

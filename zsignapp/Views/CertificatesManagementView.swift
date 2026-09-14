@@ -20,34 +20,24 @@ struct CertificatesManagementView: View {
     
     @State private var showAddCert = false
     @State private var isCheckingRevoked = false
-    @State private var certificateToShare: CertificatePair?
     @State private var shareURL: URL?
-    @State private var showShareSheet = false
+    @State private var selectedCertificate: CertificatePair?
+    @State private var showActionSheet = false
+    @State private var showDetailView = false
+    @State private var isExporting = false
     
     var body: some View {
         ZStack {
             List {
                 ForEach(certificates) { cert in
-                    CertificateRow(
+                    CertificateRowContent(
                         certificate: cert,
-                        isDefault: cert.isDefault,
-                        onTap: {
-                            setDefaultCertificate(cert)
-                        }
+                        isDefault: cert.isDefault
                     )
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            deleteCertificate(cert)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        
-                        Button {
-                            shareCertificate(cert)
-                        } label: {
-                            Label("Share", systemImage: "square.and.arrow.up")
-                        }
-                        .tint(.blue)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedCertificate = cert
+                        showActionSheet = true
                     }
                 }
             }
@@ -65,10 +55,38 @@ struct CertificatesManagementView: View {
             .sheet(isPresented: $showAddCert) {
                 AddCertificateView()
             }
-            .sheet(isPresented: $showShareSheet) {
-                if let url = shareURL {
-                    ShareSheet(items: [url])
+            .sheet(item: $shareURL) { url in
+                ShareSheet(items: [url])
+            }
+            .sheet(isPresented: $showDetailView) {
+                if let cert = selectedCertificate {
+                    NavigationView {
+                        CertificateDetailView(certificate: cert)
+                    }
                 }
+            }
+            .confirmationDialog("Certificate Options", isPresented: $showActionSheet, presenting: selectedCertificate) { cert in
+                Button("View Details") {
+                    showDetailView = true
+                }
+                
+                if !cert.isDefault {
+                    Button("Set as Default") {
+                        setDefaultCertificate(cert)
+                    }
+                }
+                
+                Button("Share Certificate") {
+                    shareCertificate(cert)
+                }
+                
+                Button("Delete", role: .destructive) {
+                    deleteCertificate(cert)
+                }
+                
+                Button("Cancel", role: .cancel) {}
+            } message: { cert in
+                Text(cert.nickname ?? L("Certificate"))
             }
             .overlay {
                 if certificates.isEmpty {
@@ -123,6 +141,26 @@ struct CertificatesManagementView: View {
                     .shadow(radius: 10)
                 }
             }
+            
+            // Loading overlay when exporting certificate
+            if isExporting {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                        Text("Preparing certificate...")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    .padding(32)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(16)
+                    .shadow(radius: 10)
+                }
+            }
         }
     }
     
@@ -154,35 +192,40 @@ struct CertificatesManagementView: View {
     private func deleteCertificate(_ certificate: CertificatePair) {
         withAnimation {
             storage.deleteCertificate(certificate)
-        }
-    }
-    
-    private func deleteCerts(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { certificates[$0] }.forEach(storage.deleteCertificate)
+            selectedCertificate = nil
         }
     }
     
     private func shareCertificate(_ certificate: CertificatePair) {
+        isExporting = true
         Task {
             do {
                 let url = try await ZSignCertificateHandler.export(certificate: certificate)
                 await MainActor.run {
+                    self.isExporting = false
                     self.shareURL = url
-                    self.showShareSheet = true
                 }
             } catch {
-                print("Error exporting certificate: \(error)")
+                await MainActor.run {
+                    self.isExporting = false
+                    print("Error exporting certificate: \(error)")
+                }
             }
         }
     }
 }
 
-// MARK: - Certificate Row
-struct CertificateRow: View {
+// MARK: - URL Extension
+extension URL: Identifiable {
+    public var id: String {
+        self.absoluteString
+    }
+}
+
+// MARK: - Certificate Row Content
+struct CertificateRowContent: View {
     let certificate: CertificatePair
     let isDefault: Bool
-    let onTap: () -> Void
     
     private var provision: Certificate? {
         Storage.shared.getProvisionDecoded(for: certificate)
@@ -194,70 +237,86 @@ struct CertificateRow: View {
     }
     
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                // Default indicator
-                Image(systemName: isDefault ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isDefault ? .blue : .gray)
-                    .font(.title3)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(certificate.nickname ?? "Certificate")
-                            .font(.headline)
-                        
-                        if isDefault {
-                            Text("DEFAULT")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
-                                .background(Color.blue)
-                                .cornerRadius(4)
-                        }
-                        
-                        if certificate.revoked {
-                            Text("REVOKED")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
-                                .background(Color.red)
-                                .cornerRadius(4)
-                        }
-                    }
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(certificate.nickname ?? L("Certificate"))
+                        .font(.headline)
                     
-                    if let provision = provision {
-                        Text(provision.Name)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Team: \(provision.TeamName)")
+                    if isDefault {
+                        Text("DEFAULT")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.accentColor)
+                            .cornerRadius(4)
                     }
                     
-                    if let expiration = certificate.expiration {
-                        Label {
-                            Text("Expires: \(expiration, style: .date)")
-                                .font(.caption2)
-                        } icon: {
-                            Image(systemName: isExpired ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-                                .font(.caption)
-                        }
-                        .foregroundColor(isExpired ? .red : .green)
+                    if certificate.revoked {
+                        Text("REVOKED")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.red)
+                            .cornerRadius(4)
                     }
                 }
                 
-                Spacer()
+                if let provision = provision {
+                    // App ID Name
+                    Text("App ID: \(provision.AppIDName)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Text(provision.Name)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Team: \(provision.TeamName)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    // PPQ Check badge
+                    if let ppqCheck = provision.PPQCheck, ppqCheck {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.shield.fill")
+                                .font(.caption2)
+                            Text("PPQ Check")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.green)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(4)
+                    }
+                }
+                
+                if let expiration = certificate.expiration {
+                    Label {
+                        Text("Expires: \(expiration, style: .date)")
+                            .font(.caption2)
+                    } icon: {
+                        Image(systemName: isExpired ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                            .font(.caption)
+                    }
+                    .foregroundColor(isExpired ? .red : .green)
+                }
             }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
-            .opacity(certificate.revoked ? 0.6 : 1.0)
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
-        .buttonStyle(.plain)
+        .padding(.vertical, 4)
+        .opacity(certificate.revoked || !isDefault ? 0.6 : 1.0)
     }
 }
 
@@ -301,6 +360,12 @@ struct AddCertificateView: View {
 struct ManualAddCertificateView: View {
     var parentDismiss: DismissAction? = nil
     @Environment(\.dismiss) var dismiss
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \CertificatePair.date, ascending: false)],
+        animation: .default
+    )
+    private var certificates: FetchedResults<CertificatePair>
     
     @State private var p12URL: URL?
     @State private var provisionURL: URL?
@@ -399,6 +464,9 @@ struct ManualAddCertificateView: View {
     private func saveCertificate() {
         guard let p12 = p12URL, let provision = provisionURL else { return }
         
+        // Nếu chưa có chứng chỉ nào, tự động set làm default
+        let shouldBeDefault = certificates.isEmpty || isDefault
+        
         isValidating = true
         errorMessage = nil
         
@@ -409,7 +477,7 @@ struct ManualAddCertificateView: View {
                     provisionURL: provision,
                     password: password,
                     nickname: nickname.isEmpty ? nil : nickname,
-                    isDefault: isDefault
+                    isDefault: shouldBeDefault
                 )
                 
                 guard handler.validate() else {
@@ -446,6 +514,12 @@ struct ManualAddCertificateView: View {
 struct ZSignCertImportView: View {
     var parentDismiss: DismissAction? = nil
     @Environment(\.dismiss) var dismiss
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \CertificatePair.date, ascending: false)],
+        animation: .default
+    )
+    private var certificates: FetchedResults<CertificatePair>
     
     @State private var zsignCertURL: URL?
     @State private var showFilePicker = false
@@ -522,6 +596,9 @@ struct ZSignCertImportView: View {
     private func importZSignCertificate() {
         guard let url = zsignCertURL else { return }
         
+        // Nếu chưa có chứng chỉ nào, tự động set làm default
+        let shouldBeDefault = certificates.isEmpty || isDefault
+        
         isImporting = true
         errorMessage = nil
         
@@ -530,7 +607,7 @@ struct ZSignCertImportView: View {
                 try await ZSignCertificateHandler.import(
                     from: url,
                     nickname: nickname.isEmpty ? nil : nickname,
-                    isDefault: isDefault
+                    isDefault: shouldBeDefault
                 )
                 
                 await MainActor.run {
@@ -556,6 +633,12 @@ struct ZSignCertImportView: View {
 struct ZipCertImportView: View {
     var parentDismiss: DismissAction? = nil
     @Environment(\.dismiss) var dismiss
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \CertificatePair.date, ascending: false)],
+        animation: .default
+    )
+    private var certificates: FetchedResults<CertificatePair>
     
     @State private var zipURL: URL?
     @State private var password: String = ""
@@ -648,6 +731,9 @@ struct ZipCertImportView: View {
     private func importZipCertificate() {
         guard let url = zipURL else { return }
         
+        // Nếu chưa có chứng chỉ nào, tự động set làm default
+        let shouldBeDefault = certificates.isEmpty || isDefault
+        
         isImporting = true
         errorMessage = nil
         
@@ -657,7 +743,7 @@ struct ZipCertImportView: View {
                     from: url,
                     password: password,
                     nickname: nickname.isEmpty ? nil : nickname,
-                    isDefault: isDefault
+                    isDefault: shouldBeDefault
                 )
                 
                 await MainActor.run {

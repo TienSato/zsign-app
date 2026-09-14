@@ -59,5 +59,7 @@ public:
 	uint32_t		m_uHeaderSize;
 
 private:
-	static uint64_t s_uExecSegLimit;
+	// [ĐÃ SỬA] Chuyển từ static -> biến thành viên để KÝ SONG SONG an toàn.
+	// Trước đây static bị chia sẻ giữa các luồng -> đua dữ liệu -> chữ ký sai.
+	uint64_t m_uExecSegLimit;
 };

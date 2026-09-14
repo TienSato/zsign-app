@@ -48,7 +48,7 @@ class InstallHandler {
         server?.onInstallationDetected = { [weak self] in
             Task { @MainActor in
                 self?.status = .installing
-                self?.statusMessage = "Installing..."
+                self?.statusMessage = L("Installing...")
             }
         }
         
@@ -75,6 +75,9 @@ class InstallHandler {
             await updateStatus(.broken, "Failed to open link")
             throw InstallError.failedToOpenLink
         }
+
+        // Nhớ đã cài (bundle id -> version) để phân biệt Cài đặt vs Cập nhật
+        InstalledRegistry.record(bundleId: signedApp.identifier, version: signedApp.version)
         
         await updateStatus(.sendingPayload, "Sending to device...")
         
@@ -107,30 +110,20 @@ class InstallHandler {
     private func buildZsignURL() -> URL {
         var comps = URLComponents()
         comps.scheme = "https"
-        comps.host = "zsign.app"
-        comps.path = "/server.php"
-        
-        let requestData: [String: Any] = [
-            "b": signedApp.identifier ?? "",
-            "n": signedApp.name ?? "",
-            "v": signedApp.version ?? "",
-            "f": "http://127.0.0.1:\(port)/app.ipa",
-            "s": "http://127.0.0.1:\(port)/app57x57.png",
-            "l": "http://127.0.0.1:\(port)/app512x512.png",
-            "t": Int(Date().timeIntervalSince1970)
+        comps.host = "sign.zsign.app"
+        comps.path = "/plist"
+
+        comps.queryItems = [
+            URLQueryItem(name: "bundleid",   value: signedApp.identifier ?? ""),
+            URLQueryItem(name: "name",       value: signedApp.name ?? ""),
+            URLQueryItem(name: "version",    value: signedApp.version ?? ""),
+            URLQueryItem(name: "fetchurl",   value: "http://127.0.0.1:\(port)/app.ipa"),
+            URLQueryItem(name: "smallimage", value: "http://127.0.0.1:\(port)/app57x57.png"),
+            URLQueryItem(name: "largeimage", value: "http://127.0.0.1:\(port)/app512x512.png"),
+            URLQueryItem(name: "t",          value: String(Int(Date().timeIntervalSince1970)))
         ]
-        
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: requestData),
-              let jsonString = String(data: jsonData, encoding: .utf8),
-              let encrypted = encryptAES256CBC(
-                plaintext: jsonString,
-                key: "Satodeptrai"
-              ) else {
-            return URL(string: "https://zsign.app/error")!
-        }
-        
-        comps.queryItems = [URLQueryItem(name: "d", value: encrypted)]
-        return comps.url!
+
+        return comps.url ?? URL(string: "https://sign.zsign.app/error")!
     }
     
     private func buildITunesLink(manifestURL: URL) -> URL {
@@ -153,53 +146,6 @@ class InstallHandler {
         }
     }
     
-    private func encryptAES256CBC(plaintext: String, key: String) -> String? {
-        guard let data = plaintext.data(using: .utf8),
-              let keyData = key.data(using: .utf8) else {
-            return nil
-        }
-        
-        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-        keyData.withUnsafeBytes {
-            _ = CC_SHA256($0.baseAddress, CC_LONG(keyData.count), &hash)
-        }
-        let keyBytes = Data(hash).prefix(32)
-        
-        var iv = Data(repeating: 0, count: 16)
-        let copyLength = min(16, keyBytes.count)
-        iv.replaceSubrange(0..<copyLength, with: keyBytes.prefix(copyLength))
-        
-        let cryptLength = data.count + kCCBlockSizeAES128
-        var cryptData = Data(count: cryptLength)
-        var numBytesEncrypted: size_t = 0
-        
-        let cryptStatus = cryptData.withUnsafeMutableBytes { cryptBytes in
-            data.withUnsafeBytes { dataBytes in
-                iv.withUnsafeBytes { ivBytes in
-                    keyBytes.withUnsafeBytes { keyBytes in
-                        CCCrypt(
-                            CCOperation(kCCEncrypt),
-                            CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding),
-                            keyBytes.baseAddress, keyBytes.count,
-                            ivBytes.baseAddress,
-                            dataBytes.baseAddress, data.count,
-                            cryptBytes.baseAddress, cryptLength,
-                            &numBytesEncrypted
-                        )
-                    }
-                }
-            }
-        }
-        
-        guard cryptStatus == kCCSuccess else { return nil }
-        
-        let encryptedData = cryptData.prefix(numBytesEncrypted)
-        return encryptedData.base64EncodedString()
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "=", with: "")
-    }
 }
 
 enum InstallStatus {

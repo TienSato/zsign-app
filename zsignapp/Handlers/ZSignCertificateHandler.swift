@@ -407,17 +407,17 @@ enum ZSignCertError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidCertificate:
-            return "Chứng chỉ không hợp lệ"
+            return L("Invalid certificate")
         case .filesNotFound:
-            return "Không tìm thấy file chứng chỉ"
+            return L("Certificate file not found")
         case .invalidZipFile:
-            return "File .zsigncert không hợp lệ hoặc bị hỏng"
+            return L("Invalid or corrupted .zsigncert file")
         case .missingMetadata:
-            return "Thiếu thông tin metadata trong chứng chỉ"
+            return L("Missing metadata in certificate")
         case .unsupportedVersion:
-            return "Phiên bản chứng chỉ không được hỗ trợ"
+            return L("Unsupported certificate version")
         case .accessDenied:
-            return "Không thể truy cập file"
+            return L("Cannot access file")
         }
     }
 }
@@ -430,9 +430,9 @@ enum ZipCertError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidZipFile:
-            return "File ZIP không hợp lệ hoặc bị hỏng"
+            return L("Invalid or corrupted ZIP file")
         case .filesNotFound:
-            return "Không tìm thấy file .p12 hoặc .mobileprovision trong ZIP"
+            return L("No .p12 or .mobileprovision found in the ZIP")
         }
     }
 }

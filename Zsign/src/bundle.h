@@ -3,6 +3,7 @@
 #include "json.h"
 #include "openssl.h"
 #include <vector>
+#include <mutex>
 
 class ZBundle
 {
@@ -23,6 +24,8 @@ public:
 
 private:
 	bool SignNode(jvalue& jvNode);
+	bool SignSingleBundle(jvalue& jvNode); // [MỚI] ký 1 bundle
+	bool SignRootParallel(jvalue& jvNode); // [MỚI] ký song song
 	void GetNodeChangedFiles(jvalue& jvNode, bool dontGenerateEmbeddedMobileProvision);
 	void GetChangedFiles(jvalue& jvNode, vector<string>& arrChangedFiles);
 	bool ModifyPluginsBundleId(const string& strOldBundleId, const string& strNewBundleId);
@@ -45,4 +48,5 @@ private:
 public:
 	string			m_strAppFolder;
 	string signFailedFiles;
+	std::mutex m_failMutex; // [MỚI] bảo vệ signFailedFiles khi ký song song
 };

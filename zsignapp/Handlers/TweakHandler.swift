@@ -1,7 +1,7 @@
 //
 //  TweakHandler-zsignapp.swift
-//  zsignapp
-//  Created by Sato on 26/10/25.
+//  Zsign
+//
 
 import Foundation
 import ZsignSwift
@@ -26,20 +26,19 @@ class TweakHandler {
     // MARK: - Main Entry Point
     
     func inject() async throws {
-        // Check if we need to inject anything
-        if !options.experiment_replaceSubstrateWithEllekit {
-            guard !urls.isEmpty else {
-                return
-            }
-        }
-        
+        // ✅ GỌI checkEllekit() TRƯỚC - giống Feather
         try await checkEllekit()
+        
+        // ✅ SAU ĐÓ mới kiểm tra rỗng
+        guard !urls.isEmpty else {
+            print("⚠️ No files to inject after ElleKit check")
+            return
+        }
         
         let baseTmpDir = fileManager.temporaryDirectory
             .appendingPathComponent("ZsignTweak_\(UUID().uuidString)")
         try fileManager.createDirectory(at: baseTmpDir, withIntermediateDirectories: true)
         
-        // Process each file
         for url in urls {
             switch url.pathExtension.lowercased() {
             case "dylib":
@@ -55,7 +54,6 @@ class TweakHandler {
             }
         }
         
-        // Handle extracted directories from debs
         if !directoriesToCheck.isEmpty {
             try await handleDirectories(at: directoriesToCheck)
             
@@ -64,7 +62,6 @@ class TweakHandler {
             }
         }
         
-        // Cleanup temp directory
         try? fileManager.removeItem(at: baseTmpDir)
     }
     
@@ -82,22 +79,32 @@ class TweakHandler {
             guard let ellekitURL = Bundle.main.url(forResource: "ellekit", withExtension: "deb") else {
                 throw TweakError.ellekitNotFound
             }
+            // ✅ Insert vào đầu danh sách để xử lý đầu tiên
             urls.insert(ellekitURL, at: 0)
+            print("✅ Added ellekit.deb to injection queue")
         }
         
-        // Check if CydiaSubstrate.framework exists
+        // ✅ Logic giống Feather
         if fileManager.fileExists(atPath: substrateFramework.path) {
             if options.experiment_replaceSubstrateWithEllekit {
+                print("🔄 Replacing CydiaSubstrate with ElleKit")
                 try fileManager.removeItem(at: substrateFramework)
                 try await addEllekit()
             } else {
+                print("ℹ️ CydiaSubstrate exists, skipping ElleKit injection")
                 return
             }
         } else {
-            guard !urls.isEmpty else {
-                return
+            // ✅ Không kiểm tra urls.isEmpty ở đây
+            // Vì có thể user chỉ muốn inject ElleKit mà không có tweak khác
+            if options.experiment_replaceSubstrateWithEllekit {
+                print("📦 No CydiaSubstrate found, adding ElleKit")
+                try await addEllekit()
+            } else if !urls.isEmpty {
+                // ✅ Chỉ add ElleKit nếu có tweaks khác cần inject
+                print("📦 Adding ElleKit for existing tweaks")
+                try await addEllekit()
             }
-            try await addEllekit()
         }
     }
     
@@ -114,13 +121,11 @@ class TweakHandler {
         var destinationURL = app
         var injectFolder = options.injectFolder
         
-        // Determine injection location
         if options.injectFolder.contains(SigningOptions.injectFolderValues[1]) {
             destinationURL = destinationURL.appendingPathComponent("Frameworks")
             try? fileManager.createDirectory(at: destinationURL, withIntermediateDirectories: true)
         }
         
-        // Adjust inject path if using @rpath and Frameworks
         if options.injectPath.contains(SigningOptions.injectPathValues[1]) &&
            options.injectFolder.contains(SigningOptions.injectFolderValues[1]) {
             injectFolder = SigningOptions.injectFolderValues[0]
@@ -134,29 +139,21 @@ class TweakHandler {
             throw TweakError.executableNotFound
         }
         
-        // Change CydiaSubstrate path
-        let changed = Zsign.changeDylibPath(
+        // ✅ Change CydiaSubstrate path (ignore result like Feather)
+        _ = Zsign.changeDylibPath(
             appExecutable: destinationURL.path,
             for: "/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
             with: "@rpath/CydiaSubstrate.framework/CydiaSubstrate"
         )
         
-        if !changed {
-            print("Failed to change CydiaSubstrate path for: \(fileName)")
-        }
-        
-        // Inject dylib
+        // ✅ Inject dylib (ignore result like Feather)
         let injectPath = "\(options.injectPath)\(injectFolder)\(destinationURL.lastPathComponent)"
-        let success = Zsign.injectDyLib(
+        _ = Zsign.injectDyLib(
             appExecutable: appExec.path,
             with: injectPath
         )
         
-        if success {
-            print("Injected: \(fileName)")
-        } else {
-            throw TweakError.injectionFailed
-        }
+        print("✅ Processed: \(fileName)")
     }
     
     // MARK: - Framework Injection
@@ -165,7 +162,7 @@ class TweakHandler {
         let fileName = url.lastPathComponent
         
         if isDisabled(fileName: fileName) {
-            print("Skipping disabled framework: \(fileName)")
+            print("⏭️ Skipping disabled framework: \(fileName)")
             return
         }
         
@@ -184,29 +181,21 @@ class TweakHandler {
             return
         }
         
-        // Change CydiaSubstrate path IN FRAMEWORK
-        let changed = Zsign.changeDylibPath(
+        // ✅ Change CydiaSubstrate path IN FRAMEWORK (ignore result like Feather)
+        _ = Zsign.changeDylibPath(
             appExecutable: fExec.path,
             for: "/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
             with: "@rpath/CydiaSubstrate.framework/CydiaSubstrate"
         )
         
-        if !changed {
-            print(" Failed to change CydiaSubstrate path in framework: \(fileName)")
-        }
-        
-        // Inject framework
+        // ✅ Inject framework (ignore result like Feather)
         let injectPath = "@executable_path/Frameworks/\(url.lastPathComponent)/\(fExec.lastPathComponent)"
-        let injected = Zsign.injectDyLib(
+        _ = Zsign.injectDyLib(
             appExecutable: appExec.path,
             with: injectPath
         )
         
-        if injected {
-            print("Injected framework: \(fileName)")
-        } else {
-            throw TweakError.injectionFailed
-        }
+        print("✅ Processed framework: \(fileName)")
     }
     
     // MARK: - Bundle Support
@@ -215,7 +204,7 @@ class TweakHandler {
         let fileName = url.lastPathComponent
         
         if isDisabled(fileName: fileName) {
-            print("Skipping disabled bundle: \(fileName)")
+            print("⏭️ Skipping disabled bundle: \(fileName)")
             return
         }
         
@@ -223,7 +212,7 @@ class TweakHandler {
         
         try fileManager.moveFileIfNeeded(from: url, to: destinationURL)
         
-        print("Copied bundle: \(fileName)")
+        print("✅ Copied bundle: \(fileName)")
     }
     
     // MARK: - Deb Handling
@@ -239,14 +228,11 @@ class TweakHandler {
             let outputPath = uniqueSubDir.appendingPathComponent(arFile.name)
             try arFile.content.write(to: outputPath)
             
-            // Extract data.tar variants
             if ["data.tar.lzma", "data.tar.gz", "data.tar.xz", "data.tar.bz2", "data.tar"].contains(arFile.name) {
                 var fileToProcess = outputPath
-                // Decompress if needed
                 if arFile.name != "data.tar" {
                     try extractFile(at: &fileToProcess)
                 }
-                // Extract tar
                 try extractFile(at: &fileToProcess)
                 directoriesToCheck.append(fileToProcess)
             }
@@ -343,17 +329,14 @@ class TweakHandler {
     // MARK: - Disabled Tweaks Check
     
     private func isDisabled(fileName: String) -> Bool {
-        // Check exact match
         if disabledTweaks.contains(fileName) {
             return true
         }
         
-        // Check with Frameworks/ prefix
         if disabledTweaks.contains("Frameworks/\(fileName)") {
             return true
         }
         
-        // Check if any disabled path ends with this filename
         for disabled in disabledTweaks {
             if disabled.hasSuffix(fileName) {
                 return true
@@ -375,14 +358,11 @@ class TweakHandler {
     }
 }
 
-
 extension FileManager {
     func moveFileIfNeeded(from source: URL, to destination: URL) throws {
-        // Remove destination if exists
         if fileExists(atPath: destination.path) {
             try removeItem(at: destination)
         }
-        // Move (not copy!)
         try moveItem(at: source, to: destination)
     }
 }

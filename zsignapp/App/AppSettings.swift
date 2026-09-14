@@ -13,25 +13,16 @@ class AppSettings: ObservableObject {
     
     // MARK: - Keys
     private enum Keys {
-        static let autoCleanTemp = "autoCleanTemp"
-        static let showDebugLog = "showDebugLog"
         static let compressionLevel = "compressionLevel"
         static let compressionLevelIsSet = "compressionLevel_isSet"
         static let backgroundAudioEnabled = "zsignapp.backgroundAudioEnabled"
+        
+        // ✅ THÊM MỚI: Chỉ cần 2 keys (bỏ certificate UUID key)
+        static let autoSignAfterDownload = "zsignapp.autoSignAfterDownload"
     }
     
     // MARK: - Settings
-    @Published var autoCleanTemp: Bool {
-        didSet {
-            defaults.set(autoCleanTemp, forKey: Keys.autoCleanTemp)
-        }
-    }
-    
-    @Published var showDebugLog: Bool {
-        didSet {
-            defaults.set(showDebugLog, forKey: Keys.showDebugLog)
-        }
-    }
+  
     
     @Published var compressionLevel: Int {
         didSet {
@@ -53,10 +44,17 @@ class AppSettings: ObservableObject {
         }
     }
     
+    // ✅ THÊM MỚI: Chỉ cần 2 settings đơn giản
+    @Published var autoSignAfterDownload: Bool {
+        didSet {
+            defaults.set(autoSignAfterDownload, forKey: Keys.autoSignAfterDownload)
+            print("📝 Auto Sign After Download: \(autoSignAfterDownload)")
+        }
+    }
+    
     // MARK: - Init
     private init() {
-        self.autoCleanTemp = defaults.bool(forKey: Keys.autoCleanTemp)
-        self.showDebugLog = defaults.bool(forKey: Keys.showDebugLog)
+        
         
         // Migrate old compression settings
         CompressionMigrationHelper.migrateCompressionSetting(key: Keys.compressionLevel)
@@ -72,6 +70,9 @@ class AppSettings: ObservableObject {
         
         // Load background audio setting
         self.backgroundAudioEnabled = defaults.bool(forKey: Keys.backgroundAudioEnabled)
+        
+        // ✅ THÊM MỚI: Load auto sign settings
+        self.autoSignAfterDownload = defaults.bool(forKey: Keys.autoSignAfterDownload)
     }
     
     // MARK: - Helpers
@@ -93,10 +94,12 @@ class AppSettings: ObservableObject {
     
     // MARK: - Reset to Default
     func resetToDefaults() {
-        autoCleanTemp = false
-        showDebugLog = false
+        
         compressionLevel = 1  // BestSpeed (default)
         backgroundAudioEnabled = false
+        
+        // ✅ THÊM MỚI: Reset auto sign settings
+        autoSignAfterDownload = false
         
         // Clear the "isSet" flag
         defaults.removeObject(forKey: Keys.compressionLevelIsSet)

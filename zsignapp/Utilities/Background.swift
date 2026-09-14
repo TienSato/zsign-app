@@ -35,6 +35,7 @@ class BackgroundAudioManager: NSObject {
         stopEngine()
         endBackgroundTask()
     }
+    
     private func setupAudioEngine() {
         let silence = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let ablPointer = UnsafeMutableAudioBufferListPointer(audioBufferList)
@@ -48,6 +49,7 @@ class BackgroundAudioManager: NSObject {
         engine.connect(silence, to: engine.mainMixerNode, format: nil)
         engine.prepare()
     }
+    
     private func setupNotifications() {
         NotificationCenter.default.addObserver(
             self,
@@ -68,16 +70,19 @@ class BackgroundAudioManager: NSObject {
             object: nil
         )
     }
+    
     @objc private func appDidEnterBackground() {
         if UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
             startBackgroundAudio()
         }
     }
+    
     @objc private func appWillEnterForeground() {
     }
     
     @objc private func appDidBecomeActive() {
     }
+    
     private func setupAudioSession() {
         do {
             let audioSession = AVAudioSession.sharedInstance()
@@ -111,6 +116,7 @@ class BackgroundAudioManager: NSObject {
         } catch {
         }
     }
+    
     @objc private func handleAudioSessionInterruption(notification: Notification) {
         guard let info = notification.userInfo,
               let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
@@ -136,6 +142,7 @@ class BackgroundAudioManager: NSObject {
             break
         }
     }
+    
     @objc private func handleAudioRouteChange(notification: Notification) {
         guard let info = notification.userInfo,
               let reasonValue = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
@@ -154,7 +161,8 @@ class BackgroundAudioManager: NSObject {
             break
         }
     }
-    // MARK: - Engine Control (NEW - Thay AVAudioPlayer)
+    
+    // MARK: - Engine Control
     private func startEngine() {
         guard !engine.isRunning else { return }
         
@@ -163,25 +171,39 @@ class BackgroundAudioManager: NSObject {
         } catch {
         }
     }
+    
     private func pauseEngine() {
         engine.pause()
     }
+    
     private func resumeEngine() {
         do {
             try engine.start()
         } catch {
         }
     }
+    
     private func stopEngine() {
         if engine.isRunning {
             engine.stop()
         }
     }
     
-    // MARK: - Public Methods (CẢI THIỆN)
-    func startBackgroundAudio() {
-        guard isInitialized,
-              UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") else {
+    // MARK: - Public Methods
+    
+    /// Start background audio to keep app active
+    /// - Parameter force: If true, bypass user setting check (used for downloads)
+    func startBackgroundAudio(force: Bool = false) {
+        guard isInitialized else {
+            return
+        }
+        
+        // ✅ THAY ĐỔI CHÍNH:
+        // - force = true: Luôn start (dành cho downloads)
+        // - force = false: Kiểm tra user setting (default behavior)
+        let shouldStart = force || UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled")
+        
+        guard shouldStart else {
             return
         }
         
@@ -197,6 +219,7 @@ class BackgroundAudioManager: NSObject {
             startKeepAliveTimer()
             
         } catch {
+            print("❌ Failed to start background audio: \(error)")
         }
     }
     
@@ -207,7 +230,7 @@ class BackgroundAudioManager: NSObject {
         endBackgroundTask()
     }
     
-    // MARK: - Keep Alive Timer (GIỮ NGUYÊN)
+    // MARK: - Keep Alive Timer
     private func startKeepAliveTimer() {
         timer?.invalidate()
         
@@ -267,4 +290,3 @@ class BackgroundAudioManager: NSObject {
     func applicationWillEnterForeground() {
     }
 }
-

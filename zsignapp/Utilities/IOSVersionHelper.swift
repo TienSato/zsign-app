@@ -18,6 +18,6 @@ class IOSVersionHelper {
     }
     
     static func shouldEnableElleKitByDefault() -> Bool {
-        return isIOS26OrLater()
+        return false  // ✅ TẮT tự động bật ElleKit
     }
 }

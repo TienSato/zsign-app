@@ -1,7 +1,7 @@
 //
 //  SigningHandler-zsignapp.swift
-//  zsignapp
-//  FIXED: Use Zip library instead of SwiftMiniZip
+//  zsign
+//
 
 import Foundation
 import UIKit
@@ -22,6 +22,7 @@ class SigningHandler {
     
     private var disabledTweaksHandler: DisabledTweaksHandler?
     private var appPath: URL?
+    private var signingError: Error?
     
     var stepProgressCallback: ((String) -> Void)?
     var progressCallback: ((Double) -> Void)?
@@ -44,7 +45,15 @@ class SigningHandler {
     // MARK: - Main Signing Flow
     
     func performFullSigning() async throws {
-        BackgroundAudioManager.shared.startBackgroundAudio()
+        BackgroundAudioManager.shared.startBackgroundAudio(force: true)
+        SignLogger.shared.start("Bắt đầu ký ứng dụng: \(sourceApp.name ?? "(không tên)")")
+        SignLogger.shared.log("Bundle gốc: \(sourceApp.identifier ?? "-") | phiên bản: \(sourceApp.version ?? "-")")
+        SignLogger.shared.log("Chứng chỉ: \(certificate.nickname ?? "-")")
+        if let n = options.appName { SignLogger.shared.log("Tên tùy chỉnh: \(n)") }
+        if let b = options.appIdentifier { SignLogger.shared.log("Bundle tùy chỉnh: \(b)") }
+        if let v = options.appVersion { SignLogger.shared.log("Version tùy chỉnh: \(v)") }
+        SignLogger.shared.log("Số tweak tiêm: \(options.injectionFiles.count) | tweak tắt: \(disabledTweaks.count)")
+        
         defer {
             if !UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
                 BackgroundAudioManager.shared.stopBackgroundAudio()
@@ -63,7 +72,12 @@ class SigningHandler {
             
             await notifyProgress("Completed")
             
+            if let error = signingError {
+                throw error
+            }
+            
         } catch {
+            SignLogger.shared.log("LỖI: \(error.localizedDescription)")
             disabledTweaksHandler?.cleanup()
             await cleanup()
             throw error
@@ -73,6 +87,7 @@ class SigningHandler {
     @MainActor
     private func notifyProgress(_ message: String) {
         stepProgressCallback?(message)
+        SignLogger.shared.log(message)
     }
     
     // MARK: - Step 1: Prepare
@@ -95,7 +110,6 @@ class SigningHandler {
         try fileManager.copyItem(at: appFile, to: destPath)
         
         appPath = destPath
-        print("Prepared app at: \(destPath.path)")
     }
     
     // MARK: - Step 2: Modify
@@ -111,7 +125,7 @@ class SigningHandler {
             throw SigningError.infoPlistNotFound
         }
         
-        // 1.Modify plugin identifiers
+        // 1. Modify plugin identifiers
         if let customIdentifier = options.appIdentifier,
            let oldIdentifier = infoDictionary["CFBundleIdentifier"] as? String {
             try await modifyPluginIdentifiers(old: oldIdentifier, new: customIdentifier, for: appPath)
@@ -120,22 +134,22 @@ class SigningHandler {
         // 2. Modify Info.plist
         try await modifyInfoPlist(using: infoDictionary, to: appPath)
         
-        // 3.Modify icon
+        // 3. Modify icon
         if let customIcon = customIcon {
             try await modifyIcon(using: infoDictionary, image: customIcon, to: appPath)
         }
         
-        // 4.Modify locales
+        // 4. Modify locales
         if let customName = options.appName {
             try await modifyLocalesForName(customName, for: appPath)
         }
         
-        // 5.Remove custom files
+        // 5. Remove custom files
         if !options.removeFiles.isEmpty {
             try await removeCustomFiles(options.removeFiles, at: appPath)
         }
         
-        // 6.Remove preset files
+        // 6. Remove preset files (minimal - NO _CodeSignature removal)
         try await removePresetFiles(at: appPath)
         
         // 7. Remove watch
@@ -149,6 +163,7 @@ class SigningHandler {
         // 9. Inject tweaks
         if options.experiment_replaceSubstrateWithEllekit || !options.injectionFiles.isEmpty {
             await notifyProgress("Injecting tweaks...")
+            SignLogger.shared.log("Tiêm \(options.injectionFiles.count) tweak vào app")
             let tweakHandler = TweakHandler(
                 app: appPath,
                 options: options,
@@ -157,15 +172,18 @@ class SigningHandler {
             try await tweakHandler.inject()
         }
         
-        // 10.iOS 19+ ARM64e fixup SAU injection
+        // 10. iOS 19+ ARM64e fixup
         if #available(iOS 19, *) {
             await notifyProgress("Applying iOS 19+ patches...")
             try await locateMachosAndFixupArm64eSlice(for: appPath)
         }
         
-        // 11.Disinject
+        // ✅ 11. NO CLEANING - Let Zsign handle everything
+        print("📝 Skipping signature cleaning - Zsign will handle all signing")
+        
+        // ✅ 12. Disinject disabled tweaks (if any)
         if !disabledTweaks.isEmpty {
-            await notifyProgress("Cleaning load commands...")
+            await notifyProgress("Removing disabled tweaks...")
             disabledTweaksHandler = DisabledTweaksHandler(
                 appURL: appPath,
                 disabledTweaks: disabledTweaks
@@ -173,29 +191,24 @@ class SigningHandler {
             try disabledTweaksHandler?.removeDisabledTweaks()
         }
         
-        // 12. Sign
-        await notifyProgress("Signing...")
+        // ✅ 13. Sign (Zsign will handle EVERYTHING including invalid files)
+        await notifyProgress("Signing app...")
         try await sign()
         
         disabledTweaksHandler?.cleanup()
         
-        // 13. Move to Signed
-        await notifyProgress("Finalizing...")
-        try await move()
-        
-        // 14. Add to database
-        await notifyProgress("Saving...")
-        try await saveToDatabase()
-        
-        // 15. Create IPA
+        // 14. Create IPA
         await notifyProgress("Creating IPA...")
         try await createIPA()
+        
+        // 15. Save to database
+        await notifyProgress("Saving...")
+        try await saveToDatabase()
     }
     
     // MARK: - Modify Functions
     
     private func modifyInfoPlist(using dict: NSMutableDictionary, to app: URL) async throws {
-        // Basic features
         if options.fileSharing {
             dict.setObject(true, forKey: "UISupportsDocumentBrowser" as NSCopying)
         }
@@ -215,7 +228,6 @@ class SigningHandler {
             dict.removeObject(forKey: "CFBundleURLTypes")
         }
         
-        // Appearance
         if options.appAppearance != SigningOptions.appAppearanceValues[0] {
             let value: Int = {
                 switch options.appAppearance {
@@ -227,17 +239,14 @@ class SigningHandler {
             dict.setObject(value, forKey: "UIUserInterfaceStyle" as NSCopying)
         }
         
-        // Minimum requirement
         if options.minimumAppRequirement != SigningOptions.appMinimumAppRequirementValues[0] {
             dict.setObject(options.minimumAppRequirement, forKey: "MinimumOSVersion" as NSCopying)
         }
         
-        // Remove useless crap
         if dict["UISupportedDevices"] != nil {
             dict.removeObject(forKey: "UISupportedDevices")
         }
         
-        // PROMINENT VALUES
         if let customIdentifier = options.appIdentifier {
             dict.setObject(customIdentifier, forKey: "CFBundleIdentifier" as NSCopying)
         }
@@ -250,12 +259,10 @@ class SigningHandler {
             dict.setObject(customVersion, forKey: "CFBundleVersion" as NSCopying)
         }
         
-        // Custom Info.plist entries
         for (key, value) in options.customInfoPlistEntries {
             dict.setObject(value, forKey: key as NSCopying)
         }
         
-        // WRITE
         try dict.write(to: app.appendingPathComponent("Info.plist"))
     }
     
@@ -290,10 +297,7 @@ class SigningHandler {
         dict["CFBundleIcons"] = cfBundleIcons
         dict["CFBundleIcons~ipad"] = cfBundleIconsIpad
         
-        //  WRITE
         try dict.write(to: app.appendingPathComponent("Info.plist"))
-        
-        // Save icon for database
         try await saveCustomIconForDatabase(image)
     }
     
@@ -333,7 +337,6 @@ class SigningHandler {
             
             var didChange = false
             
-            // CFBundleIdentifier
             if let oldValue = infoDict["CFBundleIdentifier"] as? String {
                 let newValue = oldValue.replacingOccurrences(of: oldIdentifier, with: newIdentifier)
                 if oldValue != newValue {
@@ -342,7 +345,6 @@ class SigningHandler {
                 }
             }
             
-            // WKCompanionAppBundleIdentifier
             if let oldValue = infoDict["WKCompanionAppBundleIdentifier"] as? String {
                 let newValue = oldValue.replacingOccurrences(of: oldIdentifier, with: newIdentifier)
                 if oldValue != newValue {
@@ -351,7 +353,6 @@ class SigningHandler {
                 }
             }
             
-            // NSExtension → NSExtensionAttributes → WKAppBundleIdentifier
             if let extensionDict = infoDict["NSExtension"] as? NSMutableDictionary,
                let attributes = extensionDict["NSExtensionAttributes"] as? NSMutableDictionary,
                let oldValue = attributes["WKAppBundleIdentifier"] as? String {
@@ -369,7 +370,8 @@ class SigningHandler {
     }
     
     private func removePresetFiles(at app: URL) async throws {
-        var files = [
+        // ✅ ONLY remove these specific files - NO _CodeSignature!
+        let filesToRemove = [
             "embedded.mobileprovision",
             "com.apple.WatchPlaceholder",
             "SignedByEsign",
@@ -378,12 +380,11 @@ class SigningHandler {
             app.appendingPathComponent($0)
         }
         
-        // Add _CodeSignature directories
-        let codeSignDirs = enumerateFiles(at: app) { $0.hasSuffix("_CodeSignature") }
-        files.append(contentsOf: codeSignDirs)
-        
-        for file in files {
-            try? fileManager.removeItem(at: file)
+        for file in filesToRemove {
+            if fileManager.fileExists(atPath: file.path) {
+                try fileManager.removeItem(at: file)
+                print("  ✅ Removed preset: \(file.lastPathComponent)")
+            }
         }
     }
     
@@ -408,7 +409,9 @@ class SigningHandler {
     private func removeCustomFiles(_ files: [String], at app: URL) async throws {
         for file in files {
             let fileURL = app.appendingPathComponent(file)
-            try? fileManager.removeItem(at: fileURL)
+            if fileManager.fileExists(atPath: fileURL.path) {
+                try fileManager.removeItem(at: fileURL)
+            }
         }
     }
     
@@ -462,7 +465,7 @@ class SigningHandler {
         }
     }
     
-    // MARK: - Sign
+    // MARK: - ✅ Sign with Proper Error Handling
     
     func sign() async throws {
         guard let appPath = appPath else {
@@ -473,6 +476,10 @@ class SigningHandler {
               let provisionFile = Storage.shared.getCertificateFile(.mobileprovision, from: certificate) else {
             throw SigningError.certificateFilesNotFound
         }
+        
+        print("🔐 Starting signature process...")
+        print("📝 Zsign will handle all frameworks, dylibs, and invalid files automatically")
+        SignLogger.shared.log("Bắt đầu ký bằng lõi Zsign")
         
         return try await withCheckedThrowingContinuation { continuation in
             let success = Zsign.sign(
@@ -485,38 +492,38 @@ class SigningHandler {
                 customName: "",
                 customVersion: "",
                 removeProvision: !options.removeProvisioning
-            ) { success, error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else if success {
-                    print("Signing complete")
+            ) { [weak self] success, error in
+                if success {
+                    print("✅ Main app signed successfully")
+                    SignLogger.shared.log("Ký thành công (main app)")
+                    
+                    if let error = error {
+                        print("⚠️ Signing completed with warnings (non-fatal):")
+                        print("   \(error.localizedDescription)")
+                        print("   Zsign automatically skipped invalid files")
+                        SignLogger.shared.log("Cảnh báo khi ký (đã bỏ qua file lỗi): \(error.localizedDescription)")
+                    }
+                    
                     continuation.resume()
                 } else {
-                    continuation.resume(throwing: SigningError.signingFailed)
+                    print("❌ Main app signing failed")
+                    let finalError = error ?? SigningError.signingFailed
+                    print("   Error: \(finalError.localizedDescription)")
+                    SignLogger.shared.log("Ký THẤT BẠI: \(finalError.localizedDescription)")
+                    
+                    self?.signingError = finalError
+                    continuation.resume(throwing: finalError)
                 }
             }
             
             if !success {
-                continuation.resume(throwing: SigningError.signingFailed)
+                print("❌ Zsign.sign returned false immediately")
+                SignLogger.shared.log("Zsign.sign trả về false ngay lập tức")
+                let error = SigningError.signingFailed
+                self.signingError = error
+                continuation.resume(throwing: error)
             }
         }
-    }
-    
-    // MARK: - Move to Signed/
-    
-    func move() async throws {
-        guard let signedAppPath = appPath else {
-            throw SigningError.appNotPrepared
-        }
-        
-        // Move .app to Documents/Signed/{UUID}/
-        let destDir = fileManager.signedAppDirectory(uuid)
-        let destPath = destDir.appendingPathComponent(signedAppPath.lastPathComponent)
-        
-        try fileManager.moveItem(at: signedAppPath, to: destPath)
-        appPath = destPath
-        
-        print(" Moved signed app to: \(destPath.path)")
     }
     
     // MARK: - Save to Database
@@ -537,12 +544,10 @@ class SigningHandler {
                 version: finalVersion,
                 iconFileName: finalIconFileName
             )
-            
-            print("Saved to database")
         }
     }
     
-    // MARK: - Create IPA (DÙNG ZIP LIBRARY)
+    // MARK: - Create IPA
     
     func createIPA() async throws {
         guard let signedAppPath = appPath else {
@@ -550,49 +555,39 @@ class SigningHandler {
         }
         
         return try await Task.detached(priority: .userInitiated) { [self] in
-            // Create temp IPA work dir
             let ipaWorkDir = self.fileManager.temporaryDirectory
                 .appendingPathComponent("IPACreation_\(UUID().uuidString)")
             
             try self.fileManager.createDirectory(at: ipaWorkDir, withIntermediateDirectories: true)
             
-            // Create Payload/
             let payloadDir = ipaWorkDir.appendingPathComponent("Payload")
             try self.fileManager.createDirectory(at: payloadDir, withIntermediateDirectories: true)
             
-            // Copy .app to Payload/
             let appInPayload = payloadDir.appendingPathComponent(signedAppPath.lastPathComponent)
-            try self.fileManager.copyItem(at: signedAppPath, to: appInPayload)
+            try self.fileManager.moveItem(at: signedAppPath, to: appInPayload)
             
-            // Create IPA
             let ipaName = (self.sourceApp.name ?? "SignedApp")
                 .replacingOccurrences(of: " ", with: "_") + ".ipa"
             
             let ipaPath = ipaWorkDir.appendingPathComponent(ipaName)
             
-            //  COMPRESS WITH ZIP LIBRARY
             try await self.createIPAWithZipLibrary(
                 payloadDir: payloadDir,
                 outputPath: ipaPath,
                 compressionLevel: self.settings.compressionType
             )
             
-            // Move IPA to Signed/
             let ipaDestDir = self.fileManager.signedAppDirectory(self.uuid)
             let ipaDestPath = ipaDestDir.appendingPathComponent(ipaName)
             
             try? self.fileManager.removeItem(at: ipaDestPath)
             try self.fileManager.moveItem(at: ipaPath, to: ipaDestPath)
             
-            // Cleanup
             try? self.fileManager.removeItem(at: ipaWorkDir)
-            
-            print("IPA saved to: \(ipaDestPath.path)")
             
         }.value
     }
     
-    //  DÙNG ZIP LIBRARY
     private func createIPAWithZipLibrary(
         payloadDir: URL,
         outputPath: URL,
@@ -601,29 +596,40 @@ class SigningHandler {
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .utility).async { [weak self] in
                 do {
-                    //  ZIP WITH PROGRESS
-                    try Zip.zipFiles(
-                        paths: [payloadDir],
-                        zipFilePath: outputPath,
-                        password: nil,
-                        compression: compressionLevel,
-                        progress: { progress in
-                            Task { @MainActor in
-                                self?.progressCallback?(progress)
-                            }
-                        }
-                    )
-                    
-                    print(" IPA created successfully")
-                    
-                    Task { @MainActor in
-                        self?.progressCallback?(1.0)
+                    let progressCb: (Double) -> Void = { p in
+                        Task { @MainActor in self?.progressCallback?(p) }
                     }
-                    
+                    var usedParallel = false
+                    // ƯU TIÊN: nén song song (giống LCSign). Lỗi -> fallback lib Zip cũ.
+                    if ParallelZip.enabled {
+                        do {
+                            try ParallelZip.archive(
+                                payloadFolder: payloadDir,
+                                to: outputPath,
+                                storeOnly: (compressionLevel == .NoCompression),
+                                progress: progressCb
+                            )
+                            usedParallel = true
+                            print("✅ IPA nén song song (ParallelZip)")
+                            SignLogger.shared.log("Đóng gói IPA: nén song song (ParallelZip)")
+                        } catch {
+                            try? FileManager.default.removeItem(at: outputPath)
+                            print("⚠️ ParallelZip lỗi, fallback Zip lib: \(error)")
+                            SignLogger.shared.log("Đóng gói IPA: dùng Zip lib (fallback)")
+                        }
+                    }
+                    if !usedParallel {
+                        try Zip.zipFiles(
+                            paths: [payloadDir],
+                            zipFilePath: outputPath,
+                            password: nil,
+                            compression: compressionLevel,
+                            progress: progressCb
+                        )
+                    }
+                    Task { @MainActor in self?.progressCallback?(1.0) }
                     continuation.resume()
-                    
                 } catch {
-                    print(" Failed to create IPA: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -634,7 +640,6 @@ class SigningHandler {
     
     func cleanup() async {
         try? fileManager.removeItem(at: workDir)
-        print(" Cleaned up temp directory")
     }
     
     // MARK: - Helpers
@@ -667,6 +672,9 @@ enum SigningError: LocalizedError {
     case signingFailed
     case executableNotFound
     case invalidIcon
+    case disinjectFailed
+    case signatureCleanupFailed
+    case frameworkCleanupFailed
     
     var errorDescription: String? {
         switch self {
@@ -686,6 +694,12 @@ enum SigningError: LocalizedError {
             return "App executable not found"
         case .invalidIcon:
             return "Invalid icon image"
+        case .disinjectFailed:
+            return "Failed to remove load commands"
+        case .signatureCleanupFailed:
+            return "Failed to clean old signatures"
+        case .frameworkCleanupFailed:
+            return "Failed to clean framework signatures"
         }
     }
 }

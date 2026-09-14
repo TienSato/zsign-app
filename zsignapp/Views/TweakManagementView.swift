@@ -147,7 +147,7 @@ struct TweakManagementView: View {
     private func colorForFileType(_ ext: String) -> Color {
         switch ext.lowercased() {
         case "dylib":
-            return .blue
+            return .accentColor
         case "deb":
             return .orange
         case "bundle":

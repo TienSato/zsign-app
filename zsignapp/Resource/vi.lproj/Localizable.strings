@@ -4,10 +4,6 @@
 //
 //  Created by Sato on 29/10/25.
 //
-"Select Alternative Icon" = "Chọn biểu tượng thay thế";
-"Choose from Files" = "Chọn từ Tệp";
-"Choose from Photos" = "Chọn từ Ảnh";
-"Reset to Original" = "Khôi phục ban đầu";
 // MARK: - AppsView
 "Apps" = "Ứng dụng";
 "Unsigned" = "Chưa ký";
@@ -16,22 +12,17 @@
 // MARK: - UnsignedAppsView
 "No Apps" = "Không có ứng dụng";
 "Import an IPA file to get started" = "Nhập tệp IPA để bắt đầu";
-"Cancel" = "Hủy";
 "Select" = "Chọn";
 "Import Failed" = "Nhập thất bại";
 "OK" = "OK";
 "Delete Apps" = "Xóa ứng dụng";
 "Delete" = "Xóa";
 "Are you sure you want to delete %d app(s)?" = "Bạn có chắc muốn xóa %d ứng dụng?";
-"Preparing..." = "Đang chuẩn bị...";
 
 // MARK: - UnsignedAppRow
-"Unknown App" = "Ứng dụng không xác định";
 "Version %@" = "Phiên bản %@";
 "Sign" = "Ký";
 "Options" = "Tùy chọn";
-"Sign App" = "Ký ứng dụng";
-"Delete App" = "Xóa ứng dụng";
 "Are you sure you want to delete this app?" = "Bạn có chắc muốn xóa ứng dụng này?";
 
 // MARK: - SignedAppsView
@@ -42,17 +33,12 @@
 "Unknown" = "Không xác định";
 "Install" = "Cài đặt";
 "Detail" = "Chi tiết";
-"Share" = "Chia sẻ";
 "Show in Files" = "Hiển thị trong Tệp";
 "Install Failed" = "Cài đặt thất bại";
 "Delete App" = "Xóa ứng dụng";
 "Are you sure you want to delete this signed app?" = "Bạn có chắc muốn xóa ứng dụng đã ký này?";
 
 // MARK: - SignedAppDetailView
-"App Information" = "Thông tin ứng dụng";
-"Name" = "Tên";
-"Bundle ID" = "Bundle ID";
-"Version" = "Phiên bản";
 "File Size" = "Dung lượng";
 "Signed Date" = "Ngày ký";
 "Certificate Information" = "Thông tin chứng chỉ";
@@ -61,11 +47,8 @@
 "Profile Name" = "Tên profile";
 "Expiration" = "Hết hạn";
 "PPQ Check" = "Kiểm tra PPQ";
-"Enabled" = "Bật";
-"Disabled" = "Tắt";
 "File Location" = "Vị trí tệp";
 "App Details" = "Chi tiết ứng dụng";
-"Done" = "Xong";
 
 // MARK: - BatchSignView
 "Batch Signing" = "Ký hàng loạt";
@@ -74,17 +57,13 @@
 "Customize app info and select certificates. Leave fields empty to keep original values." = "Tùy chỉnh thông tin ứng dụng và chọn chứng chỉ. Để trống để giữ giá trị gốc.";
 "Batch Sign" = "Ký hàng loạt";
 "Sign All" = "Ký tất cả";
-"App Name" = "Tên ứng dụng";
-"Certificate" = "Chứng chỉ";
 "(Default)" = "(Mặc định)";
-"Select Certificate" = "Chọn chứng chỉ";
 "Signing Apps" = "Đang ký ứng dụng";
 "%d/%d" = "%d/%d";
 "Batch Signing Completed" = "Hoàn thành ký hàng loạt";
 "All %d app(s) signed successfully!" = "Tất cả %d ứng dụng đã được ký thành công!";
 "Signed %d of %d app(s).\n\nFailed apps:\n%@" = "Đã ký %d trong số %d ứng dụng.\n\nỨng dụng thất bại:\n%@";
 "Signing Error" = "Lỗi ký";
-"Unknown App" = "Ứng dụng không xác định";
 // MARK: - AppTweaksManagerView
 "App Tweaks" = "Tweaks ứng dụng";
 "Mode" = "Chế độ";
@@ -111,7 +90,6 @@
 // MARK: - Extract Mode
 "Select All" = "Chọn tất cả";
 "Deselect All" = "Bỏ chọn tất cả";
-"Extracting..." = "Đang trích xuất...";
 "Extract %d File(s)" = "Trích xuất %d tệp";
 "Extraction Complete" = "Hoàn thành trích xuất";
 "Extracted %d file(s) to Tweaks folder" = "Đã trích xuất %d tệp vào thư mục Tweaks";
@@ -123,28 +101,17 @@
 "Collapse All" = "Thu gọn tất cả";
 
 // MARK: - TweakFileType
-"DYLIB" = "DYLIB";
-"FRAMEWORK" = "FRAMEWORK";
-"BUNDLE" = "BUNDLE";
 // MARK: - CertificatesManagementView
-"Certificates" = "Chứng chỉ";
-"Add" = "Thêm";
 "No Certificates" = "Không có chứng chỉ";
 "Add a certificate to sign apps" = "Thêm chứng chỉ để ký ứng dụng";
 "Checking certificates..." = "Đang kiểm tra chứng chỉ...";
 
 // MARK: - CertificateRow
-"Certificate" = "Chứng chỉ";
-"DEFAULT" = "MẶC ĐỊNH";
-"REVOKED" = "ĐÃ THU HỒI";
-"Team: %@" = "Nhóm: %@";
 "Expires: %@" = "Hết hạn: %@";
 
 // MARK: - AddCertificateView
 "Add Certificate" = "Thêm chứng chỉ";
-"Cancel" = "Hủy";
 "Save" = "Lưu";
-"Files" = "Tệp";
 "Certificate (.p12)" = "Chứng chỉ (.p12)";
 "Provisioning Profile" = "Provisioning Profile";
 "Password" = "Mật khẩu";
@@ -175,39 +142,24 @@
 "File will be saved to Files directory" = "Tệp sẽ được lưu vào thư mục Files";
 "You can download IPA, ZIP, and other files" = "Bạn có thể tải xuống IPA, ZIP và các tệp khác";
 "Download" = "Tải xuống";
-"Downloading..." = "Đang tải xuống...";
 
 // MARK: - Action Sheets
-"IPA Actions" = "Hành động IPA";
-"App Bundle Actions" = "Hành động App Bundle";
-"Dylib Actions" = "Hành động Dylib";
-"Deb Actions" = "Hành động Deb";
-"Choose an action for %@" = "Chọn hành động cho %@";
 
 // MARK: - IPA Actions
-"Import to Library" = "Nhập vào Thư viện";
-"Extract IPA" = "Giải nén IPA";
 
 // MARK: - App Bundle Actions
 "View Files" = "Xem tệp";
-"Package to IPA" = "Đóng gói thành IPA";
 
 // MARK: - Dylib Actions
-"Class Dump" = "Class Dump";
-"Modify Dependencies" = "Sửa Dependencies";
 "Share" = "Chia sẻ";
 
 // MARK: - Deb Actions
-"Extract Deb" = "Giải nén Deb";
 
 // MARK: - Delete Alert
-"Delete Item" = "Xóa mục";
-"Are you sure you want to delete \"%@\"?" = "Bạn có chắc muốn xóa \"%@\"?";
 
 // MARK: - Context Menu
 "Share Folder" = "Chia sẻ thư mục";
 "Delete Folder" = "Xóa thư mục";
-"App Actions" = "Hành động ứng dụng";
 
 // MARK: - File List
 "ALL FILES" = "TẤT CẢ TỆP";
@@ -299,7 +251,6 @@
 // MARK: - Management Section
 "Management" = "Quản lý";
 "Certificates" = "Chứng chỉ";
-"Signing Options" = "Tùy chọn ký";
 "Manage certificates and configure advanced signing options" = "Quản lý chứng chỉ và cấu hình tùy chọn ký nâng cao";
 
 // MARK: - IPA Compression Section
@@ -311,7 +262,6 @@
 "No Compression" = "Không nén";
 "Fastest" = "Nhanh nhất";
 "Fast" = "Nhanh";
-"Default" = "Mặc định";
 "Best" = "Tốt nhất";
 
 // MARK: - Background Processing Section
@@ -338,7 +288,6 @@
 
 // MARK: - About Section
 "About" = "Thông tin";
-"Version" = "Phiên bản";
 "Build" = "Build";
 "Support & Feedback" = "Hỗ trợ & Phản hồi";
 "Report bugs or suggestions at Zsign.app Telegram Channel" = "Báo lỗi hoặc góp ý tại Kênh Telegram Zsign.app";
@@ -349,11 +298,9 @@
 "This app uses open source packages. Tap to view on GitHub." = "Ứng dụng này sử dụng các gói mã nguồn mở. Nhấn để xem trên GitHub.";
 
 // MARK: - Reset Section
-"Reset to Defaults" = "Đặt lại mặc định";
 "Reset all settings to default values" = "Đặt lại tất cả cài đặt về giá trị mặc định";
 "Reset Settings?" = "Đặt lại cài đặt?";
 "This will reset all settings to their default values." = "Điều này sẽ đặt lại tất cả cài đặt về giá trị mặc định.";
-"Reset" = "Đặt lại";
 // MARK: - SignAppView
 "Sign %@" = "Ký %@";
 
@@ -384,8 +331,6 @@
 "PPQ Check: %@" = "Kiểm tra PPQ: %@";
 "Enabled" = "Bật";
 "Disabled" = "Tắt";
-"Certificate Revoked" = "Chứng chỉ đã thu hồi";
-"Select Certificate" = "Chọn chứng chỉ";
 "This certificate has been revoked. Signing may fail or the app may not install properly." = "Chứng chỉ này đã bị thu hồi. Việc ký có thể thất bại hoặc ứng dụng không cài đặt được.";
 
 // MARK: - Tweaks Section
@@ -393,16 +338,11 @@
 "Manage App Tweaks" = "Quản lý Tweaks ứng dụng";
 "%d disabled" = "%d đã tắt";
 "Inject Additional Tweaks" = "Chèn thêm Tweaks";
-"Inject Path" = "Đường dẫn chèn";
-"Inject Folder" = "Thư mục chèn";
-"Root" = "Gốc";
 "Manage tweaks inside the app or inject new ones. Disabled tweaks won't be injected when signing." = "Quản lý tweaks trong ứng dụng hoặc chèn tweaks mới. Tweaks đã tắt sẽ không được chèn khi ký.";
 
 // MARK: - Quick Settings Section
 "Quick Settings" = "Cài đặt nhanh";
 "Auto Install After Signing" = "Tự động cài đặt sau khi ký";
-"File Sharing" = "Chia sẻ tệp";
-"Game Mode" = "Chế độ Game";
 "Remove Provision After Signing" = "Xóa Provision sau khi ký";
 "Custom Info.plist Entries" = "Mục tùy chỉnh Info.plist";
 "Auto-install is enabled. The app will be installed automatically after signing completes." = "Tự động cài đặt đã bật. Ứng dụng sẽ được cài đặt tự động sau khi ký xong.";
@@ -440,13 +380,7 @@
 "%dd left" = "Còn %d ngày";
 
 // MARK: - QuickCustomInfoPlistView
-"Custom Entries" = "Mục tùy chỉnh";
 "Done" = "Xong";
-"Add Entry" = "Thêm mục";
-"Key" = "Khóa";
-"Value" = "Giá trị";
-"Add" = "Thêm";
-"No Custom Entries" = "Không có mục tùy chỉnh";
 "Add custom Info.plist entries for this signing session" = "Thêm mục Info.plist tùy chỉnh cho phiên ký này";
 // MARK: - SigningOptionsView
 "Signing Options" = "Tùy chọn ký";
@@ -500,7 +434,6 @@
 
 // MARK: - Info.plist Section
 "Info.plist" = "Info.plist";
-"Custom Entries" = "Mục tùy chỉnh";
 
 // MARK: - Reset Section
 "Reset to Defaults" = "Đặt lại mặc định";
@@ -561,8 +494,6 @@
 // MARK: - ManageSourcesView
 "No Sources" = "Không có nguồn";
 "Tap + to add your first source" = "Nhấn + để thêm nguồn đầu tiên";
-"Add Source" = "Thêm nguồn";
-"All Repositories" = "Tất cả kho lưu trữ";
 "%d sources" = "%d nguồn";
 "MY SOURCES" = "NGUỒN CỦA TôI";
 
@@ -620,3 +551,135 @@
 "Added: %@" = "Đã thêm: %@";
 "Failed to add file: %@" = "Thêm tệp thất bại: %@";
 "Unsupported file type: %@" = "Loại tệp không được hỗ trợ: %@";
+
+// MARK: - Language / Ngôn ngữ
+"Language" = "Ngôn ngữ";
+"Choose Language" = "Chọn ngôn ngữ";
+"You can change this later in Settings." = "Bạn có thể đổi lại sau trong Cài đặt.";
+"Continue" = "Tiếp tục";
+"Follow System" = "Theo hệ thống";
+"The app switches language immediately. Choosing Follow System uses your device language." = "App đổi ngôn ngữ ngay lập tức. Chọn Theo hệ thống sẽ dùng ngôn ngữ của máy.";
+
+// MARK: - Bổ sung (bóc từ code hardcode)
+"Device" = "Theo máy";
+"Preset" = "Chọn sẵn";
+"Custom" = "Tùy chỉnh";
+"Blue" = "Xanh dương";
+"Indigo" = "Chàm";
+"Purple" = "Tím";
+"Pink" = "Hồng";
+"Red" = "Đỏ";
+"Yellow" = "Vàng";
+"Green" = "Xanh lá";
+"Slate" = "Xám đá";
+"Invalid or corrupted mobileprovision file" = "File mobileprovision không hợp lệ hoặc bị hỏng";
+"Incorrect P12 password" = "Mật khẩu P12 không đúng";
+"The certificate in the P12 file does not match any certificate in the mobileprovision file. Make sure both come from the same certificate." = "Certificate trong file P12 không khớp với bất kỳ certificate nào trong file mobileprovision. Hãy đảm bảo P12 và mobileprovision được tạo từ cùng một certificate.";
+"Invalid certificate" = "Chứng chỉ không hợp lệ";
+"Certificate file not found" = "Không tìm thấy file chứng chỉ";
+"Invalid or corrupted .zsigncert file" = "File .zsigncert không hợp lệ hoặc bị hỏng";
+"Missing metadata in certificate" = "Thiếu thông tin metadata trong chứng chỉ";
+"Unsupported certificate version" = "Phiên bản chứng chỉ không được hỗ trợ";
+"Cannot access file" = "Không thể truy cập file";
+"Invalid or corrupted ZIP file" = "File ZIP không hợp lệ hoặc bị hỏng";
+"No .p12 or .mobileprovision found in the ZIP" = "Không tìm thấy file .p12 hoặc .mobileprovision trong ZIP";
+"No default certificate" = "Không có chứng chỉ mặc định";
+"Waiting for import to finish..." = "Đang chờ import hoàn tất...";
+"App not found" = "Không tìm thấy app";
+"Starting to sign..." = "Bắt đầu ký app...";
+"Signed successfully!" = "Ký thành công!";
+"Preparing" = "Đang chuẩn bị";
+"Extracting" = "Giải nén";
+"Reading" = "Đọc";
+"Processing" = "Xử lý";
+"Signing" = "Ký";
+"Packaging" = "Đóng gói";
+"Finishing" = "Hoàn tất";
+"Preparing to install..." = "Đang chuẩn bị cài đặt...";
+"Looking for the signed app..." = "Đang tìm signed app...";
+"Signed app not found" = "Không tìm thấy signed app";
+"Installing..." = "Đang cài đặt...";
+"Installation complete!" = "Cài đặt hoàn tất!";
+"Done!" = "Hoàn thành!";
+"Accent color preview" = "Xem trước màu chủ đạo";
+"Sample Button" = "Nút mẫu";
+"Color source" = "Nguồn màu";
+"Follow device color" = "Tự động theo máy";
+"Detecting device..." = "Đang nhận diện thiết bị...";
+"Pick any color" = "Chọn màu tùy ý";
+"Accent Color" = "Màu chủ đạo";
+"Applies to buttons, tabs and highlights across the app." = "Áp cho nút, tab, điểm nhấn trong toàn app.";
+"Appearance" = "Giao diện";
+"Changes the icon on the Home Screen. iOS shows a confirmation when it changes." = "Đổi icon ngoài màn hình chính. iOS sẽ hiện thông báo xác nhận khi đổi.";
+"White Background" = "Nền trắng";
+"Changing icon..." = "Đang đổi biểu tượng...";
+"This device does not support alternate icons." = "Thiết bị không hỗ trợ đổi icon.";
+"Supports direct download links" = "Hỗ trợ tải xuống liên kết trực tiếp";
+"No projects yet. Tap + to create one from an imported app." = "Chưa có project. Bấm + để tạo từ một app đã nhập.";
+"Installed" = "Đã cài";
+"Needs re-signing (new build)" = "Cần ký lại (bản mới)";
+"Not installed" = "Chưa cài";
+"No imported apps. Import an IPA from the Apps/Store tab first." = "Chưa có app nào được nhập. Hãy nhập IPA (tab Apps/Store) trước.";
+"Select source app" = "Chọn app gốc";
+"Close" = "Đóng";
+"Replace source IPA with a newer build" = "Đổi IPA gốc → bản mới";
+"Source App" = "App gốc";
+"Upgrading an app: import the new IPA in the Apps tab, then swap the source here. Tweaks and certificate are KEPT, only the source changes." = "App lên đời: nhập IPA mới ở tab Apps, rồi đổi bản gốc ở đây — GIỮ NGUYÊN tweak + cert, chỉ thay bản gốc.";
+"(default)" = "(mặc định)";
+"Signing Certificate" = "Chứng chỉ ký";
+"Name (blank = keep original)" = "Tên (trống = giữ gốc)";
+"Bundle ID (blank = keep original)" = "Bundle ID (trống = giữ gốc)";
+"Version (blank = keep original)" = "Phiên bản (trống = giữ gốc)";
+"Remove Watch app" = "Gỡ Watch app";
+"Remove URL scheme" = "Gỡ URL scheme";
+"Remove provisioning" = "Gỡ provisioning";
+"Per-project Signing" = "Cấu hình ký riêng";
+"Changing the Bundle ID makes it a DIFFERENT APP (no in-place update). Leave blank to keep the original." = "Đổi Bundle ID sẽ thành APP KHÁC (không cập nhật đè lên bản cũ). Để trống = giữ như app gốc.";
+"Custom Icon" = "Icon tùy chỉnh";
+"Use original icon" = "Dùng icon gốc";
+"Choose image..." = "Chọn ảnh...";
+"Add dylib/.deb" = "Thêm dylib/.deb";
+"Your Added Tweaks (dylib/.deb)" = "Tweak bạn tự thêm (dylib/.deb)";
+"Enabled dylibs are INJECTED into the source IPA when signing. Adding a file with the same name overwrites it." = "Dylib đang bật sẽ được TIÊM THÊM vào IPA gốc khi ký. Thêm file trùng tên = cập nhật (ghi đè).";
+"Manage Built-in Tweaks" = "Quản lý tweak có sẵn";
+"Source app not found for scanning (removed from the Apps tab?)." = "Không tìm thấy app gốc để quét (đã bị xóa khỏi tab Apps?).";
+"Tweaks Already in the App" = "Tweak/mod ĐÃ CÓ trong app";
+"Automatically scans dylibs/frameworks/bundles already in the modded app. Turning one OFF REMOVES it on re-sign; ON keeps it." = "Tự quét dylib/framework/bundle mà app mod đã có sẵn. TẮT cái nào thì cái đó sẽ bị GỠ khi ký lại; bật = giữ nguyên.";
+"Sign & Install (update)" = "Ký & Cài (cập nhật)";
+"Re-signs from the source IPA and installs over it: same bundle id, so iOS updates in place and keeps app data." = "Ký lại từ IPA gốc rồi cài đè: cùng bundle id nên iOS cập nhật tại chỗ, giữ dữ liệu app.";
+"). Tap Sign & Install to update." = "). Bấm Ký & Cài để cập nhật.";
+"Source app not found (it may have been removed from the Apps tab)." = "Không tìm thấy app gốc (có thể đã bị xóa khỏi tab Apps).";
+"No certificates. Add a certificate first." = "Chưa có chứng chỉ. Thêm chứng chỉ trước.";
+"Signing..." = "Đang ký...";
+"Install request sent — confirm on your device to update." = "Đã gửi cài đặt ✓ — xác nhận trên máy để cập nhật.";
+"Signed, but no signed build was found to install." = "Ký xong nhưng chưa thấy bản đã ký để cài.";
+"Choose an imported IPA as the NEW SOURCE. Prefer the SAME bundle id with a newer version (green check = same bundle)." = "Chọn IPA đã nhập để làm BẢN GỐC MỚI. Nên chọn CÙNG bundle id, phiên bản mới hơn (dấu ✓ xanh = cùng bundle).";
+"Replace Source IPA" = "Đổi IPA gốc";
+"Advanced" = "Nâng cao";
+"Workspace (keeps the source IPA + tweaks and updates over the installed build) and background processing." = "Workspace (giữ IPA gốc + tweak, cập nhật đè lên bản đã cài) và xử lý nền.";
+"App Updates (Workspace)" = "Cập nhật ứng dụng (Workspace)";
+"Save apps as projects · edit tweaks · re-sign and install over" = "Lưu app thành project · sửa tweak · ký lại cài đè";
+"Keeps the source IPA + tweaks, re-signs and updates over the installed build." = "Giữ IPA gốc + tweak, ký lại và cập nhật đè lên bản đã cài.";
+"Signing Log" = "Nhật ký ký ứng dụng";
+"Records the signing process for debugging · shows a realtime log while signing" = "Ghi lại quá trình ký để debug · hiện log realtime khi ký";
+"View latest log" = "Xem nhật ký gần nhất";
+"Log" = "Nhật ký";
+"When enabled, the signing screen shows a realtime log panel (can be hidden). Plain text, no emoji." = "Khi bật, màn hình ký sẽ hiện bảng log realtime (ẩn/hiện được). Log dạng văn bản thuần, không emoji.";
+"Clear" = "Xóa";
+"No log yet" = "Chưa có nhật ký";
+"Turn on the log and sign an app; the log will appear here." = "Bật nhật ký rồi ký một ứng dụng, log sẽ hiện ở đây.";
+"Update" = "Cập nhật";
+"This Device's UDID" = "UDID thiết bị này";
+"Could not read the UDID (the app must be signed per device)" = "Chưa đọc được UDID (app cần được ký theo từng máy)";
+"Copied!" = "Đã copy!";
+"Loading info..." = "Đang tải thông tin...";
+"Import..." = "Nhập...";
+"DOWNLOAD" = "TẢI XUỐNG";
+"No tweaks yet. Tap Add dylib/.deb." = "Chưa có tweak. Bấm Thêm dylib/.deb.";
+
+"signed:" = "ký:";
+"off" = "tắt";
+"Error:" = "Lỗi:";
+"Waiting for import..." = "Đang chờ import...";
+"Different bundle id (%@) — installing over will NOT apply; iOS treats it as a different app." = "Bundle id khác (%@) — cập nhật đè sẽ KHÔNG áp dụng, iOS coi là app khác.";
+"Source replaced → v%@. Tap Sign & Install to update." = "Đã đổi bản gốc → v%@. Bấm Ký & Cài để cập nhật.";

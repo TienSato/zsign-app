@@ -13,6 +13,8 @@ struct SignAppView: View {
     @Environment(\.dismiss) var dismiss
     
     @State private var selectedCertificate: CertificatePair?
+    @AppStorage("zsign.loggingEnabled") private var loggingEnabled = false
+    @State private var showLogPanel = false
     @State private var showCertificatePicker = false
     @State private var showAlternativeIcons = false
     @State private var showFilePicker = false
@@ -159,7 +161,7 @@ struct SignAppView: View {
                         Spacer()
                         Text(cloneSuffix)
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                             .fontWeight(.medium)
                     }
                     .padding(.vertical, 4)
@@ -182,7 +184,7 @@ struct SignAppView: View {
                 if isCloneMode {
                     Text("Clone mode enabled. App name and bundle ID will be automatically modified with suffix '\(cloneSuffix)'")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 } else {
                     Text("Leave fields as-is to keep original values, or modify to customize")
                         .font(.caption)
@@ -198,7 +200,7 @@ struct SignAppView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(cert.nickname ?? "Certificate")
+                                Text(cert.nickname ?? L("Certificate"))
                                     .font(.headline)
                                 
                                 if let provision = provision {
@@ -219,7 +221,7 @@ struct SignAppView: View {
                             } label: {
                                 Text("Change")
                                     .font(.subheadline)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                         
@@ -246,7 +248,7 @@ struct SignAppView: View {
                             
                             HStack(spacing: 8) {
                                 Image(systemName: cert.ppqCheck ? "checkmark.shield.fill" : "xmark.shield")
-                                    .foregroundColor(cert.ppqCheck ? .blue : .gray)
+                                    .foregroundColor(cert.ppqCheck ? .accentColor : .gray)
                                     .font(.caption)
                                 
                                 Text("PPQ Check: \(cert.ppqCheck ? "Enabled" : "Disabled")")
@@ -275,7 +277,7 @@ struct SignAppView: View {
                     } label: {
                         HStack {
                             Text("Select Certificate")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption)
@@ -421,7 +423,7 @@ struct SignAppView: View {
                 Section {
                     HStack(spacing: 8) {
                         Image(systemName: "moon.stars.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                             .font(.caption)
                         Text("App will continue running in background")
                             .font(.caption)
@@ -450,6 +452,11 @@ struct SignAppView: View {
         }
         .navigationTitle("Sign \(app.name ?? "App")")
         .navigationBarTitleDisplayMode(.inline)
+        .overlay {
+            if loggingEnabled && showLogPanel {
+                SignLogOverlay(present: $showLogPanel)
+            }
+        }
         .onAppear {
             if !hasInitialized {
                 customName = app.name ?? ""
@@ -559,6 +566,7 @@ struct SignAppView: View {
         isSigning = true
         signingProgress = "Starting..."
         compressionProgress = 0.0
+        if loggingEnabled { showLogPanel = true }
         
         Task {
             do {
@@ -706,12 +714,12 @@ struct CertificatePickerRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(isSelected ? .blue : .gray)
+                .foregroundColor(isSelected ? .accentColor : .gray)
                 .font(.title3)
             
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(certificate.nickname ?? "Certificate")
+                    Text(certificate.nickname ?? L("Certificate"))
                         .font(.headline)
                     
                     if certificate.isDefault {
@@ -721,7 +729,7 @@ struct CertificatePickerRow: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.blue)
+                            .background(Color.accentColor)
                             .cornerRadius(4)
                     }
                     
@@ -771,7 +779,7 @@ struct CertificatePickerRow: View {
                         Image(systemName: certificate.ppqCheck ? "checkmark.shield.fill" : "xmark.shield")
                             .font(.caption2)
                     }
-                    .foregroundColor(certificate.ppqCheck ? .blue : .gray)
+                    .foregroundColor(certificate.ppqCheck ? .accentColor : .gray)
                 }
             }
             

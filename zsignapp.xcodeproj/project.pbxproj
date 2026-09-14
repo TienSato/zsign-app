@@ -19,6 +19,7 @@
 		593F6E7F2EAE47470034C655 /* NIOHTTPResponsiveness in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E7E2EAE47470034C655 /* NIOHTTPResponsiveness */; };
 		593F6E812EAE47470034C655 /* NIOHTTPTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6E802EAE47470034C655 /* NIOHTTPTypes */; };
 		593F6EAF2EAF21F60034C655 /* AltSourceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 593F6EAE2EAF21F60034C655 /* AltSourceKit */; };
+		F00DF00DF00DF00DF00D000D /* ZSShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F00DF00DF00DF00DF00D0002 /* ZSShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,12 +37,34 @@
 			remoteGlobalIDString = 590E61FB2EAD80BA006D0A86;
 			remoteInfo = zsignapp;
 		};
+		F00DF00DF00DF00DF00D000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 590E61F42EAD80BA006D0A86 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F00DF00DF00DF00DF00D0001;
+			remoteInfo = ZSShareExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F00DF00DF00DF00DF00D000C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F00DF00DF00DF00DF00D000D /* ZSShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		590E61FC2EAD80BA006D0A86 /* zsignapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zsignapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		590E62112EAD80BD006D0A86 /* zsignappTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = zsignappTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		590E621B2EAD80BD006D0A86 /* zsignappUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = zsignappUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F00DF00DF00DF00DF00D0002 /* ZSShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ZSShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -52,6 +75,13 @@
 				Resource/ellekit.deb,
 			);
 			target = 590E61FB2EAD80BA006D0A86 /* zsignapp */;
+		};
+		F00DF00DF00DF00DF00D000E /* Exceptions for "ZSShareExtension" folder in "ZSShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F00DF00DF00DF00DF00D0001 /* ZSShareExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -73,6 +103,14 @@
 				591F7E562EB1384C00DC435F /* Exceptions for "zsignapp" folder in "Copy Bundle Resources" phase from "zsignapp" target */,
 			);
 			path = zsignapp;
+			sourceTree = "<group>";
+		};
+		F00DF00DF00DF00DF00D0003 /* ZSShareExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F00DF00DF00DF00DF00D000E /* Exceptions for "ZSShareExtension" folder in "ZSShareExtension" target */,
+			);
+			path = ZSShareExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -111,6 +149,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F00DF00DF00DF00DF00D0005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -118,6 +163,7 @@
 			isa = PBXGroup;
 			children = (
 				590E61FE2EAD80BA006D0A86 /* zsignapp */,
+				F00DF00DF00DF00DF00D0003 /* ZSShareExtension */,
 				59608D692EADA05C00603CDB /* Frameworks */,
 				590E61FD2EAD80BA006D0A86 /* Products */,
 			);
@@ -129,6 +175,7 @@
 				590E61FC2EAD80BA006D0A86 /* zsignapp.app */,
 				590E62112EAD80BD006D0A86 /* zsignappTests.xctest */,
 				590E621B2EAD80BD006D0A86 /* zsignappUITests.xctest */,
+				F00DF00DF00DF00DF00D0002 /* ZSShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -150,10 +197,12 @@
 				590E61F82EAD80BA006D0A86 /* Sources */,
 				590E61F92EAD80BA006D0A86 /* Frameworks */,
 				590E61FA2EAD80BA006D0A86 /* Resources */,
+				F00DF00DF00DF00DF00D000C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F00DF00DF00DF00DF00D000A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				590E61FE2EAD80BA006D0A86 /* zsignapp */,
@@ -217,6 +266,28 @@
 			productReference = 590E621B2EAD80BD006D0A86 /* zsignappUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		F00DF00DF00DF00DF00D0001 /* ZSShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F00DF00DF00DF00DF00D0007 /* Build configuration list for PBXNativeTarget "ZSShareExtension" */;
+			buildPhases = (
+				F00DF00DF00DF00DF00D0004 /* Sources */,
+				F00DF00DF00DF00DF00D0005 /* Frameworks */,
+				F00DF00DF00DF00DF00D0006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F00DF00DF00DF00DF00D0003 /* ZSShareExtension */,
+			);
+			name = ZSShareExtension;
+			packageProductDependencies = (
+			);
+			productName = ZSShareExtension;
+			productReference = F00DF00DF00DF00DF00D0002 /* ZSShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -239,6 +310,9 @@
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = 590E61FB2EAD80BA006D0A86;
 					};
+					F00DF00DF00DF00DF00D0001 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 				};
 			};
 			buildConfigurationList = 590E61F72EAD80BA006D0A86 /* Build configuration list for PBXProject "zsignapp" */;
@@ -255,7 +329,7 @@
 				593F6E722EAE471E0034C655 /* XCRemoteSwiftPackageReference "swift-nio" */,
 				593F6E792EAE47460034C655 /* XCRemoteSwiftPackageReference "swift-nio-extras" */,
 				593F6EAD2EAF21F60034C655 /* XCLocalSwiftPackageReference "AltSourceKit" */,
-				591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */,
+				591F806E2EB32CE800DC435F /* XCLocalSwiftPackageReference "Zsign" */,
 				591F80732EB3943300DC435F /* XCRemoteSwiftPackageReference "Zip" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -264,6 +338,7 @@
 			projectRoot = "";
 			targets = (
 				590E61FB2EAD80BA006D0A86 /* zsignapp */,
+				F00DF00DF00DF00DF00D0001 /* ZSShareExtension */,
 				590E62102EAD80BD006D0A86 /* zsignappTests */,
 				590E621A2EAD80BD006D0A86 /* zsignappUITests */,
 			);
@@ -286,6 +361,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		590E62192EAD80BD006D0A86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F00DF00DF00DF00DF00D0006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -316,6 +398,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F00DF00DF00DF00DF00D0004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -328,6 +417,11 @@
 			isa = PBXTargetDependency;
 			target = 590E61FB2EAD80BA006D0A86 /* zsignapp */;
 			targetProxy = 590E621C2EAD80BD006D0A86 /* PBXContainerItemProxy */;
+		};
+		F00DF00DF00DF00DF00D000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F00DF00DF00DF00DF00D0001 /* ZSShareExtension */;
+			targetProxy = F00DF00DF00DF00DF00D000B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -457,6 +551,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = zsignapp/zsignapp.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -464,11 +559,14 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = zsignapp/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = zSign;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -479,8 +577,8 @@
 					"$(PROJECT_DIR)/zsignapp/resource",
 					"$(PROJECT_DIR)/zsignapp/Resource",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp;
+				MARKETING_VERSION = 1.5;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -497,6 +595,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = zsignapp/zsignapp.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -504,11 +603,14 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = zsignapp/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = zSign;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -519,8 +621,8 @@
 					"$(PROJECT_DIR)/zsignapp/resource",
 					"$(PROJECT_DIR)/zsignapp/Resource",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp;
+				MARKETING_VERSION = 1.5;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -598,6 +700,58 @@
 			};
 			name = Release;
 		};
+		F00DF00DF00DF00DF00D0008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ZSShareExtension/ZSShareExtension.entitlements;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ZSShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4.1;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp2.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F00DF00DF00DF00DF00D0009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ZSShareExtension/ZSShareExtension.entitlements;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ZSShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4.1;
+				PRODUCT_BUNDLE_IDENTIFIER = signipa.sato.zsignapp2.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -637,9 +791,22 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		F00DF00DF00DF00DF00D0007 /* Build configuration list for PBXNativeTarget "ZSShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F00DF00DF00DF00DF00D0008 /* Debug */,
+				F00DF00DF00DF00DF00D0009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		591F806E2EB32CE800DC435F /* XCLocalSwiftPackageReference "Zsign" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Zsign;
+		};
 		593F6EAD2EAF21F60034C655 /* XCLocalSwiftPackageReference "AltSourceKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = AltSourceKit;
@@ -647,14 +814,6 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/khcrysalis/Zsign-Package.git";
-			requirement = {
-				branch = package;
-				kind = branch;
-			};
-		};
 		591F80732EB3943300DC435F /* XCRemoteSwiftPackageReference "Zip" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/marmelroy/Zip.git";
@@ -688,12 +847,12 @@
 		};
 		591F806F2EB32CE800DC435F /* ZsignSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */;
+			package = 591F806E2EB32CE800DC435F /* XCLocalSwiftPackageReference "Zsign" */;
 			productName = ZsignSwift;
 		};
 		591F80712EB32CE800DC435F /* zsign */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 591F806E2EB32CE800DC435F /* XCRemoteSwiftPackageReference "Zsign-Package" */;
+			package = 591F806E2EB32CE800DC435F /* XCLocalSwiftPackageReference "Zsign" */;
 			productName = zsign;
 		};
 		591F80742EB3943300DC435F /* Zip */ = {
