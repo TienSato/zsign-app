@@ -25,6 +25,8 @@ struct SettingsView: View {
                 resetButton
             }
             .navigationTitle("Settings")
+            // Tiêu đề lớn chiếm gần 100pt trống ở đỉnh -> dùng tiêu đề gọn.
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Theme.canvas, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .onAppear(perform: loadCertificates)

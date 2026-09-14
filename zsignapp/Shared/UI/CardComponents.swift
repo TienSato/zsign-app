@@ -29,7 +29,7 @@ struct CardScreen<Content: View>: View {
                 content
             }
             .padding(.horizontal, Theme.Metric.screenPadding)
-            .padding(.top, 8)
+            .padding(.top, 4)
             .padding(.bottom, 32)
         }
         .scrollDismissesKeyboard(.interactively)
@@ -111,15 +111,12 @@ struct CardRow<Trailing: View>: View {
         .contentShape(Rectangle())
     }
 
+    /// Chỉ mình glyph, không có ô nền. Khung rộng cố định để chữ các hàng thẳng cột.
     private var iconBox: some View {
-        RoundedRectangle(cornerRadius: Theme.Metric.iconRadius, style: .continuous)
-            .fill((iconTint ?? Color.accentColor).opacity(0.14))
-            .frame(width: Theme.Metric.iconBox, height: Theme.Metric.iconBox)
-            .overlay(
-                Image(systemName: icon)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(iconTint ?? Color.accentColor)
-            )
+        Image(systemName: icon)
+            .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
+            .foregroundStyle(iconTint ?? Color.accentColor)
+            .frame(width: Theme.Metric.iconBox, alignment: .center)
     }
 
     private var labels: some View {

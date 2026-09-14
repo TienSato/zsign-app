@@ -55,16 +55,16 @@ enum Theme {
     enum Metric {
         /// Bo góc thẻ. 20 là chỗ ngọt: mềm nhưng không thành viên thuốc.
         static let cardRadius: CGFloat = 20
-        /// Bo góc ô icon vuông trong hàng.
-        static let iconRadius: CGFloat = 9
+        /// Cỡ glyph icon trong hàng.
+        static let iconSize: CGFloat = 18
         /// Lề trái phải của toàn màn hình.
         static let screenPadding: CGFloat = 16
         /// Khoảng cách giữa các thẻ.
         static let cardSpacing: CGFloat = 14
         /// Padding bên trong thẻ.
         static let cardPadding: CGFloat = 16
-        /// Cạnh ô icon trong hàng.
-        static let iconBox: CGFloat = 32
+        /// Bề rộng cột icon — giữ cho chữ các hàng thẳng nhau.
+        static let iconBox: CGFloat = 26
         /// Chiều cao tối thiểu một hàng.
         static let rowHeight: CGFloat = 44
     }
