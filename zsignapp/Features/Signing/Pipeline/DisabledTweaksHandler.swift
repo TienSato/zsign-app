@@ -33,7 +33,6 @@ class DisabledTweaksHandler {
         
         let execPath = appURL.appendingPathComponent(execURL.relativePath).path
         
-        print("Removing \(disabledTweaks.count) disabled tweak(s)")
         
         // List current load commands
         let currentLoadCommands = Zsign.listDylibs(appExecutable: execPath)
@@ -52,7 +51,6 @@ class DisabledTweaksHandler {
                    loadCommand.hasSuffix(tweakName) {
                     if !loadCommandsToRemove.contains(loadCommand) {
                         loadCommandsToRemove.append(loadCommand)
-                        print("   → Will remove: \(loadCommand)")
                     }
                 }
             }
@@ -68,10 +66,6 @@ class DisabledTweaksHandler {
             if !success {
                 throw DisabledTweaksError.removalFailed
             }
-            
-            print("✅ Successfully removed \(loadCommandsToRemove.count) load command(s)")
-        } else {
-            print("⚠️ No matching load commands found to remove")
         }
     }
     
@@ -100,7 +94,6 @@ class DisabledTweaksHandler {
             
             for loadCommand in remainingDylibs {
                 if loadCommand.contains(fileName) || loadCommand.contains(nameWithoutExt) {
-                    print("Load command still exists: \(loadCommand)")
                     allRemoved = false
                     break
                 }

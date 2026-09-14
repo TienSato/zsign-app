@@ -73,7 +73,6 @@ struct ZsignApp: App {
     }
     
     private func handleIncomingURL(_ url: URL) {
-        print("📥 Received URL: \(url)")
         
         // Share Extension mở app qua scheme zsignapp:// -> quét Inbox
         if url.scheme == "zsignapp" {
@@ -82,7 +81,6 @@ struct ZsignApp: App {
         }
         
         guard url.pathExtension.lowercased() == "ipa" else {
-            print("⚠️ Not an IPA file")
             return
         }
         
@@ -103,18 +101,15 @@ struct ZsignApp: App {
             }
             
             try FileManager.default.copyItem(at: url, to: tempURL)
-            print("✅ File copied to temp: \(tempURL.path)")
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 NotificationCenter.default.post(
                     name: NSNotification.Name("ImportIPAFromShare"),
                     object: tempURL
                 )
-                print("📤 Notification posted")
             }
             
         } catch {
-            print("❌ Error copying file: \(error)")
         }
     }
 }

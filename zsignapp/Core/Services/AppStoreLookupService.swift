@@ -29,7 +29,6 @@ class AppStoreLookupService {
             
             return result
         } catch {
-            print("AppStore lookup error: \(error.localizedDescription)")
             return nil
         }
     }

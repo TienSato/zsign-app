@@ -37,15 +37,8 @@ class CertificateHandler {
     }
     
     func validate() -> Bool {
-        guard let cert = certificate else {
+        guard certificate != nil else {
             return false
-        }
-        
-        // Kiểm tra số lượng certificates trong mobileprovision
-        if let developerCerts = cert.DeveloperCertificates {
-            
-            if developerCerts.count > 1 {
-            }
         }
         
         // Kiểm tra password P12
@@ -98,10 +91,6 @@ class CertificateHandler {
         
         // Cleanup sau khi check
         password_check_fix_WHAT_THE_FUCK_free(provisionURL.path)
-        
-        if isValid {
-        } else {
-        }
         
         return isValid
     }

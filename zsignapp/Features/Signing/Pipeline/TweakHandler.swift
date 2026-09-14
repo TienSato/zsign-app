@@ -31,7 +31,6 @@ class TweakHandler {
         
         // ✅ SAU ĐÓ mới kiểm tra rỗng
         guard !urls.isEmpty else {
-            print("⚠️ No files to inject after ElleKit check")
             return
         }
         
@@ -50,7 +49,7 @@ class TweakHandler {
             case "framework":
                 try await handleFramework(at: url)
             default:
-                print("Unsupported file type: \(url.lastPathComponent)")
+                break   // đuôi file không hỗ trợ -> bỏ qua
             }
         }
         
@@ -81,28 +80,23 @@ class TweakHandler {
             }
             // ✅ Insert vào đầu danh sách để xử lý đầu tiên
             urls.insert(ellekitURL, at: 0)
-            print("✅ Added ellekit.deb to injection queue")
         }
         
         // Nếu IPA đã có sẵn CydiaSubstrate.framework thì xử lý theo tuỳ chọn thay thế bằng ElleKit
         if fileManager.fileExists(atPath: substrateFramework.path) {
             if options.experiment_replaceSubstrateWithEllekit {
-                print("🔄 Replacing CydiaSubstrate with ElleKit")
                 try fileManager.removeItem(at: substrateFramework)
                 try await addEllekit()
             } else {
-                print("ℹ️ CydiaSubstrate exists, skipping ElleKit injection")
                 return
             }
         } else {
             // ✅ Không kiểm tra urls.isEmpty ở đây
             // Vì có thể user chỉ muốn inject ElleKit mà không có tweak khác
             if options.experiment_replaceSubstrateWithEllekit {
-                print("📦 No CydiaSubstrate found, adding ElleKit")
                 try await addEllekit()
             } else if !urls.isEmpty {
                 // ✅ Chỉ add ElleKit nếu có tweaks khác cần inject
-                print("📦 Adding ElleKit for existing tweaks")
                 try await addEllekit()
             }
         }
@@ -114,7 +108,6 @@ class TweakHandler {
         let fileName = url.lastPathComponent
         
         if isDisabled(fileName: fileName) {
-            print("⏭️ Skipping disabled tweak: \(fileName)")
             return
         }
         
@@ -154,7 +147,6 @@ class TweakHandler {
             with: injectPath
         )
         
-        print("✅ Processed: \(fileName)")
     }
     
     // MARK: - Framework Injection
@@ -163,7 +155,6 @@ class TweakHandler {
         let fileName = url.lastPathComponent
         
         if isDisabled(fileName: fileName) {
-            print("⏭️ Skipping disabled framework: \(fileName)")
             return
         }
         
@@ -196,7 +187,6 @@ class TweakHandler {
             with: injectPath
         )
         
-        print("✅ Processed framework: \(fileName)")
     }
     
     // MARK: - Bundle Support
@@ -205,7 +195,6 @@ class TweakHandler {
         let fileName = url.lastPathComponent
         
         if isDisabled(fileName: fileName) {
-            print("⏭️ Skipping disabled bundle: \(fileName)")
             return
         }
         
@@ -213,7 +202,6 @@ class TweakHandler {
         
         try fileManager.moveFileIfNeeded(from: url, to: destinationURL)
         
-        print("✅ Copied bundle: \(fileName)")
     }
     
     // MARK: - Deb Handling

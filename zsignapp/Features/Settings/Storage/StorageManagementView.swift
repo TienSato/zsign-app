@@ -199,13 +199,11 @@ struct StorageManagementView: View {
                     cleanupMessage = ""
                     updateStorageSize()
                     
-                    print("Cleanup completed: \(type.displayName)")
                 }
             } catch {
                 await MainActor.run {
                     isCleaningUp = false
                     cleanupMessage = ""
-                    print("Cleanup failed: \(error.localizedDescription)")
                 }
             }
         }
@@ -398,39 +396,32 @@ struct StorageCleaner {
     }
     
     private static func cleanUnsignedApps(_ fileManager: FileManager) async throws {
-        print("Cleaning unsigned apps...")
         
         let appsDir = fileManager.appsDirectory
         if fileManager.fileExists(atPath: appsDir.path) {
             try fileManager.removeItem(at: appsDir)
             try fileManager.createDirectory(at: appsDir, withIntermediateDirectories: true)
-            print("Deleted Apps directory")
         }
         
         await MainActor.run {
             Storage.shared.deleteAllApps()
-            print("Cleared imported apps from database")
         }
     }
     
     private static func cleanSignedApps(_ fileManager: FileManager) async throws {
-        print("Cleaning signed apps...")
         
         let signedDir = fileManager.signedAppsDirectory
         if fileManager.fileExists(atPath: signedDir.path) {
             try fileManager.removeItem(at: signedDir)
             try fileManager.createDirectory(at: signedDir, withIntermediateDirectories: true)
-            print("Deleted SignedApps directory")
         }
         
         await MainActor.run {
             Storage.shared.deleteAllSignedApps()
-            print("Cleared signed apps from database")
         }
     }
     
     private static func cleanTempFiles(_ fileManager: FileManager) async throws {
-        print("Cleaning temp files...")
         
         let tempDir = fileManager.temporaryDirectory
         
@@ -446,7 +437,6 @@ struct StorageCleaner {
                item.lastPathComponent.hasPrefix("Signing_") ||
                item.lastPathComponent.hasPrefix("IPACreation_") {
                 try? fileManager.removeItem(at: item)
-                print("Deleted: \(item.lastPathComponent)")
             }
         }
     }
@@ -465,7 +455,6 @@ extension Storage {
             }
             try context.save()
         } catch {
-            print("Failed to delete apps: \(error)")
         }
     }
     
@@ -479,7 +468,6 @@ extension Storage {
             }
             try context.save()
         } catch {
-            print("Failed to delete signed apps: \(error)")
         }
     }
 }

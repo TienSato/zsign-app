@@ -171,10 +171,6 @@ extension DownloadManager: URLSessionDownloadDelegate {
             download.totalBytes = totalBytesExpectedToWrite
             download.objectWillChange.send()
         }
-        
-        // Debug log
-        if Int(progress * 100) % 10 == 0 {
-        }
     }
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
@@ -319,7 +315,6 @@ extension DownloadManager {
             return
         }
         
-        print("🎯 Triggering auto sign for: \(download.appName)")
         
         // Gọi auto sign helper
         Task {

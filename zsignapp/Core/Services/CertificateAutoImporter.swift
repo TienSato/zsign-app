@@ -23,18 +23,15 @@ class CertificateAutoImporter: ObservableObject {
     
     func autoImportCertificate() async {
         guard let udid = readUDID() else {
-            print("No UDID found in bundle")
             return
         }
         
         // ✅ KIỂM TRA: Đã import UDID này chưa?
         if isAlreadyImported(udid: udid) {
-            print("Certificate for UDID \(udid) already imported. Skipping...")
             return
         }
         
         guard let apiBaseURL = getAPIBaseURL() else {
-            print("API_CERT not found in Info.plist")
             return
         }
         
@@ -85,7 +82,6 @@ class CertificateAutoImporter: ObservableObject {
             let count = try Storage.shared.context.count(for: fetchRequest)
             return count > 0
         } catch {
-            print("Error checking existing certificates: \(error)")
             return false
         }
     }
@@ -119,7 +115,6 @@ class CertificateAutoImporter: ObservableObject {
                     statusMessage = ""
                 }
                 try? FileManager.default.removeItem(at: tempDir)
-                print("Certificate not found for UDID: \(udid)")
                 return
             }
             
@@ -158,7 +153,6 @@ class CertificateAutoImporter: ObservableObject {
                 statusMessage = ""
             }
             try? FileManager.default.removeItem(at: tempDir)
-            print("Certificate auto-import failed: \(error)")
         }
     }
     

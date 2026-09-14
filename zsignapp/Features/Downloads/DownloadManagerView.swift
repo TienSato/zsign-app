@@ -99,7 +99,6 @@ struct DownloadManagerView: View {
                         customFileName: customFileName.isEmpty ? nil : customFileName,
                         onItmsServicesDetected: { itmsURL in
                             // ✅ NEW: Handle itms-services from WebView
-                            print("📱 [UI] itms-services from WebView")
                             handleItmsServicesLink(itmsURL)
                         },
                         onDismiss: {
@@ -126,7 +125,6 @@ struct DownloadManagerView: View {
         
         // ✅ NEW: Check itms-services
         if urlString.lowercased().hasPrefix("itms-services://") {
-            print("📱 [UI] itms-services from input")
             handleItmsServicesLink(urlString)
             return
         }
@@ -157,38 +155,32 @@ struct DownloadManagerView: View {
         
         Task {
             do {
-                print("📱 [itms] Processing: \(urlString)")
                 
                 // Extract plist URL
                 guard let plistURL = extractPlistURL(from: urlString) else {
                     throw NSError(domain: "DownloadManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Cannot extract plist URL"])
                 }
                 
-                print("📄 [itms] Plist URL: \(plistURL.absoluteString)")
                 
                 // Download plist
-                print("📥 [itms] Downloading plist...")
                 let (data, _) = try await URLSession.shared.data(from: plistURL)
                 
                 guard let plistString = String(data: data, encoding: .utf8) else {
                     throw NSError(domain: "DownloadManager", code: 2, userInfo: [NSLocalizedDescriptionKey: "Cannot decode plist"])
                 }
                 
-                print("📄 [itms] Plist size: \(plistString.count) bytes")
                 
                 // Extract IPA URL
                 guard let ipaURL = extractIPAURL(from: plistString) else {
                     throw NSError(domain: "DownloadManager", code: 3, userInfo: [NSLocalizedDescriptionKey: "Cannot find IPA URL in plist"])
                 }
                 
-                print("✅ [itms] IPA URL: \(ipaURL.absoluteString)")
                 
                 // Start download
                 await MainActor.run {
                     let fileName = customFileName.isEmpty ? ipaURL.lastPathComponent : customFileName
                     let finalName = fileName.hasSuffix(".ipa") ? fileName : "\(fileName).ipa"
                     
-                    print("🚀 [itms] Starting download: \(finalName)")
                     
                     _ = downloadManager.startDownload(url: ipaURL, id: "dl_\(UUID().uuidString)", appName: finalName)
                     
@@ -198,7 +190,6 @@ struct DownloadManagerView: View {
                 }
                 
             } catch {
-                print("❌ [itms] Error: \(error.localizedDescription)")
                 await MainActor.run {
                     errorMessage = "Failed to process itms-services link: \(error.localizedDescription)"
                     showError = true
@@ -210,23 +201,19 @@ struct DownloadManagerView: View {
     
     private func extractPlistURL(from itmsLink: String) -> URL? {
         guard let urlRange = itmsLink.range(of: "url=") else {
-            print("❌ [itms] No 'url=' parameter")
             return nil
         }
         
         let urlParam = String(itmsLink[urlRange.upperBound...])
         
         guard let decodedString = urlParam.removingPercentEncoding else {
-            print("❌ [itms] Cannot decode URL")
             return nil
         }
         
-        print("🔗 [itms] Decoded: \(decodedString)")
         return URL(string: decodedString)
     }
     
     private func extractIPAURL(from plistContent: String) -> URL? {
-        print("🔍 [itms] Searching for IPA URL...")
         
         // Method 1: Regex
         let pattern = "<string>(https?://[^<]+\\.ipa[^<]*)</string>"
@@ -234,22 +221,18 @@ struct DownloadManagerView: View {
            let match = regex.firstMatch(in: plistContent, options: [], range: NSRange(plistContent.startIndex..., in: plistContent)),
            let range = Range(match.range(at: 1), in: plistContent) {
             let urlString = String(plistContent[range])
-            print("✅ [itms] Found via regex: \(urlString)")
             return URL(string: urlString)
         }
         
         // Method 2: Line search
-        print("🔍 [itms] Trying line search...")
         let lines = plistContent.components(separatedBy: .newlines)
         for (index, line) in lines.enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.lowercased().contains(".ipa") && (trimmed.contains("http://") || trimmed.contains("https://")) {
-                print("🔍 [itms] Line \(index): \(trimmed)")
                 if let startIndex = trimmed.range(of: ">")?.upperBound,
                    let endIndex = trimmed.range(of: "</", options: .backwards)?.lowerBound {
                     let urlString = String(trimmed[startIndex..<endIndex])
                     if let url = URL(string: urlString), urlString.lowercased().contains(".ipa") {
-                        print("✅ [itms] Found via line: \(urlString)")
                         return url
                     }
                 }
@@ -257,17 +240,14 @@ struct DownloadManagerView: View {
         }
         
         // Method 3: Broad search
-        print("🔍 [itms] Trying broad search...")
         let urlPattern = "(https?://[^\\s<>\"']+\\.ipa[^\\s<>\"']*)"
         if let regex = try? NSRegularExpression(pattern: urlPattern, options: [.caseInsensitive]),
            let match = regex.firstMatch(in: plistContent, options: [], range: NSRange(plistContent.startIndex..., in: plistContent)),
            let range = Range(match.range(at: 1), in: plistContent) {
             let urlString = String(plistContent[range])
-            print("✅ [itms] Found via broad: \(urlString)")
             return URL(string: urlString)
         }
         
-        print("❌ [itms] Cannot find IPA URL")
         return nil
     }
 }
@@ -342,7 +322,6 @@ struct DownloadWebView: View {
                     },
                     onItmsServicesDetected: onItmsServicesDetected,  // ✅ NEW
                     onDownloadStarted: {
-                        print("📥 [UI] Download started, closing WebView")
                         onDismiss()
                     }
                 )
@@ -438,11 +417,9 @@ struct SimpleWebView: UIViewRepresentable {
             if let url = navigationAction.request.url {
                 let urlString = url.absoluteString
                 
-                print("🪟 [Popup] \(urlString)")
                 
                 // ✅ NEW: Check itms-services
                 if urlString.lowercased().hasPrefix("itms-services://") {
-                    print("📱 [Popup] itms-services detected!")
                     DispatchQueue.main.async {
                         self.onItmsServicesDetected(urlString)
                     }
@@ -472,7 +449,6 @@ struct SimpleWebView: UIViewRepresentable {
             
             // Check itms-services
             if urlString.lowercased().hasPrefix("itms-services://") {
-                print("📱 [Nav] itms-services detected!")
                 DispatchQueue.main.async {
                     self.onItmsServicesDetected(urlString)
                 }
@@ -502,8 +478,6 @@ struct SimpleWebView: UIViewRepresentable {
                                 url.absoluteString.lowercased().hasSuffix(".ipa")
             
             if isDownloadable {
-                print("📥 [Response] Downloadable file detected")
-                print("   Type: \(type)")
                 
                 if #available(iOS 14.5, *) {
                     decisionHandler(.download)
@@ -521,29 +495,23 @@ struct SimpleWebView: UIViewRepresentable {
         
         @available(iOS 14.5, *)
         func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
-            print("📥 [WKDownload] Download started")
             download.delegate = self
         }
         
         @available(iOS 14.5, *)
         func download(_ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String, completionHandler: @escaping (URL?) -> Void) {
             
-            print("📥 [WKDownload] File: \(suggestedFilename)")
             
             guard let url = response.url else {
-                print("❌ [WKDownload] No URL")
                 completionHandler(nil)
                 return
             }
             
-            print("🚀 [WKDownload] Starting DownloadManager for progress tracking")
             
             DispatchQueue.main.async {
                 let name = self.customFileName ?? suggestedFilename
                 let finalName = name.hasSuffix(".ipa") ? name : "\(name).ipa"
                 
-                print("🚀 [WKDownload] URL: \(url.absoluteString)")
-                print("🚀 [WKDownload] File: \(finalName)")
                 
                 _ = DownloadManager.shared.startDownload(
                     url: url,
@@ -559,12 +527,10 @@ struct SimpleWebView: UIViewRepresentable {
         
         @available(iOS 14.5, *)
         func downloadDidFinish(_ download: WKDownload) {
-            print("✅ [WKDownload] Finished (unused)")
         }
         
         @available(iOS 14.5, *)
         func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
-            print("❌ [WKDownload] Failed: \(error.localizedDescription)")
         }
         
         private func updateState(_ webView: WKWebView) {

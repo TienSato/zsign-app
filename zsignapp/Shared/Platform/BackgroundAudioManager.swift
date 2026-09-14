@@ -57,30 +57,12 @@ class BackgroundAudioManager: NSObject {
             name: UIApplication.didEnterBackgroundNotification,
             object: nil
         )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appWillEnterForeground),
-            name: UIApplication.willEnterForegroundNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appDidBecomeActive),
-            name: UIApplication.didBecomeActiveNotification,
-            object: nil
-        )
     }
     
     @objc private func appDidEnterBackground() {
         if UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
             startBackgroundAudio()
         }
-    }
-    
-    @objc private func appWillEnterForeground() {
-    }
-    
-    @objc private func appDidBecomeActive() {
     }
     
     private func setupAudioSession() {
@@ -219,7 +201,6 @@ class BackgroundAudioManager: NSObject {
             startKeepAliveTimer()
             
         } catch {
-            print("❌ Failed to start background audio: \(error)")
         }
     }
     
@@ -279,14 +260,5 @@ class BackgroundAudioManager: NSObject {
     
     var backgroundTimeRemaining: TimeInterval {
         return UIApplication.shared.backgroundTimeRemaining
-    }
-    
-    func applicationDidEnterBackground() {
-        if UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
-            startBackgroundAudio()
-        }
-    }
-    
-    func applicationWillEnterForeground() {
     }
 }

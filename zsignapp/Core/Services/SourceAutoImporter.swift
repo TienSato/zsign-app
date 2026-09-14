@@ -18,7 +18,6 @@ class SourceAutoImporter: ObservableObject {
     
     func autoImportSources() async {
         guard let apiURL = getAPIURL() else {
-            print("API_SOURCE not found in Info.plist")
             return
         }
         
@@ -70,7 +69,6 @@ class SourceAutoImporter: ObservableObject {
                     isFetching = false
                     statusMessage = ""
                 }
-                print("No new sources to import")
                 return
             }
             
@@ -83,7 +81,6 @@ class SourceAutoImporter: ObservableObject {
                     try await importSource(serverSource)
                     markAsImported(identifier: serverSource.identifier)
                 } catch {
-                    print("Failed to import source \(serverSource.name): \(error)")
                 }
             }
             
@@ -103,7 +100,6 @@ class SourceAutoImporter: ObservableObject {
                 isFetching = false
                 statusMessage = ""
             }
-            print("Source auto-import failed: \(error)")
         }
     }
     

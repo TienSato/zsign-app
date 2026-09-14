@@ -189,7 +189,6 @@ struct CertificatesManagementView: View {
             } catch {
                 await MainActor.run {
                     self.isExporting = false
-                    print("Error exporting certificate: \(error)")
                 }
             }
         }

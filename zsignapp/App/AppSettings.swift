@@ -48,7 +48,6 @@ class AppSettings: ObservableObject {
     @Published var autoSignAfterDownload: Bool {
         didSet {
             defaults.set(autoSignAfterDownload, forKey: Keys.autoSignAfterDownload)
-            print("📝 Auto Sign After Download: \(autoSignAfterDownload)")
         }
     }
     

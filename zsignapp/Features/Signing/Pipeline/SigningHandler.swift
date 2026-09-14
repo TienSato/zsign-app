@@ -179,7 +179,6 @@ class SigningHandler {
         }
         
         // ✅ 11. NO CLEANING - Let Zsign handle everything
-        print("📝 Skipping signature cleaning - Zsign will handle all signing")
         
         // ✅ 12. Disinject disabled tweaks (if any)
         if !disabledTweaks.isEmpty {
@@ -383,7 +382,6 @@ class SigningHandler {
         for file in filesToRemove {
             if fileManager.fileExists(atPath: file.path) {
                 try fileManager.removeItem(at: file)
-                print("  ✅ Removed preset: \(file.lastPathComponent)")
             }
         }
     }
@@ -477,8 +475,6 @@ class SigningHandler {
             throw SigningError.certificateFilesNotFound
         }
         
-        print("🔐 Starting signature process...")
-        print("📝 Zsign will handle all frameworks, dylibs, and invalid files automatically")
         SignLogger.shared.log("Bắt đầu ký bằng lõi Zsign")
         
         return try await withCheckedThrowingContinuation { continuation in
@@ -494,21 +490,15 @@ class SigningHandler {
                 removeProvision: !options.removeProvisioning
             ) { [weak self] success, error in
                 if success {
-                    print("✅ Main app signed successfully")
                     SignLogger.shared.log("Ký thành công (main app)")
                     
                     if let error = error {
-                        print("⚠️ Signing completed with warnings (non-fatal):")
-                        print("   \(error.localizedDescription)")
-                        print("   Zsign automatically skipped invalid files")
                         SignLogger.shared.log("Cảnh báo khi ký (đã bỏ qua file lỗi): \(error.localizedDescription)")
                     }
                     
                     continuation.resume()
                 } else {
-                    print("❌ Main app signing failed")
                     let finalError = error ?? SigningError.signingFailed
-                    print("   Error: \(finalError.localizedDescription)")
                     SignLogger.shared.log("Ký THẤT BẠI: \(finalError.localizedDescription)")
                     
                     self?.signingError = finalError
@@ -517,7 +507,6 @@ class SigningHandler {
             }
             
             if !success {
-                print("❌ Zsign.sign returned false immediately")
                 SignLogger.shared.log("Zsign.sign trả về false ngay lập tức")
                 let error = SigningError.signingFailed
                 self.signingError = error
@@ -610,11 +599,9 @@ class SigningHandler {
                                 progress: progressCb
                             )
                             usedParallel = true
-                            print("✅ IPA nén song song (ParallelZip)")
                             SignLogger.shared.log("Đóng gói IPA: nén song song (ParallelZip)")
                         } catch {
                             try? FileManager.default.removeItem(at: outputPath)
-                            print("⚠️ ParallelZip lỗi, fallback Zip lib: \(error)")
                             SignLogger.shared.log("Đóng gói IPA: dùng Zip lib (fallback)")
                         }
                     }
