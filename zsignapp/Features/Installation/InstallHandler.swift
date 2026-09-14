@@ -37,9 +37,8 @@ final class InstallHandler {
     private let signedApp: SignedApp
     private let port: UInt16 = UInt16.random(in: 4000...8000)
 
-    /// Tổng thời gian chờ installd tải xong trước khi tự bỏ cuộc.
-    private let maxWait: UInt64 = 900_000_000_000   // 15 phút
-    private let pollInterval: UInt64 = 1_000_000_000 // 1 giây
+    /// Chốt chặn: quá lâu mà installd không lấy gì thì tự dọn server.
+    private let serverTimeout: TimeInterval = 900   // 15 phút
 
     init(signedApp: SignedApp) {
         self.signedApp = signedApp
@@ -57,28 +56,23 @@ final class InstallHandler {
             throw InstallError.ipaNotFound
         }
 
-        let finished = InstallFlag()
         let server = InstallServer(port: port, ipaPath: ipaFile, app: signedApp)
-        server.onInstallationComplete = { finished.set() }
-
         try server.start()
-        // Dù thoát bằng lỗi, huỷ task hay chạy hết, server luôn được tắt.
-        defer { server.stop() }
+
+        // Trao server cho pool giữ hộ. Hàm này trả về ngay sau khi mở link,
+        // nên nếu không có chỗ giữ tham chiếu thì server bị giải phóng và
+        // installd gọi vào sẽ không còn ai trả lời.
+        InstallServerPool.shared.keep(server, timeout: serverTimeout)
 
         let manifestURL = buildManifestURL()
         let opened = await openURL(buildITunesLink(manifestURL: manifestURL))
-        guard opened else { throw InstallError.failedToOpenLink }
+        guard opened else {
+            InstallServerPool.shared.release(server)
+            throw InstallError.failedToOpenLink
+        }
 
         // Nhớ đã cài (bundle id -> version) để phân biệt Cài đặt vs Cập nhật
         InstalledRegistry.record(bundleId: signedApp.identifier, version: signedApp.version)
-
-        // Giữ server sống cho tới khi installd lấy đủ IPA + 2 icon, hoặc hết giờ.
-        var elapsed: UInt64 = 0
-        while elapsed < maxWait {
-            if finished.isSet { break }
-            try await Task.sleep(nanoseconds: pollInterval)
-            elapsed += pollInterval
-        }
     }
 
     /// https://sign.zsign.app/plist?... — máy chủ sinh manifest plist từ các tham số này.
@@ -135,18 +129,49 @@ enum InstallError: LocalizedError {
     }
 }
 
-/// Cờ "installd đã lấy xong": ghi từ event loop của NIO, đọc từ task đang chờ.
-private final class InstallFlag: @unchecked Sendable {
-    private let lock = NSLock()
-    private var value = false
+/// Giữ các server cài đặt đang chạy sống ngoài vòng đời của install().
+///
+/// install() chỉ mở link rồi trả về ngay — việc tải IPA diễn ra sau đó, do
+/// installd của iOS chủ động gọi vào 127.0.0.1. Pool này là nơi duy nhất còn
+/// giữ tham chiếu tới server trong khoảng thời gian đó.
+///
+/// Server được thả ra ở một trong hai thời điểm:
+///   - installd lấy đủ IPA + 2 icon  -> onInstallationComplete
+///   - hết giờ chờ (người dùng bấm Huỷ ở hộp thoại cài của iOS, installd
+///     không bao giờ gọi vào) -> chốt chặn, tránh giữ cổng và 4 luồng NIO mãi
+private final class InstallServerPool {
+    static let shared = InstallServerPool()
 
-    var isSet: Bool {
-        lock.lock(); defer { lock.unlock() }
-        return value
+    private let lock = NSLock()
+    private var servers: [InstallServer] = []
+
+    func keep(_ server: InstallServer, timeout: TimeInterval) {
+        lock.lock()
+        servers.append(server)
+        lock.unlock()
+
+        server.onInstallationComplete = { [weak self, weak server] in
+            guard let server else { return }
+            self?.release(server)
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self, weak server] in
+            guard let server else { return }
+            self?.release(server)
+        }
     }
 
-    func set() {
-        lock.lock(); value = true; lock.unlock()
+    /// Thả và tắt server. Gọi nhiều lần cũng chỉ tắt đúng một lần.
+    func release(_ server: InstallServer) {
+        lock.lock()
+        guard let index = servers.firstIndex(where: { $0 === server }) else {
+            lock.unlock()
+            return
+        }
+        servers.remove(at: index)
+        lock.unlock()
+
+        server.stop()
     }
 }
 
