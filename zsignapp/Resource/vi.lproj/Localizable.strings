@@ -861,3 +861,6 @@
 "Set a default certificate in Certificates Management to enable this feature." = "Đặt một chứng chỉ mặc định trong phần Chứng chỉ để bật tính năng này.";
 "Apps downloaded from Store will be automatically signed with your default certificate and installed. You'll receive notifications for each step." = "Ứng dụng tải từ Store sẽ được ký bằng chứng chỉ mặc định và cài tự động. Bạn sẽ nhận thông báo ở từng bước.";
 "Enable to automatically sign and install downloaded apps using your default certificate. Works with apps from Store (Sources)." = "Bật để tự động ký và cài ứng dụng vừa tải bằng chứng chỉ mặc định. Áp dụng cho ứng dụng từ Store (Nguồn).";
+
+/* Man Nang cao */
+"Plays silent audio so iOS does not suspend the app" = "Phát âm thanh im lặng để iOS không treo ứng dụng";

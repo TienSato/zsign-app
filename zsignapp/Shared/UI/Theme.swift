@@ -18,23 +18,26 @@ enum Theme {
 
     // MARK: - Màu
 
-    /// Nền toàn màn hình. Thay cho systemGroupedBackground xám của Form/List.
-    static let canvas = dynamic(light: 0xF5F3F0, dark: 0x0E0E10)
+    /// Nền toàn màn hình.
+    /// Sáng: giấy ấm. Tối: than chì ẤM, KHÔNG phải đen hệ thống (#000).
+    /// Giữ chút hơi ấm để ăn nhập với chế độ sáng và bớt gắt mắt ban đêm.
+    static let canvas = dynamic(light: 0xF5F3F0, dark: 0x1A1917)
 
-    /// Nền thẻ nổi trên canvas.
-    static let card = dynamic(light: 0xFFFFFF, dark: 0x1A1A1C)
+    /// Nền thẻ nổi trên canvas — sáng hơn canvas để tự tách lớp,
+    /// vì trong chế độ tối bóng đổ gần như vô hình.
+    static let card = dynamic(light: 0xFFFFFF, dark: 0x262523)
 
-    /// Nền phụ bên trong thẻ (ô icon, vùng nhấn mạnh).
-    static let cardAlt = dynamic(light: 0xF2F0ED, dark: 0x252528)
+    /// Nền phụ bên trong thẻ (vùng nhấn mạnh, ô nhập liệu).
+    static let cardAlt = dynamic(light: 0xF2F0ED, dark: 0x312F2C)
 
     /// Chữ chính — lấy đúng sắc than chì của logo.
-    static let ink = dynamic(light: 0x1C1C1E, dark: 0xF2F2F4)
+    static let ink = dynamic(light: 0x1C1C1E, dark: 0xF2F0ED)
 
     /// Chữ phụ.
-    static let ink2 = dynamic(light: 0x6E6E73, dark: 0x9A9AA0)
+    static let ink2 = dynamic(light: 0x6E6E73, dark: 0xA5A19C)
 
     /// Chữ mờ nhất (chú thích, mã kỹ thuật).
-    static let ink3 = dynamic(light: 0xA1A1A6, dark: 0x6A6A70)
+    static let ink3 = dynamic(light: 0xA1A1A6, dark: 0x716D68)
 
     /// Đường kẻ mảnh giữa các hàng trong cùng một thẻ.
     static var hairline: Color {
@@ -92,6 +95,20 @@ private extension UIColor {
 // MARK: - Tiện ích dùng ở mọi màn hình
 
 extension View {
+    /// Khung chuẩn cho MỘT màn hình: tiêu đề gọn + thanh điều hướng cùng tông nền.
+    /// Mỗi màn hình chỉ cần đúng một dòng này, không lặp lại cấu hình ở đâu khác.
+    ///
+    ///     CardScreen { ... }
+    ///         .screenChrome("Settings")
+    ///
+    func screenChrome(_ title: LocalizedStringKey, large: Bool = false) -> some View {
+        self
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(large ? .large : .inline)
+            .toolbarBackground(Theme.canvas, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+    }
+
     /// Phủ nền canvas lên toàn màn hình, thay cho nền mặc định của List/Form.
     func canvasBackground() -> some View {
         self.background(Theme.canvas.ignoresSafeArea())

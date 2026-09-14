@@ -677,3 +677,6 @@
 "Set a default certificate in Certificates Management to enable this feature." = "Set a default certificate in Certificates Management to enable this feature.";
 "Apps downloaded from Store will be automatically signed with your default certificate and installed. You'll receive notifications for each step." = "Apps downloaded from Store will be automatically signed with your default certificate and installed. You'll receive notifications for each step.";
 "Enable to automatically sign and install downloaded apps using your default certificate. Works with apps from Store (Sources)." = "Enable to automatically sign and install downloaded apps using your default certificate. Works with apps from Store (Sources).";
+
+/* Man Nang cao */
+"Plays silent audio so iOS does not suspend the app" = "Plays silent audio so iOS does not suspend the app";

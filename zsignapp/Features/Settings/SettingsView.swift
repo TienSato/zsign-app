@@ -24,11 +24,7 @@ struct SettingsView: View {
                 aboutGroup
                 resetButton
             }
-            .navigationTitle("Settings")
-            // Tiêu đề lớn chiếm gần 100pt trống ở đỉnh -> dùng tiêu đề gọn.
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Theme.canvas, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+            .screenChrome("Settings")
             .onAppear(perform: loadCertificates)
             .onReceive(NotificationCenter.default.publisher(
                 for: NSNotification.Name("CertificatesDidChange"))) { _ in
@@ -164,115 +160,112 @@ struct AdvancedSettingsView: View {
     @AppStorage("zsign.workspaceEnabled") private var workspaceEnabled = false
     @AppStorage("zsign.loggingEnabled") private var loggingEnabled = false
     @State private var showBackgroundInfoAlert = false
-    
+
     var body: some View {
-        Form {
-            // MARK: - Workspace
-            Section {
-                Toggle(isOn: $workspaceEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("App Updates (Workspace)")
-                        Text("Save apps as projects · edit tweaks · re-sign and install over")
-                            .font(.caption).foregroundColor(.secondary)
-                    }
-                }
-                if workspaceEnabled {
-                    NavigationLink {
-                        ProjectsListView()
-                    } label: {
-                        Text("Projects")
-                    }
-                }
-            } header: {
-                Text("Workspace")
-            } footer: {
-                Text("Keeps the source IPA + tweaks, re-signs and updates over the installed build.")
-                    .font(.caption)
-            }
-            
-            // MARK: - Nhật ký (Logging)
-            Section {
-                Toggle(isOn: $loggingEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Signing Log")
-                        Text("Records the signing process for debugging · shows a realtime log while signing")
-                            .font(.caption).foregroundColor(.secondary)
-                    }
-                }
-                if loggingEnabled {
-                    NavigationLink {
-                        SignLogViewerView()
-                    } label: {
-                        Text("View latest log")
-                    }
-                }
-            } header: {
-                Text("Log")
-            } footer: {
-                Text("When enabled, the signing screen shows a realtime log panel (can be hidden). Plain text, no emoji.")
-                    .font(.caption)
-            }
-            
-            // MARK: - Background Processing
-            Section {
-                Toggle(isOn: $settings.backgroundAudioEnabled) {
-                    HStack {
-                        Text("Keep App Active")
-                        
-                        Button {
-                            showBackgroundInfoAlert = true
-                        } label: {
-                            Image(systemName: "info.circle")
-                                .foregroundColor(.accentColor)
-                                .font(.caption)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                
-                if settings.backgroundAudioEnabled {
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(Color.green)
-                            .frame(width: 8, height: 8)
-                        
-                        Text("Background mode active")
-                            .font(.caption)
-                            .foregroundColor(.green)
-                        
-                        Spacer()
-                        
-                        if BackgroundAudioManager.shared.isAudioPlaying {
-                            Image(systemName: "waveform")
-                                .font(.caption)
-                                .foregroundColor(.green)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                
-            } header: {
-                Text("Background Processing")
-            } footer: {
-                Text("Prevents iOS from killing the app during large file transfers. Recommended for installing apps larger than 2GB.")
-                    .font(.caption)
-            }
+        CardScreen {
+            workspaceGroup
+            logGroup
+            backgroundGroup
         }
-        .navigationTitle("Advanced")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenChrome("Advanced")
         .alert("Background Mode", isPresented: $showBackgroundInfoAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("""
             When enabled, the app plays silent audio to prevent iOS from suspending it during long operations.
-            
+
             This is especially useful when:
             • Installing large apps (2GB+)
             • Signing multiple apps
             • Slow network connections
-            
+
             The app will continue working even when the screen is locked or you switch to another app.
             """)
+        }
+    }
+
+    // MARK: - Vùng làm việc
+
+    private var workspaceGroup: some View {
+        CardGroup(L("Workspace"),
+                  footnote: L("Keeps the source IPA + tweaks, re-signs and updates over the installed build.")) {
+            CardToggleRow(
+                icon: "shippingbox.fill",
+                title: L("App Updates (Workspace)"),
+                subtitle: L("Save apps as projects · edit tweaks · re-sign and install over"),
+                isOn: $workspaceEnabled
+            )
+            if workspaceEnabled {
+                CardDivider()
+                CardNavRow(icon: "square.stack.3d.up.fill", title: L("Projects")) {
+                    ProjectsListView()
+                }
+            }
+        }
+    }
+
+    // MARK: - Nhật ký
+
+    private var logGroup: some View {
+        CardGroup(L("Log"),
+                  footnote: L("When enabled, the signing screen shows a realtime log panel (can be hidden). Plain text, no emoji.")) {
+            CardToggleRow(
+                icon: "text.alignleft",
+                title: L("Signing Log"),
+                subtitle: L("Records the signing process for debugging · shows a realtime log while signing"),
+                isOn: $loggingEnabled
+            )
+            if loggingEnabled {
+                CardDivider()
+                CardNavRow(icon: "doc.text.magnifyingglass", title: L("View latest log")) {
+                    SignLogViewerView()
+                }
+            }
+        }
+    }
+
+    // MARK: - Chạy nền
+
+    private var backgroundGroup: some View {
+        CardGroup(L("Background Processing"),
+                  footnote: L("Prevents iOS from killing the app during large file transfers. Recommended for installing apps larger than 2GB.")) {
+            CardRow(icon: "bolt.fill",
+                    title: L("Keep App Active"),
+                    subtitle: L("Plays silent audio so iOS does not suspend the app")) {
+                HStack(spacing: 10) {
+                    Button {
+                        showBackgroundInfoAlert = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.ink3)
+                    }
+                    .buttonStyle(.plain)
+
+                    Toggle("", isOn: $settings.backgroundAudioEnabled)
+                        .labelsHidden()
+                }
+            }
+
+            if settings.backgroundAudioEnabled {
+                CardDivider()
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(.green)
+                        .frame(width: 7, height: 7)
+                    Text("Background mode active")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                    Spacer()
+                    if BackgroundAudioManager.shared.isAudioPlaying {
+                        Image(systemName: "waveform")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                    }
+                }
+                .padding(.horizontal, Theme.Metric.cardPadding)
+                .padding(.vertical, 11)
+            }
         }
     }
 }
