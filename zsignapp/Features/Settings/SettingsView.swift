@@ -1,7 +1,11 @@
 //
 //  SettingsView.swift
 //  zsignapp
-//  FIXED: Storage moved to separate view for better performance
+//
+//  Màn hình Cài đặt — dựng bằng bộ thẻ dùng chung (Theme + CardComponents)
+//  thay cho Form, để nền và thẻ theo đúng tông của app thay vì tông mặc định
+//  của hệ thống.
+//
 
 import SwiftUI
 import Zip
@@ -10,149 +14,142 @@ struct SettingsView: View {
     @StateObject private var settings = AppSettings.shared
     @State private var showResetAlert = false
     @State private var certificates: [CertificatePair] = []
-    
+
     var body: some View {
-        NavigationView {
-            Form {
-                // MARK: - UDID (trên cùng) — chạm để copy
-                Section {
-                    UDIDRow()
-                    DeviceInfoRow()
-                }
-
-                // MARK: - Management Section
-                Section {
-                    NavigationLink {
-                        CertificatesManagementView()
-                    } label: {
-                        Text("Certificates")
-                    }
-                    
-                    NavigationLink {
-                        SigningOptionsView()
-                    } label: {
-                        Text("Signing Options")
-                    }
-
-                    NavigationLink {
-                        AppearanceSettingsView()
-                    } label: {
-                        Text("Appearance")
-                    }
-                } header: {
-                    Text("Management")
-                } footer: {
-                    Text("Manage certificates and configure advanced signing options")
-                        .font(.caption)
-                }
-
-                // MARK: - Nâng cao (Advanced)
-                Section {
-                    NavigationLink {
-                        AdvancedSettingsView()
-                    } label: {
-                        Text("Advanced")
-                    }
-                } footer: {
-                    Text("Workspace (keeps the source IPA + tweaks and updates over the installed build) and background processing.")
-                        .font(.caption)
-                }
-                
-               
-                
-                // MARK: - Storage Section (NavigationLink to separate view)
-                Section {
-                    NavigationLink {
-                        StorageManagementView()
-                    } label: {
-                        Label("Storage & Cleanup", systemImage: "externaldrive")
-                    }
-                } header: {
-                    Text("Storage")
-                } footer: {
-                    Text("Manage app storage, view usage statistics, and clean up files")
-                        .font(.caption)
-                }
-                
-                // MARK: - About Section
-                Section {
-                    HStack {
-                        Text("Version")
-                        Spacer()
-                        Text(appVersion)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Build")
-                        Spacer()
-                        Text(appBuild)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Link(destination: URL(string: "https://t.me/zsignapp")!) {
-                        HStack {
-                            Text("Support & Feedback")
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                } header: {
-                    Text("About")
-                } footer: {
-                    Text("Report bugs or suggestions at Zsign.app Telegram Channel")
-                        .font(.caption)
-                }
-                
-                // MARK: - Reset Section
-                Section {
-                    Button(role: .destructive) {
-                        showResetAlert = true
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Text("Reset to Defaults")
-                            Spacer()
-                        }
-                    }
-                } footer: {
-                    Text("Reset all settings to default values")
-                        .font(.caption)
-                }
+        NavigationStack {
+            CardScreen {
+                deviceCard
+                managementGroup
+                systemGroup
+                aboutGroup
+                resetButton
             }
             .navigationTitle("Settings")
-            .onAppear {
-                loadCertificates()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CertificatesDidChange"))) { _ in
+            .toolbarBackground(Theme.canvas, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .onAppear(perform: loadCertificates)
+            .onReceive(NotificationCenter.default.publisher(
+                for: NSNotification.Name("CertificatesDidChange"))) { _ in
                 loadCertificates()
             }
             .alert("Reset Settings?", isPresented: $showResetAlert) {
                 Button("Cancel", role: .cancel) {}
                 Button("Reset", role: .destructive) {
-                    withAnimation {
-                        settings.resetToDefaults()
-                    }
+                    withAnimation { settings.resetToDefaults() }
                 }
             } message: {
                 Text("This will reset all settings to their default values.")
             }
         }
-        .navigationViewStyle(.stack) // FIX: Force stack style cho iPad
     }
-    
-    // MARK: - Load Certificates
+
+    // MARK: - Thiết bị
+
+    private var deviceCard: some View {
+        CardGroup {
+            UDIDRow()
+            CardDivider()
+            DeviceInfoRow()
+        }
+    }
+
+    // MARK: - Quản lý
+
+    private var managementGroup: some View {
+        CardGroup(L("Management"),
+                  footnote: L("Manage certificates and configure advanced signing options")) {
+            CardNavRow(icon: "key.fill",
+                       title: L("Certificates"),
+                       subtitle: certificateSummary) {
+                CertificatesManagementView()
+            }
+            CardDivider()
+            CardNavRow(icon: "slider.horizontal.3",
+                       title: L("Signing Options"),
+                       subtitle: L("Name, bundle ID, entitlements and tweaks")) {
+                SigningOptionsView()
+            }
+            CardDivider()
+            CardNavRow(icon: "paintpalette.fill",
+                       title: L("Appearance"),
+                       subtitle: L("Accent color, app icon and language")) {
+                AppearanceSettingsView()
+            }
+        }
+    }
+
+    private var certificateSummary: String {
+        if certificates.isEmpty { return L("No certificates yet") }
+        let valid = certificates.filter { !$0.revoked }.count
+        return "\(valid)/\(certificates.count) " + L("usable")
+    }
+
+    // MARK: - Hệ thống
+
+    private var systemGroup: some View {
+        CardGroup(L("System")) {
+            CardNavRow(icon: "gearshape.2.fill",
+                       title: L("Advanced"),
+                       subtitle: L("Workspace, signing log and background processing")) {
+                AdvancedSettingsView()
+            }
+            CardDivider()
+            CardNavRow(icon: "externaldrive.fill",
+                       title: L("Storage & Cleanup"),
+                       subtitle: L("Usage breakdown and cleanup tools")) {
+                StorageManagementView()
+            }
+        }
+    }
+
+    // MARK: - Giới thiệu
+
+    private var aboutGroup: some View {
+        CardGroup(L("About"),
+                  footnote: L("Report bugs or suggestions at Zsign.app Telegram Channel")) {
+            CardValueRow(icon: "number", title: L("Version"), value: appVersion)
+            CardDivider()
+            CardValueRow(icon: "hammer.fill", title: L("Build"), value: appBuild)
+            CardDivider()
+            Link(destination: URL(string: "https://t.me/zsignapp")!) {
+                CardRow(icon: "paperplane.fill",
+                        title: L("Support & Feedback"),
+                        subtitle: "t.me/zsignapp") {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Theme.ink3)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Đặt lại
+
+    private var resetButton: some View {
+        VStack(spacing: 8) {
+            FilledButton(title: L("Reset to Defaults"),
+                         icon: "arrow.counterclockwise",
+                         role: .destructive) {
+                showResetAlert = true
+            }
+            Text("Reset all settings to default values")
+                .font(.caption)
+                .foregroundStyle(Theme.ink3)
+        }
+        .padding(.top, 4)
+    }
+
+    // MARK: -
+
     private func loadCertificates() {
         certificates = Storage.shared.fetchCertificates()
     }
-    
+
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
-    
+
     private var appBuild: String {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }

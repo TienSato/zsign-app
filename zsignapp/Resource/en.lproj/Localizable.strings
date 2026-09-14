@@ -655,3 +655,25 @@
 "Ad Hoc" = "Ad Hoc";
 "App Store" = "App Store";
 "Could not read the X.509 certificate inside this profile." = "Could not read the X.509 certificate inside this profile.";
+
+/* Man hinh Cai dat kieu the */
+"No certificates yet" = "No certificates yet";
+"usable" = "usable";
+"Name, bundle ID, entitlements and tweaks" = "Name, bundle ID, entitlements and tweaks";
+"Accent color, app icon and language" = "Accent color, app icon and language";
+"Workspace, signing log and background processing" = "Workspace, signing log and background processing";
+"Usage breakdown and cleanup tools" = "Usage breakdown and cleanup tools";
+
+/* Cai dat nang cao + tu dong ky */
+"Storage & Cleanup" = "Storage & Cleanup";
+"Workspace" = "Workspace";
+"Projects" = "Projects";
+"AUTO SIGN & INSTALL" = "AUTO SIGN & INSTALL";
+"After Download" = "After Download";
+"No default certificate set" = "No default certificate set";
+"Set default certificate →" = "Set default certificate →";
+"Add certificate →" = "Add certificate →";
+"Add a certificate first to enable auto signing. Go to Management → Certificates." = "Add a certificate first to enable auto signing. Go to Management → Certificates.";
+"Set a default certificate in Certificates Management to enable this feature." = "Set a default certificate in Certificates Management to enable this feature.";
+"Apps downloaded from Store will be automatically signed with your default certificate and installed. You'll receive notifications for each step." = "Apps downloaded from Store will be automatically signed with your default certificate and installed. You'll receive notifications for each step.";
+"Enable to automatically sign and install downloaded apps using your default certificate. Works with apps from Store (Sources)." = "Enable to automatically sign and install downloaded apps using your default certificate. Works with apps from Store (Sources).";

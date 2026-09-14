@@ -2,7 +2,8 @@
 //  UDIDView.swift
 //  zsignapp
 //
-//  Hàng UDID gọn cho Form — CHẠM để copy, hiện "Copied!" 1.5s (kèm haptic).
+//  Hàng UDID và hàng thông tin máy, dựng theo bộ thẻ dùng chung (CardComponents).
+//  UDID: CHẠM để copy, hiện "Copied!" 1.5s kèm haptic.
 //
 
 import SwiftUI
@@ -14,44 +15,24 @@ struct UDIDRow: View {
 
     var body: some View {
         Button(action: copyUDID) {
-            HStack(spacing: 12) {
-                Image(systemName: "iphone.gen3")
-                    .font(.title3)
-                    .foregroundColor(.accentColor)
-                    .frame(width: 28)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("This Device's UDID")
-                        .font(.subheadline).fontWeight(.medium)
-                        .foregroundColor(.primary)
-                    if let udid = udid {
-                        Text(udid)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    } else {
-                        Text("Could not read the UDID (the app must be signed per device)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
-
+            CardRow(
+                icon: "iphone.gen3",
+                title: L("This Device's UDID"),
+                subtitle: udid ?? L("Could not read the UDID (the app must be signed per device)")
+            ) {
                 if udid != nil {
                     if copied {
                         Text("Copied!")
-                            .font(.caption).fontWeight(.semibold)
-                            .foregroundColor(.green)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.green)
                             .transition(.opacity.combined(with: .scale))
                     } else {
                         Image(systemName: "doc.on.doc")
-                            .foregroundColor(.accentColor)
+                            .font(.footnote)
+                            .foregroundStyle(Color.accentColor)
                     }
                 }
             }
-            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(udid == nil)
@@ -59,7 +40,7 @@ struct UDIDRow: View {
     }
 
     private func copyUDID() {
-        guard let udid = udid else { return }
+        guard let udid else { return }
         UIPasteboard.general.string = udid
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         withAnimation { copied = true }
@@ -69,33 +50,23 @@ struct UDIDRow: View {
     }
 }
 
-
-// Hàng thông tin máy (tên máy + màu) — màu chấm theo màu chủ đạo.
+/// Hàng thông tin máy — chấm màu lấy theo màu máy mà DeviceThemeManager đọc được.
 struct DeviceInfoRow: View {
     @ObservedObject private var theme = DeviceThemeManager.shared
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "circle.fill")
-                .font(.title3)
-                .foregroundColor(theme.accent)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Device")
-                    .font(.subheadline).fontWeight(.medium)
-                Text(deviceLine)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-        }
+        CardRow(
+            icon: "circle.fill",
+            title: L("Device"),
+            subtitle: deviceLine,
+            iconTint: theme.accent
+        )
     }
 
     private var deviceLine: String {
         var parts: [String] = []
         if !theme.deviceName.isEmpty { parts.append(theme.deviceName) }
-        if let f = theme.finish, !f.isEmpty { parts.append(f) }
-        if parts.isEmpty { return DeviceInfo.modelIdentifier }
-        return parts.joined(separator: " · ")
+        if let finish = theme.finish, !finish.isEmpty { parts.append(finish) }
+        return parts.isEmpty ? DeviceInfo.modelIdentifier : parts.joined(separator: " · ")
     }
 }

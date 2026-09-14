@@ -839,3 +839,25 @@
 "Ad Hoc" = "Ad Hoc";
 "App Store" = "App Store";
 "Could not read the X.509 certificate inside this profile." = "Không đọc được chứng chỉ X.509 bên trong hồ sơ này.";
+
+/* Man hinh Cai dat kieu the */
+"No certificates yet" = "Chưa có chứng chỉ nào";
+"usable" = "dùng được";
+"Name, bundle ID, entitlements and tweaks" = "Tên, bundle ID, quyền và tweak";
+"Accent color, app icon and language" = "Màu chủ đạo, biểu tượng và ngôn ngữ";
+"Workspace, signing log and background processing" = "Vùng làm việc, nhật ký ký và chạy nền";
+"Usage breakdown and cleanup tools" = "Phân tích dung lượng và công cụ dọn dẹp";
+
+/* Cai dat nang cao + tu dong ky */
+"Storage & Cleanup" = "Dung lượng & dọn dẹp";
+"Workspace" = "Vùng làm việc";
+"Projects" = "Dự án";
+"AUTO SIGN & INSTALL" = "TỰ ĐỘNG KÝ & CÀI";
+"After Download" = "Sau khi tải xong";
+"No default certificate set" = "Chưa đặt chứng chỉ mặc định";
+"Set default certificate →" = "Đặt chứng chỉ mặc định →";
+"Add certificate →" = "Thêm chứng chỉ →";
+"Add a certificate first to enable auto signing. Go to Management → Certificates." = "Thêm chứng chỉ trước để bật tự động ký. Vào Quản lý → Chứng chỉ.";
+"Set a default certificate in Certificates Management to enable this feature." = "Đặt một chứng chỉ mặc định trong phần Chứng chỉ để bật tính năng này.";
+"Apps downloaded from Store will be automatically signed with your default certificate and installed. You'll receive notifications for each step." = "Ứng dụng tải từ Store sẽ được ký bằng chứng chỉ mặc định và cài tự động. Bạn sẽ nhận thông báo ở từng bước.";
+"Enable to automatically sign and install downloaded apps using your default certificate. Works with apps from Store (Sources)." = "Bật để tự động ký và cài ứng dụng vừa tải bằng chứng chỉ mặc định. Áp dụng cho ứng dụng từ Store (Nguồn).";
