@@ -372,11 +372,10 @@ struct UnsignedAppRow: View {
                             .font(.caption2.weight(.semibold))
                     }
                     .foregroundStyle(Color.accentColor)
+                    // Không bọc nền: hàng đã nằm trong thẻ rồi, thêm ô nữa
+                    // sẽ thành hộp-trong-hộp.
                     .frame(width: 58, height: 54)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Theme.cardAlt)
-                    )
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -727,10 +726,7 @@ struct SignedAppRow: View {
                         }
                     }
                     .frame(width: 58, height: 54)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Theme.cardAlt)
-                    )
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(isInstalling)
