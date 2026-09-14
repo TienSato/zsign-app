@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct EmptyStateView: View {
+struct EmptyStateView<Actions: View>: View {
     /// standard: icon xám, tiêu đề .headline, chiếm hết khung.
     /// compact: icon .secondary, tiêu đề .title2 semibold, chỉ padding.
     enum Style {
@@ -19,16 +19,23 @@ struct EmptyStateView: View {
     let systemImage: String
     let message: LocalizedStringKey
     var style: Style = .standard
+    /// Nút hành động đặt ngay dưới phần mô tả. Bỏ trống thì không có gì.
+    @ViewBuilder var actions: Actions
 
     var body: some View {
         if #available(iOS 17.0, *) {
-            ContentUnavailableView(
-                title,
-                systemImage: systemImage,
-                description: Text(message)
-            )
+            ContentUnavailableView {
+                Label(title, systemImage: systemImage)
+            } description: {
+                Text(message)
+            } actions: {
+                actions
+            }
         } else {
-            fallback
+            VStack(spacing: 16) {
+                fallback
+                actions
+            }
         }
     }
 
@@ -68,5 +75,19 @@ struct EmptyStateView: View {
             }
             .padding()
         }
+    }
+}
+
+// Cách gọi rút gọn khi không có nút hành động — giữ nguyên mọi nơi gọi cũ.
+extension EmptyStateView where Actions == EmptyView {
+    init(title: LocalizedStringKey,
+         systemImage: String,
+         message: LocalizedStringKey,
+         style: Style = .standard) {
+        self.title = title
+        self.systemImage = systemImage
+        self.message = message
+        self.style = style
+        self.actions = EmptyView()
     }
 }

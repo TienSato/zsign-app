@@ -29,22 +29,14 @@ struct CertificatesManagementView: View {
     @State private var showActionSheet = false
     @State private var showDetailView = false
     @State private var isExporting = false
-    
+
+    /// uuid của những chứng chỉ có chứa UDID của CHÍNH máy này.
+    /// Quét một lần khi mở màn, không quét lại mỗi lần vẽ.
+    @State private var deviceCertUUIDs: Set<String> = []
+
     var body: some View {
         ZStack {
-            CardScreen {
-                ForEach(certificates) { cert in
-                    CertificateRowContent(
-                        certificate: cert,
-                        isDefault: cert.isDefault
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selectedCertificate = cert
-                        showActionSheet = true
-                    }
-                }
-            }
+            content
             .screenChrome("Certificates")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -91,21 +83,15 @@ struct CertificatesManagementView: View {
             } message: { cert in
                 Text(cert.nickname ?? L("Certificate"))
             }
-            .overlay {
-                if certificates.isEmpty {
-                    EmptyStateView(
-                        title: "No Certificates",
-                        systemImage: "key.fill",
-                        message: "Add a certificate to sign apps"
-                    )
-                }
-            }
             .onAppear {
                 checkAllCertificatesRevoked()
                 // Clean up old exported certificate files
                 ZSignCertificateHandler.cleanupOldExports()
             }
-            
+            .task(id: certificates.count) {
+                await scanDeviceCertificates()
+            }
+
             if isCheckingRevoked {
                 ProgressOverlay(title: "Checking certificates...")
             }
@@ -116,6 +102,84 @@ struct CertificatesManagementView: View {
         }
     }
     
+    /// Danh sách chứng chỉ, hoặc màn trống khi chưa có cái nào.
+    ///
+    /// Trước đây màn trống được gắn bằng `.overlay { EmptyStateView }` chồng
+    /// lên một ScrollView RỖNG. ContentUnavailableView bên trong overlay không
+    /// nhận được kích thước nên tự vẽ nền trắng của hệ thống, để lộ hai mảng
+    /// trắng cùng một vệt nền ở giữa.
+    @ViewBuilder
+    private var content: some View {
+        if certificates.isEmpty {
+            EmptyStateView(
+                title: "No Certificates",
+                systemImage: "key.fill",
+                message: "Add a certificate to sign apps"
+            ) {
+                Button { showAddCert = true } label: {
+                    Label("Add Certificate", systemImage: "plus")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.canvas.ignoresSafeArea())
+        } else {
+            CardScreen {
+                ForEach(certificates) { cert in
+                    CertificateRowContent(
+                        certificate: cert,
+                        isDefault: cert.isDefault,
+                        isForThisDevice: deviceCertUUIDs.contains(cert.uuid ?? "")
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedCertificate = cert
+                        showActionSheet = true
+                    }
+                }
+            }
+        }
+    }
+
+    /// Đọc UDID của máy (từ embedded.mobileprovision của chính app này), rồi
+    /// dò xem hồ sơ cấp quyền của từng chứng chỉ có chứa UDID đó không.
+    ///
+    /// Đường dẫn tệp lấy trên main thread vì CertificatePair là NSManagedObject;
+    /// phần đọc tệp và giải mã plist chạy ngoài main thread.
+    private func scanDeviceCertificates() async {
+        guard let udid = UDIDReader.deviceUDID()?.lowercased(), !udid.isEmpty else {
+            deviceCertUUIDs = []
+            return
+        }
+
+        let pairs: [(String, URL)] = certificates.compactMap { cert in
+            guard let uuid = cert.uuid,
+                  let url = Storage.shared.getCertificateFile(.mobileprovision, from: cert)
+            else { return nil }
+            return (uuid, url)
+        }
+        guard !pairs.isEmpty else {
+            deviceCertUUIDs = []
+            return
+        }
+
+        let matched = await Task.detached(priority: .userInitiated) { () -> Set<String> in
+            var found: Set<String> = []
+            for (uuid, url) in pairs {
+                guard let devices = CertificateReader(url).decoded?.ProvisionedDevices else { continue }
+                if devices.contains(where: { $0.lowercased() == udid }) {
+                    found.insert(uuid)
+                }
+            }
+            return found
+        }.value
+
+        guard !Task.isCancelled else { return }
+        deviceCertUUIDs = matched
+    }
+
     private func checkAllCertificatesRevoked() {
         guard !certificates.isEmpty else { return }
         
@@ -177,11 +241,14 @@ extension URL: Identifiable {
 struct CertificateRowContent: View {
     let certificate: CertificatePair
     let isDefault: Bool
-    
-    private var provision: Certificate? {
-        Storage.shared.getProvisionDecoded(for: certificate)
-    }
-    
+    /// Hồ sơ của chứng chỉ này có chứa UDID của chính máy đang chạy.
+    var isForThisDevice: Bool = false
+
+    /// Giải mã mobileprovision MỘT lần rồi giữ lại.
+    /// Trước đây đây là computed property -> mỗi lần SwiftUI vẽ lại là một lần
+    /// đọc tệp từ đĩa và giải mã plist, cho TỪNG chứng chỉ.
+    @State private var provision: Certificate?
+
     private var isExpired: Bool {
         guard let expiration = certificate.expiration else { return false }
         return expiration < Date()
@@ -190,7 +257,11 @@ struct CertificateRowContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
-            
+
+            if isForThisDevice {
+                deviceMatchRow
+            }
+
             if let provision = provision {
                 details(provision)
             }
@@ -204,6 +275,23 @@ struct CertificateRowContent: View {
         }
         .cardStyle()
         .opacity(certificate.revoked || !isDefault ? 0.6 : 1.0)
+        .task(id: certificate.uuid) {
+            guard provision == nil else { return }
+            provision = Storage.shared.getProvisionDecoded(for: certificate)
+        }
+    }
+
+    /// Dòng đỏ báo chứng chỉ này ký được cho chính máy đang cầm.
+    private var deviceMatchRow: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "iphone.gen3")
+                .font(.caption)
+            Text("Certificate for this device")
+                .font(.caption.weight(.semibold))
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(Color.red)
+        .padding(.leading, Theme.Metric.iconBox + 12)
     }
     
     // MARK: - Tên + nhãn trạng thái

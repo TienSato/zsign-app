@@ -979,3 +979,6 @@
 
 /* Tim ung dung ngay tren man Store */
 "No app matches what you typed" = "Không có ứng dụng nào khớp với từ bạn nhập";
+
+/* Man chung chi */
+"Certificate for this device" = "Chứng chỉ của thiết bị này";
