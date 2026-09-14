@@ -789,3 +789,6 @@
 "Try Another Search" = "Try Another Search";
 "New Search" = "New Search";
 "RESULTS FOR \"%@\"" = "RESULTS FOR \"%@\"";
+
+/* Store: cache + nguon */
+"Loading apps..." = "Loading apps...";

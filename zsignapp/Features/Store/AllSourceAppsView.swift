@@ -14,9 +14,14 @@ import UIKit
 
 /// Một thẻ chứa toàn bộ hàng ứng dụng, có tiêu đề đếm số lượng phía trên.
 private struct StoreAppsList: View {
-    let apps: [ASRepository.App]
-    
+    let apps: [StoreApp]
+    /// Hiện tên nguồn ở mỗi dòng (tắt khi đang xem đúng một nguồn).
+    var showsSource: Bool = true
+
     var body: some View {
+        // Tính MỘT lần cho cả danh sách thay vì gọi apps.count trong vòng lặp.
+        let firstID = apps.first?.id
+
         ScrollView {
             VStack(spacing: 0) {
                 HStack {
@@ -31,15 +36,14 @@ private struct StoreAppsList: View {
                 .padding(.horizontal, 4)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
-                
+
                 LazyVStack(spacing: 0) {
-                    ForEach(Array(apps.enumerated()), id: \.element.currentUniqueId) { index, app in
-                        VStack(spacing: 0) {
-                            SourceAppRow(app: app)
-                            if index < apps.count - 1 {
-                                Divider().padding(.leading, 84)
-                            }
-                        }
+                    // Duyệt thẳng mảng: không Array(enumerated()), không dựng
+                    // lại chuỗi id cho từng phần tử ở mỗi lần vẽ.
+                    ForEach(apps) { item in
+                        SourceAppRow(item: item,
+                                     showsSource: showsSource,
+                                     showsDivider: item.id != firstID)
                     }
                 }
                 .cardStyle(padding: 0)
@@ -59,10 +63,10 @@ struct AllSourceAppsView: View {
     private var sources: [AltSource] {
         sourcesCache.cachedSources
     }
-    
-    private var allApps: [ASRepository.App] {
-        sources.compactMap { viewModel.sources[$0] }
-            .flatMap { $0.apps }
+
+    /// Đọc thẳng danh sách đã dựng sẵn — KHÔNG gộp lại ở đây.
+    private var allApps: [StoreApp] {
+        viewModel.catalog
     }
     
     var body: some View {
@@ -96,18 +100,22 @@ struct AllSourceAppsView: View {
             await viewModel.fetchSources(sources, refresh: true)
         }
         .task(id: sources.count) {
-            if viewModel.sources.isEmpty {
-                await viewModel.fetchSources(sources)
-            }
+            // Bản lưu trên đĩa hiện ra ngay, rồi mới làm mới ngầm nếu đã cũ.
+            await viewModel.loadCachedIfNeeded(sources)
+            await viewModel.refreshIfStale(sources)
         }
     }
     
     @ViewBuilder
     private var appsList: some View {
-        if viewModel.sources.isEmpty {
+        if sources.isEmpty {
             emptyView
         } else if allApps.isEmpty {
-            noAppsView
+            if viewModel.isRefreshing {
+                ProgressOverlay(title: "Loading apps...")
+            } else {
+                noAppsView
+            }
         } else {
             appsListContent
         }
@@ -140,61 +148,85 @@ struct AllSourceAppsView: View {
 // MARK: - Source App Row (danh sách 1 cột)
 
 struct SourceAppRow: View {
-    let app: ASRepository.App
-    
+    let item: StoreApp
+    var showsSource: Bool = true
+    var showsDivider: Bool = false
+
     @ObservedObject private var downloadManager = DownloadManager.shared
     @State private var currentDownload: Download?
-    
+
+    private var app: ASRepository.App { item.app }
+
     var body: some View {
-        HStack(spacing: 10) {
-            NavigationLink {
-                SourceAppDetailView(app: app)
-            } label: {
-                HStack(spacing: 13) {
-                    iconView
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(app.currentName)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Theme.ink)
-                            .lineLimit(1)
-                        
-                        if let dev = app.developer, !dev.isEmpty {
-                            Text(dev)
-                                .font(.system(size: 12.5))
-                                .foregroundStyle(Theme.ink2)
-                                .lineLimit(1)
-                        }
-                        
-                        if !metaLine.isEmpty {
-                            Text(metaLine)
-                                .font(.system(size: 11.5))
-                                .foregroundStyle(Theme.ink3)
-                                .lineLimit(1)
-                        }
-                        
-                        if let download = currentDownload {
-                            DownloadProgressView(download: download)
-                                .padding(.top, 3)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
+        VStack(spacing: 0) {
+            if showsDivider {
+                Rectangle()
+                    .fill(Theme.hairline)
+                    .frame(height: 0.5)
+                    .padding(.leading, 84)
             }
-            .buttonStyle(.plain)
-            
-            actionButton
+
+            HStack(spacing: 10) {
+                NavigationLink {
+                    SourceAppDetailView(app: app, sourceName: item.sourceName)
+                } label: {
+                    HStack(spacing: 13) {
+                        iconView
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.name)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Theme.ink)
+                                .lineLimit(1)
+
+                            if let dev = item.developer, !dev.isEmpty {
+                                Text(dev)
+                                    .font(.system(size: 12.5))
+                                    .foregroundStyle(Theme.ink2)
+                                    .lineLimit(1)
+                            }
+
+                            if !item.versionAndSize.isEmpty {
+                                Text(item.versionAndSize)
+                                    .font(.system(size: 11.5))
+                                    .foregroundStyle(Theme.ink3)
+                                    .lineLimit(1)
+                            }
+
+                            // Ứng dụng này đến từ nguồn nào.
+                            if showsSource {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "square.stack.3d.up.fill")
+                                        .font(.system(size: 9))
+                                    Text(item.sourceName)
+                                        .font(.system(size: 11))
+                                        .lineLimit(1)
+                                }
+                                .foregroundStyle(Color.accentColor.opacity(0.85))
+                                .padding(.top, 1)
+                            }
+
+                            if let download = currentDownload {
+                                DownloadProgressView(download: download)
+                                    .padding(.top, 3)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                actionButton
+            }
+            .padding(.horizontal, Theme.Metric.screenPadding)
+            .padding(.vertical, 10)
         }
-        .padding(.horizontal, Theme.Metric.screenPadding)
-        .padding(.vertical, 10)
         .onAppear { updateCurrentDownload() }
         .onChange(of: downloadManager.downloads.count) { _ in updateCurrentDownload() }
     }
-    
+
     private var iconView: some View {
-        AsyncImage(url: app.iconURL) { image in
-            image.resizable().aspectRatio(contentMode: .fill)
-        } placeholder: {
+        CachedAsyncImage(url: item.iconURL, size: 56) {
             ZStack {
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
                     .fill(Theme.cardAlt)
@@ -203,30 +235,17 @@ struct SourceAppRow: View {
                     .foregroundStyle(Theme.ink3)
             }
         }
-        .frame(width: 56, height: 56)
         .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 13, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)
         )
     }
-    
-    private var metaLine: String {
-        var parts: [String] = []
-        if let v = app.currentVersion, !v.isEmpty { parts.append("v\(v)") }
-        if let size = app.size {
-            let f = ByteCountFormatter()
-            f.allowedUnits = [.useAll]
-            f.countStyle = .file
-            parts.append(f.string(fromByteCount: Int64(size)))
-        }
-        return parts.joined(separator: " · ")
-    }
-    
+
     private var installState: InstallStateKind {
         InstalledRegistry.status(bundleId: app.id, availableVersion: app.currentVersion)
     }
-    
+
     @ViewBuilder
     private var actionButton: some View {
         if let download = currentDownload {
@@ -247,7 +266,7 @@ struct SourceAppRow: View {
             .disabled(installState == .installed)
         }
     }
-    
+
     private var actionTitle: String {
         switch installState {
         case .notInstalled:    return L("Install")
@@ -255,7 +274,7 @@ struct SourceAppRow: View {
         case .installed:       return L("Installed")
         }
     }
-    
+
     private var actionColor: Color {
         switch installState {
         case .notInstalled:    return .accentColor
@@ -263,12 +282,12 @@ struct SourceAppRow: View {
         case .installed:       return Theme.ink3
         }
     }
-    
+
     private func updateCurrentDownload() {
         let id = app.id ?? app.currentUniqueId
         currentDownload = downloadManager.getDownload(by: id)
     }
-    
+
     private func startDownload() {
         guard let url = app.currentDownloadUrl else { return }
         let id = app.id ?? app.currentUniqueId
@@ -281,6 +300,8 @@ struct SourceAppRow: View {
 // MARK: - Source App Detail View (App Store Style)
 struct SourceAppDetailView: View {
     let app: ASRepository.App
+    /// Nguồn mà ứng dụng này đến từ. Rỗng thì không hiện dòng nguồn.
+    var sourceName: String = ""
     
     @ObservedObject private var downloadManager = DownloadManager.shared
     @State private var currentDownload: Download?
@@ -464,11 +485,7 @@ struct SourceAppDetailView: View {
                 Color.clear.frame(height: 110)
                 
                 HStack(alignment: .bottom, spacing: 16) {
-                    AsyncImage(url: finalIconURL) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
+                    CachedAsyncImage(url: finalIconURL, size: 100) {
                         RoundedRectangle(cornerRadius: 22)
                             .fill(.white.opacity(0.3))
                             .overlay(
@@ -477,7 +494,6 @@ struct SourceAppDetailView: View {
                                     .foregroundStyle(.white.opacity(0.8))
                             )
                     }
-                    .frame(width: 100, height: 100)
                     .clipShape(RoundedRectangle(cornerRadius: 22))
                     .shadow(color: Theme.cardShadow, radius: 12, x: 0, y: 6)
                     
@@ -803,6 +819,12 @@ struct SourceAppDetailView: View {
                 .foregroundStyle(Theme.ink)
             
             VStack(spacing: 16) {
+                // Ứng dụng này đến từ nguồn nào
+                if !sourceName.isEmpty {
+                    InfoRow(title: L("Source"), value: sourceName)
+                    infoDivider
+                }
+
                 if let developer = finalDeveloper {
                     InfoRow(title: L("Developer"), value: developer)
                 }
@@ -1060,11 +1082,7 @@ struct SourceCellView: View {
     
     var body: some View {
         HStack(spacing: 13) {
-            AsyncImage(url: source.iconURL) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
+            CachedAsyncImage(url: source.iconURL, size: 56) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(Theme.cardAlt)
@@ -1072,7 +1090,6 @@ struct SourceCellView: View {
                         .foregroundStyle(Theme.ink3)
                 }
             }
-            .frame(width: 56, height: 56)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -1233,13 +1250,18 @@ struct SourceAppsView: View {
         return L("All Repositories")
     }
     
-    private var allApps: [ASRepository.App] {
-        sources.compactMap { viewModel.sources[$0] }
-            .flatMap { $0.apps }
+    /// Lọc từ danh sách đã dựng sẵn theo khoá nguồn — không gộp lại từ đầu.
+    private var allApps: [StoreApp] {
+        let keys = Set(sources.compactMap { source -> String? in
+            guard let url = source.sourceURL else { return nil }
+            return source.identifier ?? url.absoluteString
+        })
+        guard !keys.isEmpty else { return [] }
+        return viewModel.catalog.filter { keys.contains($0.sourceKey) }
     }
-    
+
     var body: some View {
-        StoreAppsList(apps: allApps)
+        StoreAppsList(apps: allApps, showsSource: sources.count > 1)
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Theme.canvas, for: .navigationBar)

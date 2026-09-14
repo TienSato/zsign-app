@@ -226,7 +226,7 @@ private struct NewSearchButton: View {
 
 // MARK: - Search Apps View (Grid Layout)
 struct SearchAppsView: View {
-    let apps: [ASRepository.App]
+    let apps: [StoreApp]
     
     @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = SearchViewModel()
@@ -237,19 +237,17 @@ struct SearchAppsView: View {
         GridItem(.flexible(), spacing: 12)
     ]
     
-    private var filteredApps: [ASRepository.App] {
-        guard viewModel.hasSearched else {
-            return []
-        }
-        
-        let searchTerm = viewModel.performedSearchText.trimmingCharacters(in: .whitespaces)
-        guard !searchTerm.isEmpty else {
-            return []
-        }
-        
-        return apps.filter {
-            $0.name?.localizedCaseInsensitiveContains(searchTerm) ?? false
-        }
+    private var filteredApps: [StoreApp] {
+        guard viewModel.hasSearched else { return [] }
+
+        let searchTerm = viewModel.performedSearchText
+            .trimmingCharacters(in: .whitespaces)
+            .lowercased()
+        guard !searchTerm.isEmpty else { return [] }
+
+        // So trên chuỗi đã hạ chữ hoa sẵn lúc dựng danh sách — nhanh hơn
+        // localizedCaseInsensitiveContains rất nhiều trên hàng chục nghìn mục.
+        return apps.filter { $0.searchName.contains(searchTerm) }
     }
     
     var body: some View {
@@ -290,13 +288,9 @@ struct SearchAppsView: View {
                 .padding(.bottom, 8)
                 
                 LazyVStack(spacing: 0) {
-                    ForEach(Array(filteredApps.enumerated()), id: \.element.currentUniqueId) { index, app in
-                        VStack(spacing: 0) {
-                            SourceAppRow(app: app)
-                            if index < filteredApps.count - 1 {
-                                Divider().padding(.leading, 84)
-                            }
-                        }
+                    let firstID = filteredApps.first?.id
+                    ForEach(filteredApps) { item in
+                        SourceAppRow(item: item, showsDivider: item.id != firstID)
                     }
                 }
                 .cardStyle(padding: 0)

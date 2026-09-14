@@ -973,3 +973,6 @@
 "Try Another Search" = "Tìm kiếm khác";
 "New Search" = "Tìm kiếm mới";
 "RESULTS FOR \"%@\"" = "KẾT QUẢ CHO \"%@\"";
+
+/* Store: cache + nguon */
+"Loading apps..." = "Đang tải ứng dụng...";
