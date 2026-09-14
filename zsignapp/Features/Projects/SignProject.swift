@@ -2,7 +2,7 @@
 //  SignProject.swift
 //  zsignapp
 //
-//  "Workspace" rút gọn (kiểu LCSign): mỗi app đã nhập lưu thành 1 project =
+//  "Workspace" rút gọn: mỗi app đã nhập lưu thành 1 project =
 //  IPA GỐC (chính là ImportedApp đã lưu) + danh sách dylib + cert. Sửa tweak ->
 //  ký lại TỪ GỐC -> cài đè (cùng bundle id = cập nhật tại chỗ, giữ data).
 //
@@ -165,7 +165,7 @@ final class ProjectStore: ObservableObject {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         var name = srcURL.lastPathComponent
-        // tránh trùng tên -> nếu trùng thì GHI ĐÈ (giống LCSign: plugin cùng tên -> cập nhật)
+        // tránh trùng tên -> nếu trùng thì GHI ĐÈ (plugin cùng tên = bản cập nhật)
         let dest = dir.appendingPathComponent(name)
 
         let accessing = srcURL.startAccessingSecurityScopedResource()

@@ -26,7 +26,7 @@ class TweakHandler {
     // MARK: - Main Entry Point
     
     func inject() async throws {
-        // ✅ GỌI checkEllekit() TRƯỚC - giống Feather
+        // Phải gọi checkEllekit() TRƯỚC khi xử lý dylib/framework
         try await checkEllekit()
         
         // ✅ SAU ĐÓ mới kiểm tra rỗng
@@ -84,7 +84,7 @@ class TweakHandler {
             print("✅ Added ellekit.deb to injection queue")
         }
         
-        // ✅ Logic giống Feather
+        // Nếu IPA đã có sẵn CydiaSubstrate.framework thì xử lý theo tuỳ chọn thay thế bằng ElleKit
         if fileManager.fileExists(atPath: substrateFramework.path) {
             if options.experiment_replaceSubstrateWithEllekit {
                 print("🔄 Replacing CydiaSubstrate with ElleKit")
@@ -139,14 +139,15 @@ class TweakHandler {
             throw TweakError.executableNotFound
         }
         
-        // ✅ Change CydiaSubstrate path (ignore result like Feather)
+        // Đổi đường dẫn CydiaSubstrate sang @rpath (bỏ qua kết quả: dylib không
+        // tham chiếu CydiaSubstrate thì thao tác này thất bại là bình thường)
         _ = Zsign.changeDylibPath(
             appExecutable: destinationURL.path,
             for: "/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
             with: "@rpath/CydiaSubstrate.framework/CydiaSubstrate"
         )
         
-        // ✅ Inject dylib (ignore result like Feather)
+        // Nhúng dylib (bỏ qua kết quả: nếu đã nhúng sẵn thì zsign trả về false)
         let injectPath = "\(options.injectPath)\(injectFolder)\(destinationURL.lastPathComponent)"
         _ = Zsign.injectDyLib(
             appExecutable: appExec.path,
@@ -181,14 +182,14 @@ class TweakHandler {
             return
         }
         
-        // ✅ Change CydiaSubstrate path IN FRAMEWORK (ignore result like Feather)
+        // Đổi đường dẫn CydiaSubstrate BÊN TRONG framework sang @rpath (bỏ qua kết quả)
         _ = Zsign.changeDylibPath(
             appExecutable: fExec.path,
             for: "/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
             with: "@rpath/CydiaSubstrate.framework/CydiaSubstrate"
         )
         
-        // ✅ Inject framework (ignore result like Feather)
+        // Nhúng framework (bỏ qua kết quả: nếu đã nhúng sẵn thì zsign trả về false)
         let injectPath = "@executable_path/Frameworks/\(url.lastPathComponent)/\(fExec.lastPathComponent)"
         _ = Zsign.injectDyLib(
             appExecutable: appExec.path,

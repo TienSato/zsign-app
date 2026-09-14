@@ -2,8 +2,8 @@
 //  ParallelZipArchiver.swift
 //  zsignapp
 //
-//  Nén IPA SONG SONG (raw deflate, đa nhân) rồi tự dựng ZIP — mô phỏng
-//  cơ chế PrepareRawDeflateBatch của LCSign. Có Zip64. Nếu bất kỳ lỗi nào,
+//  Nén IPA SONG SONG (raw deflate, đa nhân) rồi tự dựng ZIP, nhanh hơn nhiều
+//  so với nén tuần tự. Có hỗ trợ Zip64. Nếu bất kỳ lỗi nào,
 //  caller sẽ fallback về thư viện Zip cũ (đã kiểm chứng) => không bao giờ hỏng.
 //
 

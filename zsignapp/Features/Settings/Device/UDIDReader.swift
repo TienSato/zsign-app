@@ -3,8 +3,8 @@
 //  zsignapp
 //
 //  Đọc UDID thiết bị từ `embedded.mobileprovision` trong bundle (ProvisionedDevices).
-//  Chạy trên BẢN KÝ THƯỜNG (ký theo từng máy) — không dùng MobileGestalt/entitlement
-//  private (vốn chỉ chạy trên TrollStore/enterprise).
+//  Chạy trên BẢN KÝ THƯỜNG (ký theo từng máy) — không dùng MobileGestalt hay
+//  entitlement private (những thứ đó bản ký thường không có quyền).
 //
 
 import Foundation

@@ -600,7 +600,7 @@ class SigningHandler {
                         Task { @MainActor in self?.progressCallback?(p) }
                     }
                     var usedParallel = false
-                    // ƯU TIÊN: nén song song (giống LCSign). Lỗi -> fallback lib Zip cũ.
+                    // ƯU TIÊN: nén song song đa nhân cho nhanh. Lỗi -> fallback lib Zip cũ.
                     if ParallelZip.enabled {
                         do {
                             try ParallelZip.archive(

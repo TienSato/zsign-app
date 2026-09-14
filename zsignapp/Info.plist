@@ -32,8 +32,6 @@
 	<string>https://chungchi365.com/upload/udid</string>
 	<key>API_SOURCE</key>
 	<string>https://zsign.app/source.json</string>
-	<key>API_STORE</key>
-	<string>https://chungchi365.com</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -99,8 +97,6 @@
 				<dict>
 					<key>UISceneConfigurationName</key>
 					<string>Default Configuration</string>
-					<key>UISceneDelegateClassName</key>
-					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
 				</dict>
 			</array>
 		</dict>

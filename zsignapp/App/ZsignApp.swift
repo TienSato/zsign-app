@@ -1,14 +1,13 @@
 //
-//  SignAppApp.swift
+//  ZsignApp.swift
 //  zsignapp
 //  Created by Sato on 26/10/25.
 
 import SwiftUI
 
 @main
-struct SignAppApp: App {
+struct ZsignApp: App {
     let storage = Storage.shared
-    @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var certAutoImporter = CertificateAutoImporter.shared
     @StateObject private var sourceAutoImporter = SourceAutoImporter.shared
     @StateObject private var deviceTheme = DeviceThemeManager.shared
@@ -19,7 +18,6 @@ struct SignAppApp: App {
     
     init() {
         setupAppDirectories()
-        requestNotificationPermission()
     }
     
     var body: some Scene {
@@ -42,7 +40,6 @@ struct SignAppApp: App {
                     IslandBadgeController.shared.apply(enabled: true)
                     SharedImportScanner.shared.scanAndImport()
                     Task {
-                        await notificationManager.fetchNotification()
                         await certAutoImporter.autoImportCertificate()
                         await sourceAutoImporter.autoImportSources()
                     }
@@ -68,27 +65,11 @@ struct SignAppApp: App {
                 .fullScreenCover(isPresented: $showLanguageSetup) {
                     FirstLaunchLanguageView { showLanguageSetup = false }
                 }
-                .sheet(isPresented: $notificationManager.shouldShowNotification) {
-                    if let notification = notificationManager.currentNotification {
-                        NotificationView(notification: notification)
-                            .interactiveDismissDisabled(!notification.dismissible)
-                    }
-                }
         }
     }
     
     private func setupAppDirectories() {
         FileManager.default.setupAppDirectories()
-    }
-    
-    private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if granted {
-                print("✅ Notification permission granted")
-            } else if let error = error {
-                print("❌ Notification permission error: \(error)")
-            }
-        }
     }
     
     private func handleIncomingURL(_ url: URL) {

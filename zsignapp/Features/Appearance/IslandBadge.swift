@@ -1,7 +1,7 @@
 //
 //  IslandBadge.swift
 //  zsignapp
-//  Badge thương hiệu kiểu LCSign: đặt trong 1 UIWindow riêng ở NGAY DƯỚI lớp
+//  Badge thương hiệu zsign: đặt trong 1 UIWindow riêng ở NGAY DƯỚI lớp
 //  Dynamic Island (windowLevel = .statusBar - 1). Lúc dùng thật bị DI che khuất
 //  (gần như không thấy); khi CHỤP MÀN HÌNH badge lộ ra như branding trên DI.
 //  Badge canh giữa + đúng số đo DI (126 x 37.33, đỉnh 11.33) nên tự khớp mọi máy.
