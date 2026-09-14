@@ -8,8 +8,8 @@
 //  Muốn đổi giao diện lớp phủ tiến trình ở bất kỳ đâu trong app thì SỬA
 //  DUY NHẤT FILE NÀY. Các màn hình chỉ truyền nội dung vào, không tự vẽ.
 //
-//  Bố cục: làm mờ nền màn hình, KHÔNG có hộp/thẻ. Icon app đập theo nhịp ở
-//  giữa, nội dung tiến trình nằm bên dưới.
+//  Bố cục: phủ kín nền bằng đúng màu nền của app, KHÔNG có hộp/thẻ.
+//  Icon app đập theo nhịp ở giữa, nội dung tiến trình nằm bên dưới.
 //
 //  Cách dùng:
 //      if isImporting {
@@ -41,9 +41,15 @@ struct ProgressOverlay: View {
 
     var body: some View {
         ZStack {
-            // Làm mờ toàn bộ màn hình phía sau và chặn mọi thao tác chạm.
-            Rectangle()
-                .fill(.ultraThinMaterial)
+            // Phủ ĐÚNG màu nền của app và chặn mọi thao tác chạm.
+            //
+            // Trước đây dùng .ultraThinMaterial: vật liệu mờ đặt trên nền
+            // Theme.canvas cho ra một sắc NHẠT HƠN canvas, trong khi thanh
+            // điều hướng phía trên vẫn là canvas nguyên bản -> lộ một đường
+            // ranh ngang ngay dưới thanh tiêu đề, nhìn như hai mảnh rời.
+            // Dùng thẳng Theme.canvas thì khớp tuyệt đối ở mọi màn, cả sáng
+            // lẫn tối.
+            Theme.canvas
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { }
