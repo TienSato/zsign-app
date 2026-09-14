@@ -29,26 +29,40 @@ struct IslandBadgeView: View {
     var title: String = "zSign"
     var iconAsset: String = "IconPreviewDefault"
 
+    // Số đo Dynamic Island danh nghĩa (points) — như nhau trên mọi iPhone có DI.
     private let diWidth: CGFloat = 126
     private let diHeight: CGFloat = 37.33
     private let diTop: CGFloat = 11.33
 
+    /// Tỉ lệ badge so với DI thật.
+    /// 1.0 = đúng bằng DI, nhưng DI mỗi đời máy lệch nhau vài point nên dễ lòi viền.
+    /// Để nhỏ hơn cho chắc chắn nấp trọn. VẪN LÒI thì giảm tiếp (0.82, 0.78...).
+    private let diScale: CGFloat = 0.86
+
     var body: some View {
         let hasDI = DeviceScreen.hasDynamicIsland
-        let w: CGFloat = hasDI ? diWidth : 120
-        let h: CGFloat = hasDI ? diHeight : 34
-        let top: CGFloat = hasDI ? diTop : max(DeviceScreen.topSafeInset - h - 4, 6)
+        let w: CGFloat = hasDI ? diWidth * diScale : 112
+        let h: CGFloat = hasDI ? diHeight * diScale : 32
+        // Giữ badge đúng tâm vùng DI khi thu nhỏ.
+        let top: CGFloat = hasDI
+            ? diTop + (diHeight - h) / 2
+            : max(DeviceScreen.topSafeInset - h - 4, 6)
+
+        // Icon và chữ co theo chiều cao badge để không bị chật khi thu nhỏ.
+        let iconSize = h * 0.60
+        let fontSize = h * 0.34
 
         VStack(spacing: 0) {
-            HStack(spacing: 6) {
+            HStack(spacing: h * 0.15) {
                 Image(iconAsset)
                     .resizable().scaledToFit()
-                    .frame(width: h - 17, height: h - 17)
-                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                    .frame(width: iconSize, height: iconSize)
+                    .clipShape(RoundedRectangle(cornerRadius: iconSize * 0.28, style: .continuous))
                 Text(title)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(.system(size: fontSize, weight: .semibold, design: .rounded))
                     .foregroundStyle(foreground)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .frame(width: w, height: h)
             .background(Capsule(style: .continuous).fill(background))
