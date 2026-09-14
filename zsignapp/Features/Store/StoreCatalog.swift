@@ -37,6 +37,8 @@ struct StoreApp: Identifiable, Hashable {
     let iconURL: URL?
     /// "v1.2.3 · 45,6 MB"
     let versionAndSize: String
+    /// Tên đã hạ chữ hoa VÀ bỏ dấu, tính sẵn một lần. Lúc tìm chỉ việc
+    /// `contains` — không phải chuẩn hoá Unicode cho từng mục nữa.
     let searchName: String
 
     static func == (lhs: StoreApp, rhs: StoreApp) -> Bool { lhs.id == rhs.id }
@@ -261,6 +263,12 @@ final class SourcesViewModel: ObservableObject {
         }
     }
 
+    /// Chuẩn hoá chuỗi để so khớp: hạ chữ hoa và BỎ DẤU.
+    /// Nhờ vậy gõ "tra sua" vẫn ra "Trà Sữa", gõ "face" vẫn ra "Facebook".
+    static func fold(_ text: String) -> String {
+        text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+    }
+
     /// Dựng danh sách phẳng NGOÀI main thread. Đây là chỗ tốn nhất, không
     /// được để nó chạy trong body của view.
     private static func buildCatalog(_ decoded: [(SourceRef, ASRepository)]) async -> [StoreApp] {
@@ -296,7 +304,7 @@ final class SourcesViewModel: ObservableObject {
                         developer: app.developer,
                         iconURL: app.iconURL,
                         versionAndSize: parts.joined(separator: " · "),
-                        searchName: name.lowercased()
+                        searchName: Self.fold(name)
                     ))
                 }
             }

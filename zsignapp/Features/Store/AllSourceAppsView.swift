@@ -21,7 +21,10 @@ private struct StoreAppsList: View {
     @Binding var isSearching: Bool
 
     @State private var query = ""
-    /// nil = không lọc, hiện tất cả. Lưu sẵn kết quả thay vì lọc trong body.
+    /// Từ khoá ĐÃ bấm tìm. Khác `query` (chữ đang gõ) — không lọc theo từng
+    /// phím gõ, vì lọc hàng chục nghìn mục mỗi phím thì máy nào cũng giật.
+    @State private var submitted = ""
+    /// nil = chưa tìm, hiện tất cả. Lưu sẵn kết quả thay vì lọc trong body.
     @State private var results: [StoreApp]?
     @FocusState private var focused: Bool
 
@@ -41,7 +44,7 @@ private struct StoreAppsList: View {
                 }
 
                 HStack {
-                    Text(isSearching && !query.isEmpty ? "RESULTS" : "APPS")
+                    Text(results != nil ? "RESULTS" : "APPS")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(Theme.ink2)
                     Spacer()
@@ -53,7 +56,7 @@ private struct StoreAppsList: View {
                 .padding(.top, 12)
                 .padding(.bottom, 8)
 
-                if list.isEmpty {
+                if list.isEmpty && results != nil {
                     EmptyStateView(
                         title: "No Results",
                         systemImage: "magnifyingglass",
@@ -79,14 +82,14 @@ private struct StoreAppsList: View {
         }
         .background(Theme.canvas.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
-        // Đổi query hoặc đổi danh sách nguồn thì lọc lại. .task(id:) tự huỷ
-        // lượt trước nên việc chờ 220ms bên dưới thành ra là chống gõ dồn.
-        .task(id: "\(query)#\(apps.count)") { await applyFilter() }
+        // Chỉ lọc lại khi ĐÃ bấm tìm, hoặc khi danh sách nguồn đổi.
+        .task(id: "\(submitted)#\(apps.count)") { await applyFilter() }
         .onChange(of: isSearching) { searching in
             if searching {
                 focused = true
             } else {
                 query = ""
+                submitted = ""
                 results = nil
             }
         }
@@ -108,9 +111,13 @@ private struct StoreAppsList: View {
                     .submitLabel(.search)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+                    .onSubmit(runSearch)
 
                 if !query.isEmpty {
-                    Button { query = "" } label: {
+                    Button {
+                        query = ""
+                        submitted = ""
+                    } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15))
                             .foregroundStyle(Theme.ink3)
@@ -122,29 +129,32 @@ private struct StoreAppsList: View {
             .padding(.vertical, 10)
             .background(Capsule().fill(Theme.card))
 
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) { isSearching = false }
-            } label: {
-                Text("Cancel")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.accentColor)
+            Button(action: runSearch) {
+                Text("Search")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(query.trimmingCharacters(in: .whitespaces).isEmpty
+                                     ? Theme.ink3 : Color.accentColor)
             }
             .buttonStyle(.plain)
+            .disabled(query.trimmingCharacters(in: .whitespaces).isEmpty)
         }
+    }
+
+    private func runSearch() {
+        focused = false
+        submitted = query
     }
 
     // MARK: - Lọc
 
+    /// Lọc MỘT lần cho mỗi lần bấm tìm. Khớp chuỗi con ở bất kỳ vị trí nào:
+    /// "f", "face", "book" đều ra Facebook. Không phân biệt hoa thường và dấu.
     private func applyFilter() async {
-        let term = query.trimmingCharacters(in: .whitespaces).lowercased()
+        let term = SourcesViewModel.fold(submitted.trimmingCharacters(in: .whitespaces))
         guard !term.isEmpty else {
             results = nil
             return
         }
-
-        // Chờ một nhịp: gõ tiếp thì .task(id:) huỷ lượt này, không lọc thừa.
-        try? await Task.sleep(nanoseconds: 220_000_000)
-        guard !Task.isCancelled else { return }
 
         let source = apps
         let filtered = await Task.detached(priority: .userInitiated) {
