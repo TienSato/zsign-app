@@ -1,26 +1,9 @@
 //
 //  IslandBadge.swift
 //  zsignapp
-//  Badge thương hiệu zsign: đặt trong 1 UIWindow riêng ở NGAY DƯỚI lớp
-//  Dynamic Island (windowLevel = .statusBar - 1). Lúc dùng thật bị DI che khuất
-//  (gần như không thấy); khi CHỤP MÀN HÌNH badge lộ ra như branding trên DI.
-//  Badge canh giữa + đúng số đo DI (126 x 37.33, đỉnh 11.33) nên tự khớp mọi máy.
-//
 
 import SwiftUI
 import UIKit
-
-enum DeviceScreen {
-    static var topSafeInset: CGFloat {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let window = scenes.flatMap { $0.windows }.first { $0.isKeyWindow } ?? scenes.first?.windows.first
-        return window?.safeAreaInsets.top ?? 0
-    }
-    static var hasDynamicIsland: Bool { topSafeInset >= 55 }
-    static var hasNotch: Bool { topSafeInset >= 30 }
-}
-
-// MARK: - Badge view (nhỏ, nấp đúng vị trí DI)
 
 struct IslandBadgeView: View {
     var tint: Color
@@ -29,26 +12,20 @@ struct IslandBadgeView: View {
     var title: String = "zSign"
     var iconAsset: String = "IconPreviewDefault"
 
-    // Số đo Dynamic Island danh nghĩa (points) — như nhau trên mọi iPhone có DI.
     private let diWidth: CGFloat = 126
     private let diHeight: CGFloat = 37.33
     private let diTop: CGFloat = 11.33
 
-    /// Tỉ lệ badge so với DI thật.
-    /// 1.0 = đúng bằng DI, nhưng DI mỗi đời máy lệch nhau vài point nên dễ lòi viền.
-    /// Để nhỏ hơn cho chắc chắn nấp trọn. VẪN LÒI thì giảm tiếp (0.82, 0.78...).
+  
     private let diScale: CGFloat = 0.86
 
     var body: some View {
-        let hasDI = DeviceScreen.hasDynamicIsland
-        let w: CGFloat = hasDI ? diWidth * diScale : 112
-        let h: CGFloat = hasDI ? diHeight * diScale : 32
-        // Giữ badge đúng tâm vùng DI khi thu nhỏ.
-        let top: CGFloat = hasDI
-            ? diTop + (diHeight - h) / 2
-            : max(DeviceScreen.topSafeInset - h - 4, 6)
+        // Chỉ dựng cho máy CÓ Dynamic Island — controller đã chặn từ ngoài,
+        // nên ở đây luôn dùng số đo của DI, không còn nhánh tai thỏ.
+        let w = diWidth * diScale
+        let h = diHeight * diScale
+        let top = diTop + (diHeight - h) / 2   // giữ badge đúng tâm vùng DI
 
-        // Icon và chữ co theo chiều cao badge để không bị chật khi thu nhỏ.
         let iconSize = h * 0.60
         let fontSize = h * 0.34
 
@@ -77,14 +54,13 @@ struct IslandBadgeView: View {
     }
 }
 
-// MARK: - Window đặt badge dưới lớp DI
 
 final class IslandBadgeWindow: UIWindow {
     private let host = UIHostingController(rootView: AnyView(EmptyView()))
 
     override init(windowScene: UIWindowScene) {
         super.init(windowScene: windowScene)
-        windowLevel = .statusBar - 1          // dưới DI/status bar
+        windowLevel = .statusBar - 1
         backgroundColor = .clear
         isUserInteractionEnabled = false
         host.view.backgroundColor = .clear
@@ -97,10 +73,9 @@ final class IslandBadgeWindow: UIWindow {
         isHidden = false
     }
 
-    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? { nil } // xuyên chạm
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? { nil }
 }
 
-// MARK: - Controller bật/tắt + cập nhật màu
 
 @MainActor
 final class IslandBadgeController {
@@ -109,7 +84,9 @@ final class IslandBadgeController {
     private let title = "zSign"
 
     func apply(enabled: Bool) {
-        guard enabled else {
+        // Máy không có Dynamic Island thì badge sẽ lộ hẳn ra màn hình chứ
+        // không nấp được sau đâu cả -> không dựng cửa sổ nào.
+        guard enabled, DeviceInfo.hasDynamicIsland else {
             window?.isHidden = true
             window = nil
             return
