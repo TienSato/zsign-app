@@ -1,10 +1,6 @@
 //
 //  ShareViewController.swift
 //  ZSShareExtension
-//
-//  Nhận file .ipa từ Share Sheet -> chép vào App Group Inbox -> mở app chính.
-//  Cơ chế giống app tham khảo: extension chỉ "bắt" file rồi bàn giao, app chính tự nhập.
-//
 
 import UIKit
 import UniformTypeIdentifiers

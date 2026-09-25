@@ -2,18 +2,6 @@
 //  CachedAsyncImage.swift
 //  zsignapp
 //
-//  Ảnh có bộ nhớ đệm 2 tầng và THU NHỎ về đúng cỡ hiển thị.
-//
-//  Vì sao không dùng AsyncImage của SwiftUI:
-//    - Không có tầng đệm trong RAM: cuộn qua rồi cuộn lại là tải lại từ mạng.
-//    - Không thu nhỏ: icon nguồn thường là PNG 512x512 hoặc 1024x1024 nhưng
-//      chỉ hiển thị ở 56pt. Giải nén full-size tốn RAM gấp ~80 lần cần thiết
-//      (1024x1024x4 byte = 4MB mỗi ảnh).
-//
-//  Ở đây: NSCache giữ ảnh ĐÃ thu nhỏ trong RAM, URLCache riêng giữ byte gốc
-//  trên đĩa (256MB), ImageIO thu nhỏ ngay lúc giải mã nên không bao giờ
-//  dựng bitmap full-size.
-//
 
 import SwiftUI
 import UIKit
@@ -40,7 +28,6 @@ final class ImageCache {
         session = URLSession(configuration: config)
     }
 
-    /// Ảnh đã có sẵn trong RAM (không chạm mạng, không chạm đĩa).
     func cached(_ url: URL, pixels: Int) -> UIImage? {
         memory.object(forKey: Self.key(url, pixels))
     }
@@ -64,7 +51,6 @@ final class ImageCache {
         "\(url.absoluteString)|\(pixels)" as NSString
     }
 
-    /// Giải mã THẲNG ra ảnh nhỏ bằng ImageIO — không bao giờ dựng bitmap gốc.
     private static func downsample(_ data: Data, maxPixel: Int) -> UIImage? {
         let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
         guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {
@@ -85,7 +71,6 @@ final class ImageCache {
 
 // MARK: - View
 
-/// Thay thế AsyncImage. Dùng y như AsyncImage nhưng có đệm và thu nhỏ.
 struct CachedAsyncImage<Placeholder: View>: View {
     let url: URL?
     let size: CGFloat

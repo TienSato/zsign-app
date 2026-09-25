@@ -46,8 +46,7 @@ class CertificateHandler {
             return false
         }
         
-        // Nếu password đúng, ta tin rằng P12 và mobileprovision đã khớp
-        // Zsign sẽ tự kiểm tra khi sign thực tế
+        
         
         return true
     }

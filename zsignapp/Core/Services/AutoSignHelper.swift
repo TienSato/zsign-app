@@ -191,15 +191,12 @@ class AutoSignHelper {
         
         let installHandler = InstallHandler(signedApp: signedApp)
         
-        // ✅ FIX: Dùng detached task như SignAppView
         Task.detached {
             try? await installHandler.install()
         }
         
-        // ✅ Chỉ đợi 5 giây rồi cho là xong
         try? await Task.sleep(nanoseconds: 5_000_000_000)
         
-        // ✅ LUÔN FINISH SAU 5 GIÂY
         await MainActor.run {
             AutoSignProgressManager.shared.updateProgress(0.95, step: "Installation complete!")
         }
@@ -217,7 +214,6 @@ class AutoSignHelper {
         }
     }
     
-    /// Tìm signed app vừa được ký
     private func findRecentlySignedApp(bundleID: String) -> SignedApp? {
         let context = Storage.shared.container.viewContext
         let fetchRequest = SignedApp.fetchRequest()
@@ -227,14 +223,12 @@ class AutoSignHelper {
             NSSortDescriptor(keyPath: \SignedApp.date, ascending: false)
         ]
         
-        // ✅ FIX: Lọc theo bundleID trong query
         fetchRequest.predicate = NSPredicate(
             format: "identifier == %@", bundleID
         )
         
         fetchRequest.fetchLimit = 1
         
-        // Chỉ tìm app được sign trong vòng 2 phút
         let twoMinutesAgo = Date().addingTimeInterval(-120)
         
         if let results = try? context.fetch(fetchRequest),

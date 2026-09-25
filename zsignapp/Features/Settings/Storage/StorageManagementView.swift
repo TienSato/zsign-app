@@ -12,7 +12,6 @@ struct StorageManagementView: View {
     @State private var storageSize: String = "Calculating..."
     @State private var isCalculating = false
     
-    /// Nút dọn bị khoá khi đang dọn, đang tính, hoặc không còn gì để xoá.
     private var isCleanupDisabled: Bool {
         isCleaningUp || storageSize == "0 bytes" || isCalculating
     }

@@ -7,7 +7,6 @@
 import SwiftUI
 
 extension Image {
-    /// Style cho app icon
     func appIconStyle(
         size: CGFloat = 56,
         lineWidth: CGFloat = 1,

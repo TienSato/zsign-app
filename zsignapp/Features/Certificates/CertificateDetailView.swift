@@ -2,15 +2,6 @@
 //  CertificateDetailView.swift
 //  zsignapp
 //
-//  Chi tiết đầy đủ của một cặp chứng chỉ:
-//    1. Chứng chỉ (P12)     - bóc từ X.509 DER trong mobileprovision
-//    2. Hồ sơ cấp quyền     - đọc từ plist của mobileprovision
-//    3. Quyền (entitlements) - gom nhóm, có tên dễ hiểu (EntitlementCatalog)
-//    4. UDID thiết bị       - danh sách máy được cấp phép
-//
-//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents) thay cho List.
-//  Danh sách quyền rất dài nên các thẻ quyền dùng LazyVStack.
-//
 
 import SwiftUI
 import UIKit
@@ -21,8 +12,7 @@ struct CertificateDetailView: View {
     @State private var provision: Certificate?
     @State private var x509: X509Certificate?
 
-    /// Lấy locale từ môi trường (gốc app đã set theo ngôn ngữ người dùng chọn)
-    /// thay vì đụng vào LocalizationManager.shared — nó là @MainActor.
+    
     @Environment(\.locale) private var locale
 
     var body: some View {
@@ -44,7 +34,6 @@ struct CertificateDetailView: View {
         .onAppear(perform: load)
     }
 
-    // MARK: - 1. Chứng chỉ (P12)
 
     @ViewBuilder
     private var p12Section: some View {
@@ -80,7 +69,6 @@ struct CertificateDetailView: View {
         }
     }
 
-    // MARK: - 2. Hồ sơ cấp quyền
 
     @ViewBuilder
     private func profileSection(_ p: Certificate) -> some View {
@@ -105,8 +93,7 @@ struct CertificateDetailView: View {
         }
     }
 
-    /// Bỏ những dòng không có giá trị rồi mới chèn kẻ mảnh, để thẻ không bao giờ
-    /// có hai đường kẻ dính nhau.
+   
     @ViewBuilder
     private func fieldRows(_ fields: [CertField]) -> some View {
         let shown = fields.filter { !($0.value ?? "").isEmpty }
@@ -123,7 +110,6 @@ struct CertificateDetailView: View {
         }
     }
 
-    // MARK: - 3. Quyền
 
     @ViewBuilder
     private func entitlementSections(_ p: Certificate) -> some View {
@@ -147,8 +133,7 @@ struct CertificateDetailView: View {
         }
     }
 
-    /// Ghép danh mục có sẵn với những khoá lạ chỉ xuất hiện trong hồ sơ này,
-    /// để không quyền nào bị giấu đi.
+   
     private func entitlements(
         in category: EntitlementCategory,
         granted: [String: AnyCodable]
@@ -163,7 +148,6 @@ struct CertificateDetailView: View {
         }
     }
 
-    // MARK: - 4. UDID thiết bị
 
     @ViewBuilder
     private func deviceSection(_ p: Certificate) -> some View {
@@ -196,7 +180,6 @@ struct CertificateDetailView: View {
         }
     }
 
-    // MARK: - Nạp dữ liệu
 
     private func load() {
         guard provision == nil else { return }
@@ -207,7 +190,6 @@ struct CertificateDetailView: View {
         }
     }
 
-    // MARK: - Tiện ích
 
     private func format(_ date: Date?) -> String? {
         guard let date else { return nil }
@@ -218,7 +200,6 @@ struct CertificateDetailView: View {
         return formatter.string(from: date)
     }
 
-    /// application-identifier là "TEAMID.com.vi.du" — bỏ tiền tố đội cho dễ đọc.
     private func bundleID(_ p: Certificate) -> String? {
         guard let full = p.Entitlements?["application-identifier"]?.value as? String else { return nil }
         for prefix in (p.ApplicationIdentifierPrefix ?? []) + p.TeamIdentifier
@@ -251,14 +232,10 @@ struct CertificateDetailView: View {
     }
 }
 
-// MARK: - Thành phần dùng lại trong màn hình này
 
-/// Một phần của màn hình: tiêu đề có icon phía trên + một thẻ chứa các hàng.
-/// Thay cho `Section { } header: { }` của List.
 private struct DetailCard<Content: View>: View {
     let header: SectionHeader
-    /// Bật cho các thẻ rất dài (danh sách quyền, danh sách UDID) để chỉ dựng
-    /// những hàng thật sự lọt vào khung nhìn.
+    
     var isLazy: Bool = false
     @ViewBuilder var content: Content
 
@@ -279,7 +256,6 @@ private struct DetailCard<Content: View>: View {
     }
 }
 
-/// Mô tả một dòng nhãn/giá trị trước khi dựng, để lọc dòng rỗng rồi mới chèn kẻ.
 private struct CertField: Identifiable {
     let id = UUID()
     let label: LocalizedStringKey
@@ -289,7 +265,6 @@ private struct CertField: Identifiable {
     var valueColor: Color = Theme.ink
 }
 
-/// Một dòng quyền: thông tin từ danh mục + giá trị thực tế (nil = chưa cấp).
 private struct EntitlementItem: Identifiable {
     let info: EntitlementInfo
     let value: String?
@@ -367,7 +342,6 @@ private struct CertRow: View {
 
 private struct EntitlementRow: View {
     let info: EntitlementInfo
-    /// nil nghĩa là hồ sơ này KHÔNG có quyền đó.
     let value: String?
 
     private var isGranted: Bool { value != nil }

@@ -2,13 +2,6 @@
 //  TweakManagementView.swift
 //  zsignapp
 //
-//  Created by Sato on 26/10/25.
-//
-//  Danh sách tweak sẽ được tiêm khi ký. Giữ `List` vì có `onDelete`
-//  (bỏ List là mất thao tác vuốt để xoá), chỉ thay nền và từng hàng
-//  sang bộ thẻ dùng chung.
-//
-
 import SwiftUI
 import UniformTypeIdentifiers
 

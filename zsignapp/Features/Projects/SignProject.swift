@@ -2,12 +2,6 @@
 //  SignProject.swift
 //  zsignapp
 //
-//  "Workspace" rút gọn: mỗi app đã nhập lưu thành 1 project =
-//  IPA GỐC (chính là ImportedApp đã lưu) + danh sách dylib + cert. Sửa tweak ->
-//  ký lại TỪ GỐC -> cài đè (cùng bundle id = cập nhật tại chỗ, giữ data).
-//
-//  Lưu bằng JSON trong Documents/SignProjects/ (không đụng Core Data model).
-//
 
 import Foundation
 import UIKit
@@ -39,7 +33,6 @@ struct SignProject: Codable, Identifiable, Equatable {
     var removeProvision: Bool = false
     var hasCustomIcon: Bool = false
 
-    /// Bundle id thực tế khi ký (custom nếu có, không thì gốc).
     var effectiveBundleId: String { customBundleID.isEmpty ? bundleId : customBundleID }
     var createdAt: Date = Date()
     var lastSignedAt: Date?
@@ -158,14 +151,12 @@ final class ProjectStore: ObservableObject {
         projectDir(for: p).appendingPathComponent("dylibs", isDirectory: true)
     }
 
-    /// Copy 1 file dylib/deb vào project. Trả về ProjectDylib mới (hoặc nil nếu lỗi).
     func addDylib(to projectIn: SignProject, from srcURL: URL) -> SignProject {
         var project = projectIn
         let dir = dylibsDir(for: project)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         var name = srcURL.lastPathComponent
-        // tránh trùng tên -> nếu trùng thì GHI ĐÈ (plugin cùng tên = bản cập nhật)
         let dest = dir.appendingPathComponent(name)
 
         let accessing = srcURL.startAccessingSecurityScopedResource()
@@ -196,7 +187,6 @@ final class ProjectStore: ObservableObject {
         return project
     }
 
-    /// URL các dylib đang bật -> đưa vào options.injectionFiles khi ký.
     func enabledDylibURLs(for p: SignProject) -> [URL] {
         let dir = dylibsDir(for: p)
         return p.dylibs.filter { $0.enabled }.map { dir.appendingPathComponent($0.fileName) }

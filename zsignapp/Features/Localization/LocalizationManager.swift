@@ -1,11 +1,6 @@
 //
 //  LocalizationManager.swift
 //  zsignapp
-//  Quản lý ngôn ngữ: mặc định theo máy, cho phép chọn thủ công và đổi
-//  NGAY LẬP TỨC không cần khởi động lại (đổi bundle localization của Bundle.main).
-//  Thêm ngôn ngữ mới = thêm 1 case vào AppLanguage + 1 thư mục <mã>.lproj.
-//
-
 import Foundation
 import SwiftUI
 import ObjectiveC
@@ -19,7 +14,6 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Mã thư mục .lproj. nil = theo hệ thống.
     var code: String? {
         switch self {
         case .system: return nil
@@ -28,7 +22,6 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Tên hiển thị — viết bằng chính ngôn ngữ đó, KHÔNG dịch.
     var displayName: String {
         switch self {
         case .system: return NSLocalizedString("Follow System", comment: "")
@@ -60,7 +53,6 @@ private final class LocalizedBundle: Bundle {
 }
 
 extension Bundle {
-    /// Ép Bundle.main tra cứu chuỗi từ <code>.lproj. nil = trả về mặc định hệ thống.
     static func setAppLanguage(_ code: String?) {
         _ = swizzleOnce
         var inner: Bundle?
@@ -93,7 +85,6 @@ final class LocalizationManager: ObservableObject {
         }
     }
 
-    /// Đã từng chọn ngôn ngữ chưa (để hiện màn chọn lần đầu mở app).
     @Published var hasChosen: Bool {
         didSet { d.set(hasChosen, forKey: kChosen) }
     }
@@ -105,13 +96,11 @@ final class LocalizationManager: ObservableObject {
         Bundle.setAppLanguage(language.code)
     }
 
-    /// Locale dùng cho .environment(\.locale) — ảnh hưởng định dạng ngày/số.
     var locale: Locale {
         if let c = language.code { return Locale(identifier: c) }
         return Locale.current
     }
 
-    /// Ngôn ngữ đang thực sự áp dụng (giải quyết .system).
     var resolvedCode: String {
         if let c = language.code { return c }
         let pref = Locale.preferredLanguages.first ?? "en"
@@ -121,5 +110,4 @@ final class LocalizationManager: ObservableObject {
 
 // MARK: - Rút gọn
 
-/// Dùng ở nơi cần String (Text(bienString) KHÔNG tự dịch, khác Text("literal")).
 func L(_ key: String) -> String { NSLocalizedString(key, comment: "") }

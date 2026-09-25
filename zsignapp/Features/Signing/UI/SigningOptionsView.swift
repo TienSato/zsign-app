@@ -1,12 +1,7 @@
 //
 //  SigningOptionsView.swift
 //  zsignapp
-//
-//  Advanced signing options
-//
-//  Giao diện dạng thẻ (Theme + CardComponents). Mọi tuỳ chọn, mọi điểm gọi
-//  optionsManager.saveOptions() giữ nguyên như bản Form cũ.
-//
+
 
 import SwiftUI
 
@@ -436,7 +431,6 @@ struct SigningOptionsView: View {
 
 // MARK: - Ô nhập trong các sheet "thêm mới"
 
-/// Hàng nhập liệu dùng trong sheet Add Entry / Add File của màn này.
 private struct SigningOptionsFieldRow: View {
     let icon: String
     let title: String

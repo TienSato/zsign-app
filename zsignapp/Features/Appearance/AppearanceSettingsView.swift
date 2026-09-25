@@ -1,9 +1,6 @@
 //
 //  AppearanceSettingsView.swift
 //  zsignapp
-//  Cài đặt → Giao diện: màu chủ đạo, sáng/tối, ngôn ngữ và biểu tượng ứng dụng.
-//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents) thay cho Form.
-//
 
 import SwiftUI
 import UIKit
@@ -170,9 +167,9 @@ struct AppearanceSettingsView: View {
 // MARK: - Chọn icon app (alternate app icons)
 
 private struct IconOption: Identifiable {
-    let id: String          // tên alternate icon; "" = mặc định
+    let id: String
     let display: String
-    let preview: String     // tên imageset preview
+    let preview: String     
     var altName: String? { id.isEmpty ? nil : id }
 }
 
@@ -238,22 +235,20 @@ struct AppIconPicker: View {
         .onAppear { syncCurrent() }
     }
 
-    /// Đồng bộ lại trạng thái hiển thị theo icon thật của hệ thống.
     private func syncCurrent() {
         current = UIApplication.shared.alternateIconName ?? ""
     }
 
     private func setIcon(_ opt: IconOption) {
         guard UIApplication.shared.supportsAlternateIcons else { return }
-        guard !isChanging else { return }          // chặn gọi chồng
+        guard !isChanging else { return }
         syncCurrent()
-        guard current != opt.id else { return }    // đã là icon này rồi
+        guard current != opt.id else { return }
 
         isChanging = true
         errorText = nil
 
-        // QUAN TRỌNG: phải async trên main queue. Gọi thẳng trong action của SwiftUI
-        // thì iOS hay bỏ qua im lặng từ lần đổi thứ hai trở đi.
+      
         DispatchQueue.main.async {
             UIApplication.shared.setAlternateIconName(opt.altName) { err in
                 DispatchQueue.main.async {
@@ -266,7 +261,6 @@ struct AppIconPicker: View {
             }
         }
 
-        // Lưới an toàn: nếu completion không bao giờ bắn, vẫn nhả khoá + đồng bộ lại.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             syncCurrent()
             isChanging = false

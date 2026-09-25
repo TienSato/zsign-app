@@ -982,3 +982,24 @@
 
 /* Man chung chi */
 "Certificate for this device" = "Chứng chỉ của thiết bị này";
+
+/* May chu plist */
+"Plist Server" = "Máy chủ plist";
+"Server in use" = "Máy chủ đang dùng";
+"Only the manifest is fetched from this server. The IPA never leaves your device." = "Chỉ tệp manifest được lấy từ máy chủ này. File IPA không bao giờ rời khỏi máy bạn.";
+"Add Server" = "Thêm máy chủ";
+"Test this server" = "Kiểm tra máy chủ này";
+"Run your own server" = "Tự dựng máy chủ riêng";
+"The server only turns your parameters into a manifest plist. It never receives the IPA — the manifest points back to 127.0.0.1 inside your device." = "Máy chủ chỉ biến các tham số thành tệp manifest plist. Nó không hề nhận file IPA — manifest trỏ ngược về 127.0.0.1 ngay trong máy bạn.";
+"It is a single JavaScript file deployed free on Cloudflare Pages. The repository below has the code and a step-by-step guide." = "Chỉ là một tệp JavaScript, triển khai miễn phí trên Cloudflare Pages. Kho mã bên dưới có sẵn mã nguồn và hướng dẫn từng bước.";
+"Source code & guide" = "Mã nguồn & hướng dẫn";
+"Could not build the URL. Check the host name." = "Không dựng được địa chỉ. Kiểm tra lại tên miền.";
+"Empty response" = "Máy chủ trả về rỗng";
+"Server answered HTTP 200 but the content is not a manifest plist:" = "Máy chủ trả HTTP 200 nhưng nội dung không phải manifest plist:";
+"OK — %@ returned a valid manifest (%d bytes)." = "OK — %@ trả về manifest hợp lệ (%d byte).";
+"Server address" = "Địa chỉ máy chủ";
+"Enter the domain only. https:// and /plist are added automatically." = "Chỉ nhập tên miền. Phần https:// và /plist app tự thêm.";
+"Name (optional)" = "Tên gợi nhớ (không bắt buộc)";
+"My server" = "Máy chủ của tôi";
+"Domain" = "Tên miền";
+"This server already exists, or the domain is not valid." = "Máy chủ này đã có rồi, hoặc tên miền không hợp lệ.";

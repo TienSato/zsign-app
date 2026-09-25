@@ -1,9 +1,6 @@
 //
 //  LanguagePickerView.swift
 //  zsignapp
-//  Màn chọn ngôn ngữ: dùng cho cả lần đầu mở app và trong Cài đặt → Giao diện.
-//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents).
-//
 
 import SwiftUI
 

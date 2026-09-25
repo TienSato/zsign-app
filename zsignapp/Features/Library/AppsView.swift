@@ -2,11 +2,6 @@
 //  AppsView.swift
 //  zsignapp
 //  Created by Sato on 13/1/26.
-//
-//  Thư viện ứng dụng — dựng theo bộ thẻ dùng chung (Theme + CardComponents).
-//  Hai tab Unsigned/Signed vẫn giữ `List` vì có onDelete + chế độ chọn nhiều,
-//  chỉ thay nền và dựng nội dung từng hàng theo dáng CardRow.
-//
 
 import SwiftUI
 import CoreData
@@ -40,7 +35,6 @@ struct UnsignedAppsView: View {
     private var apps: FetchedResults<ImportedApp>
     
     @State private var showFilePicker = false
-    // ✅ THÊM 2 DÒNG NÀY
     @State private var showDownloadManager = false
     @StateObject private var downloadManager = DownloadManager.shared
     @State private var isImporting = false
@@ -69,7 +63,6 @@ struct UnsignedAppsView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                 }
-                // ✅ THÊM SECTION NÀY (Downloads Section)
                             if !downloadManager.downloads.isEmpty {
                                 Section {
                                     ForEach(downloadManager.downloads) { download in
@@ -95,7 +88,6 @@ struct UnsignedAppsView: View {
                 }
                 .onDelete(perform: deleteApps)
             } header: {
-                // ✅ THÊM ĐIỀU KIỆN NÀY CHO HEADER
                 if !downloadManager.downloads.isEmpty {
                     sectionHeader("Imported Apps", icon: "app.badge")
                 }
@@ -151,7 +143,6 @@ struct UnsignedAppsView: View {
                                 }
                             }
                             
-                            // ✅ THAY BUTTON NÀY BẰNG MENU
                                             Menu {
                                                 Button {
                                                     showFilePicker = true
@@ -200,7 +191,6 @@ struct UnsignedAppsView: View {
             )
             .ignoresSafeArea()
         }
-        // ✅ THÊM SHEET NÀY
         .sheet(isPresented: $showDownloadManager) {
             DownloadManagerView()
         }
@@ -226,7 +216,6 @@ struct UnsignedAppsView: View {
         }
     }
     
-    /// Tiêu đề nhỏ của một Section trong List, cùng tông với CardGroup.
     private func sectionHeader(_ title: LocalizedStringKey, icon: String) -> some View {
         Label(title, systemImage: icon)
             .font(.footnote.weight(.semibold))
@@ -603,7 +592,6 @@ struct SignedAppRow: View {
         return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
     
-    /// Icon 60pt, bo góc theo tỉ lệ squircle 0.2237 của Apple.
     @ViewBuilder
     private var iconView: some View {
         if let iconImage = loadIcon() {
@@ -764,14 +752,12 @@ struct SignedAppRow: View {
         }
     }
     
-    // ✅ LOGIC ĐÚNG: Kiểm tra custom icon trước, nếu không có thì dùng icon từ source app
     private func loadIcon() -> UIImage? {
         guard let uuid = app.uuid,
               let iconFileName = app.iconFileName else {
             return nil
         }
         
-        // 1️⃣ Nếu là custom_icon.png → đọc từ SignedApps/<uuid>/Icons/
         if iconFileName == "custom_icon.png" {
             let signedAppDir = FileManager.default.signedAppDirectory(uuid)
             let customIconPath = signedAppDir
@@ -784,7 +770,6 @@ struct SignedAppRow: View {
             }
         }
         
-        // 2️⃣ Nếu không phải custom icon → đọc từ source app: Apps/<sourceUUID>/Icons/
         if let sourceUUID = app.sourceUUID {
             let sourceIconPath = FileManager.default
                 .iconsDirectory(for: sourceUUID)

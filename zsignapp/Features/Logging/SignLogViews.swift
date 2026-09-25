@@ -1,12 +1,6 @@
 //
 //  SignLogViews.swift
 //  zsignapp
-//  Overlay log realtime (trong màn hình ký) + trình xem log (trong Cài đặt).
-//
-//  Bảng nổi giữ nguyên tính chất "đè lên màn hình ký" cùng nút thu gọn / đóng;
-//  chỉ đổi màu sang bảng màu chung (Theme) thay cho màu mặc định của hệ thống.
-//  Nội dung nhật ký vẫn là chữ monospaced, gạch đầu dòng theo từng dòng log.
-//
 
 import SwiftUI
 import UIKit

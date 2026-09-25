@@ -2,11 +2,6 @@
 //  SigningAppAlternativeIconView.swift
 //  zsignapp
 //
-//  Alternative icon picker for signing
-//
-//  Giao diện dạng thẻ (Theme + CardComponents). Phần đọc icon trong IPA
-//  (getIconImage / loadAlternateIcons / resizeToSquare) giữ nguyên 100%.
-//
 
 import SwiftUI
 

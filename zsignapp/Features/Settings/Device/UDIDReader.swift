@@ -1,21 +1,15 @@
 //
 //  UDIDReader.swift
 //  zsignapp
-//
-//  Đọc UDID thiết bị từ `embedded.mobileprovision` trong bundle (ProvisionedDevices).
-//  Chạy trên BẢN KÝ THƯỜNG (ký theo từng máy) — không dùng MobileGestalt hay
-//  entitlement private (những thứ đó bản ký thường không có quyền).
-//
 
 import Foundation
 
 enum UDIDReader {
 
-    /// UDID thiết bị hiện tại (từ provisioning profile). nil nếu không xác định được.
     static func deviceUDID() -> String? {
         let devices = provisionedDevices()
-        if devices.count == 1 { return devices[0] }   // ký per-device -> chính là máy này
-        return devices.first                           // nhiều máy -> lấy đầu (best-effort)
+        if devices.count == 1 { return devices[0] }
+        return devices.first                          
     }
 
     static var isAvailable: Bool {
@@ -23,7 +17,6 @@ enum UDIDReader {
         return false
     }
 
-    /// Mảng ProvisionedDevices trong embedded.mobileprovision.
     static func provisionedDevices() -> [String] {
         guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
               let data = try? Data(contentsOf: url),
@@ -38,7 +31,6 @@ enum UDIDReader {
         return devices
     }
 
-    /// embedded.mobileprovision là khối CMS đã ký — trích phần plist XML bên trong.
     private static func extractPlist(from data: Data) -> Data? {
         let head = Data("<?xml".utf8)
         let tail = Data("</plist>".utf8)

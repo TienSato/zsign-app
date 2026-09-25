@@ -2,10 +2,6 @@
 //  DeviceThemeManager.swift
 //  zsignapp
 //
-//  Xác định MÀU MÁY (từ zsign.app/device.json theo model) rồi tạo màu chủ đạo
-//  nhạt/tinh tế cho toàn app. Cache vào UserDefaults: mở app lần đầu mới gọi mạng,
-//  các lần sau lấy cache tức thì (không lag).
-//
 
 import SwiftUI
 
@@ -24,14 +20,12 @@ final class DeviceThemeManager: ObservableObject {
     private let kFetched = "deviceTheme.fetched"
 
     private init() {
-        // Khôi phục cache ngay (không lag)
         let cachedFinish = d.string(forKey: kFinish)
         self.finish = cachedFinish
         self.deviceName = d.string(forKey: kName) ?? ""
         self.accent = DeviceThemeManager.accentColor(forFinish: cachedFinish)
     }
 
-    /// Gọi 1 lần lúc mở app. Chỉ chạm mạng nếu chưa có cache hoặc đổi máy.
     func bootstrap() {
         let ident = DeviceInfo.modelIdentifier
         let fetched = d.bool(forKey: kFetched)
@@ -56,7 +50,6 @@ final class DeviceThemeManager: ObservableObject {
         let matches = list.filter { $0.identifier == ident }
         guard !matches.isEmpty else { return }
 
-        // Khớp theo identifier (bản ký thường không đọc được model number chính xác)
         let chosen = matches.first
 
         let fin = chosen?.finish
@@ -74,14 +67,12 @@ final class DeviceThemeManager: ObservableObject {
         }
     }
 
-    // MARK: - Ánh xạ tên màu máy -> màu chủ đạo (nhạt/tinh tế)
     static func accentColor(forFinish finish: String?) -> Color {
         guard let f = finish?.lowercased(), !f.isEmpty else {
             return Color(red: 0.30, green: 0.52, blue: 0.85) // xanh mặc định dịu
         }
         func rgb(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r, green: g, blue: b) }
 
-        // ưu tiên khớp cụm dài trước
         if f.contains("desert") { return rgb(0.78, 0.66, 0.50) }
         if f.contains("natural titanium") || f.contains("natural") { return rgb(0.66, 0.63, 0.60) }
         if f.contains("blue titanium") { return rgb(0.42, 0.50, 0.62) }

@@ -1,9 +1,5 @@
 //
 //  SignLogger.swift
-//  zsignapp
-//  Nhật ký quá trình ký (bật/tắt ở Cài đặt → Nâng cao).
-//  Quy ước: KHÔNG emoji/icon trong nội dung log; mỗi dòng bắt đầu bằng "- ".
-//
 
 import Foundation
 import Combine
@@ -14,7 +10,6 @@ final class SignLogger: ObservableObject {
 
     @Published private(set) var lines: [String] = []
 
-    /// Bật/tắt qua UserDefaults (khớp @AppStorage("zsign.loggingEnabled")).
     var isEnabled: Bool { UserDefaults.standard.bool(forKey: "zsign.loggingEnabled") }
 
     private static let timeFormatter: DateFormatter = {
@@ -24,14 +19,12 @@ final class SignLogger: ObservableObject {
         return f
     }()
 
-    /// Bắt đầu một phiên log mới (xoá log cũ rồi ghi tiêu đề).
     func start(_ title: String) {
         guard isEnabled else { return }
         set([])
         log(title)
     }
 
-    /// Ghi 1 dòng. Gọi được từ bất kỳ thread nào.
     func log(_ message: String) {
         guard isEnabled else { return }
         let clean = SignLogger.sanitize(message)
@@ -50,7 +43,6 @@ final class SignLogger: ObservableObject {
         DispatchQueue.main.async { self.lines = v }
     }
 
-    /// Loại bỏ emoji/ký tự biểu tượng để giữ log thuần văn bản.
     private static func sanitize(_ s: String) -> String {
         let filtered = s.unicodeScalars.filter { scalar in
             if scalar.properties.isEmoji && scalar.value > 0x238C { return false }

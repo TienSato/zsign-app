@@ -798,3 +798,24 @@
 
 /* Man chung chi */
 "Certificate for this device" = "Certificate for this device";
+
+/* May chu plist */
+"Plist Server" = "Plist Server";
+"Server in use" = "Server in use";
+"Only the manifest is fetched from this server. The IPA never leaves your device." = "Only the manifest is fetched from this server. The IPA never leaves your device.";
+"Add Server" = "Add Server";
+"Test this server" = "Test this server";
+"Run your own server" = "Run your own server";
+"The server only turns your parameters into a manifest plist. It never receives the IPA — the manifest points back to 127.0.0.1 inside your device." = "The server only turns your parameters into a manifest plist. It never receives the IPA — the manifest points back to 127.0.0.1 inside your device.";
+"It is a single JavaScript file deployed free on Cloudflare Pages. The repository below has the code and a step-by-step guide." = "It is a single JavaScript file deployed free on Cloudflare Pages. The repository below has the code and a step-by-step guide.";
+"Source code & guide" = "Source code & guide";
+"Could not build the URL. Check the host name." = "Could not build the URL. Check the host name.";
+"Empty response" = "Empty response";
+"Server answered HTTP 200 but the content is not a manifest plist:" = "Server answered HTTP 200 but the content is not a manifest plist:";
+"OK — %@ returned a valid manifest (%d bytes)." = "OK — %@ returned a valid manifest (%d bytes).";
+"Server address" = "Server address";
+"Enter the domain only. https:// and /plist are added automatically." = "Enter the domain only. https:// and /plist are added automatically.";
+"Name (optional)" = "Name (optional)";
+"My server" = "My server";
+"Domain" = "Domain";
+"This server already exists, or the domain is not valid." = "This server already exists, or the domain is not valid.";

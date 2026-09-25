@@ -3,11 +3,6 @@
 //  zsignapp
 //
 //  Created by Sato on 26/10/25.
-//
-//  Dựng bằng bộ thẻ dùng chung (Theme + CardComponents) thay cho List/Form,
-//  để nền và thẻ theo đúng tông của app. Mỗi chứng chỉ là MỘT thẻ riêng vì
-//  nội dung một hàng khá dài (tên, App ID, hồ sơ, đội, hạn dùng).
-//
 
 import SwiftUI
 import CoreData
@@ -30,8 +25,6 @@ struct CertificatesManagementView: View {
     @State private var showDetailView = false
     @State private var isExporting = false
 
-    /// uuid của những chứng chỉ có chứa UDID của CHÍNH máy này.
-    /// Quét một lần khi mở màn, không quét lại mỗi lần vẽ.
     @State private var deviceCertUUIDs: Set<String> = []
 
     var body: some View {
@@ -102,12 +95,6 @@ struct CertificatesManagementView: View {
         }
     }
     
-    /// Danh sách chứng chỉ, hoặc màn trống khi chưa có cái nào.
-    ///
-    /// Trước đây màn trống được gắn bằng `.overlay { EmptyStateView }` chồng
-    /// lên một ScrollView RỖNG. ContentUnavailableView bên trong overlay không
-    /// nhận được kích thước nên tự vẽ nền trắng của hệ thống, để lộ hai mảng
-    /// trắng cùng một vệt nền ở giữa.
     @ViewBuilder
     private var content: some View {
         if certificates.isEmpty {
@@ -143,11 +130,6 @@ struct CertificatesManagementView: View {
         }
     }
 
-    /// Đọc UDID của máy (từ embedded.mobileprovision của chính app này), rồi
-    /// dò xem hồ sơ cấp quyền của từng chứng chỉ có chứa UDID đó không.
-    ///
-    /// Đường dẫn tệp lấy trên main thread vì CertificatePair là NSManagedObject;
-    /// phần đọc tệp và giải mã plist chạy ngoài main thread.
     private func scanDeviceCertificates() async {
         guard let udid = UDIDReader.deviceUDID()?.lowercased(), !udid.isEmpty else {
             deviceCertUUIDs = []
@@ -241,12 +223,8 @@ extension URL: Identifiable {
 struct CertificateRowContent: View {
     let certificate: CertificatePair
     let isDefault: Bool
-    /// Hồ sơ của chứng chỉ này có chứa UDID của chính máy đang chạy.
     var isForThisDevice: Bool = false
 
-    /// Giải mã mobileprovision MỘT lần rồi giữ lại.
-    /// Trước đây đây là computed property -> mỗi lần SwiftUI vẽ lại là một lần
-    /// đọc tệp từ đĩa và giải mã plist, cho TỪNG chứng chỉ.
     @State private var provision: Certificate?
 
     private var isExpired: Bool {
@@ -281,7 +259,6 @@ struct CertificateRowContent: View {
         }
     }
 
-    /// Dòng đỏ báo chứng chỉ này ký được cho chính máy đang cầm.
     private var deviceMatchRow: some View {
         HStack(spacing: 6) {
             Image(systemName: "iphone.gen3")
@@ -834,7 +811,6 @@ struct FilePickerButton: View {
 
 // MARK: - Ô nhập dùng trong các màn nhập chứng chỉ
 
-/// Hàng nhập liệu trong thẻ: nhãn nhỏ phía trên, ô nhập phía dưới.
 private struct CertInputRow: View {
     let icon: String
     let title: String
@@ -874,7 +850,6 @@ private struct CertInputRow: View {
     }
 }
 
-/// Hàng "đang xử lý" bên trong thẻ (khác với ProgressOverlay phủ toàn màn hình).
 private struct CertStatusRow: View {
     let title: LocalizedStringKey
     
@@ -895,7 +870,6 @@ private struct CertStatusRow: View {
     }
 }
 
-/// Hàng báo lỗi bên trong thẻ.
 private struct CertErrorRow: View {
     let message: String
     

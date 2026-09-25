@@ -2,9 +2,6 @@
 //  SharedImportScanner.swift
 //  zsignapp
 //
-//  Quét App Group Inbox (do Share Extension ghi vào) và bơm .ipa vào
-//  pipeline nhập sẵn có bằng notification "ImportIPAFromShare".
-//
 
 import Foundation
 

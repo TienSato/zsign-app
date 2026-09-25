@@ -23,7 +23,6 @@ extension FileManager {
     
     // MARK: - Setup All Directories
     
-    /// Call this on app launch to ensure all directories exist
     func setupAppDirectories() {
         let directories = [
             documentsDirectory,

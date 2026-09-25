@@ -178,9 +178,7 @@ class SigningHandler {
             try await locateMachosAndFixupArm64eSlice(for: appPath)
         }
         
-        // ✅ 11. NO CLEANING - Let Zsign handle everything
         
-        // ✅ 12. Disinject disabled tweaks (if any)
         if !disabledTweaks.isEmpty {
             await notifyProgress("Removing disabled tweaks...")
             disabledTweaksHandler = DisabledTweaksHandler(
@@ -190,7 +188,6 @@ class SigningHandler {
             try disabledTweaksHandler?.removeDisabledTweaks()
         }
         
-        // ✅ 13. Sign (Zsign will handle EVERYTHING including invalid files)
         await notifyProgress("Signing app...")
         try await sign()
         
@@ -369,7 +366,6 @@ class SigningHandler {
     }
     
     private func removePresetFiles(at app: URL) async throws {
-        // ✅ ONLY remove these specific files - NO _CodeSignature!
         let filesToRemove = [
             "embedded.mobileprovision",
             "com.apple.WatchPlaceholder",
@@ -463,7 +459,6 @@ class SigningHandler {
         }
     }
     
-    // MARK: - ✅ Sign with Proper Error Handling
     
     func sign() async throws {
         guard let appPath = appPath else {

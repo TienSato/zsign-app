@@ -1,10 +1,6 @@
 //
 //  StoreComponents.swift
 //  zsignapp
-//
-//  Component dùng chung cho Store (tách ra khi bỏ Zsign Store).
-//
-
 import SwiftUI
 import UIKit
 

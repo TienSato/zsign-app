@@ -2,8 +2,6 @@
 //  ProjectsView.swift
 //  zsignapp
 //
-//  Workspace rút gọn: quản lý project (IPA gốc + danh sách dylib) và ký lại + cài đè.
-//
 
 import SwiftUI
 import UniformTypeIdentifiers
@@ -14,7 +12,6 @@ struct ProjectsListView: View {
     @ObservedObject private var store = ProjectStore.shared
     @State private var showNewPicker = false
 
-    // Giữ `List` vì có vuốt-để-xoá (.onDelete) — bỏ List là mất chức năng đó.
     var body: some View {
         List {
             if store.projects.isEmpty {
@@ -154,8 +151,6 @@ struct ProjectDetailView: View {
         return t.isEmpty ? [.data] : t
     }
 
-    // Giữ `Form` vì danh sách tweak có .onDelete/.onMove + EditButton —
-    // bỏ khung List là mất xoá và sắp xếp lại dylib.
     var body: some View {
         Form {
             Section {

@@ -1,11 +1,6 @@
 //
 //  SettingsView.swift
 //  zsignapp
-//
-//  Màn hình Cài đặt — dựng bằng bộ thẻ dùng chung (Theme + CardComponents)
-//  thay cho Form, để nền và thẻ theo đúng tông của app thay vì tông mặc định
-//  của hệ thống.
-//
 
 import SwiftUI
 import Zip
@@ -90,6 +85,12 @@ struct SettingsView: View {
                        title: L("Advanced"),
                        subtitle: L("Workspace, signing log and background processing")) {
                 AdvancedSettingsView()
+            }
+            CardDivider()
+            CardNavRow(icon: "server.rack",
+                       title: L("Plist Server"),
+                       subtitle: PlistServerStore.shared.selected.host) {
+                PlistServerSettingsView()
             }
             CardDivider()
             CardNavRow(icon: "externaldrive.fill",

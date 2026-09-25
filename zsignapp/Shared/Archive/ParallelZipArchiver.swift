@@ -1,11 +1,6 @@
 //
 //  ParallelZipArchiver.swift
 //  zsignapp
-//
-//  Nén IPA SONG SONG (raw deflate, đa nhân) rồi tự dựng ZIP, nhanh hơn nhiều
-//  so với nén tuần tự. Có hỗ trợ Zip64. Nếu bất kỳ lỗi nào,
-//  caller sẽ fallback về thư viện Zip cũ (đã kiểm chứng) => không bao giờ hỏng.
-//
 
 import Foundation
 import Compression
@@ -13,7 +8,6 @@ import Compression
 enum ParallelZipError: Error { case tooLargeForMemory, ioError }
 
 enum ParallelZip {
-    /// Bật/tắt nhanh. Đặt false để luôn dùng thư viện Zip cũ.
     static var enabled = true
 
     // Ngưỡng: file lớn hơn -> STORE + stream (chống ngốn RAM). Nhỏ hơn -> deflate song song trong RAM.

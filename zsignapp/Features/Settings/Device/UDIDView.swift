@@ -1,10 +1,6 @@
 //
 //  UDIDView.swift
 //  zsignapp
-//
-//  Hàng UDID và hàng thông tin máy, dựng theo bộ thẻ dùng chung (CardComponents).
-//  UDID: CHẠM để copy, hiện "Copied!" 1.5s kèm haptic.
-//
 
 import SwiftUI
 import UIKit
@@ -50,7 +46,6 @@ struct UDIDRow: View {
     }
 }
 
-/// Hàng thông tin máy — chấm màu lấy theo màu máy mà DeviceThemeManager đọc được.
 struct DeviceInfoRow: View {
     @ObservedObject private var theme = DeviceThemeManager.shared
 

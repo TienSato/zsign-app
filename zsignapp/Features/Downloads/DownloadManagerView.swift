@@ -3,11 +3,6 @@
 //  zsignapp
 //
 //  Created by Sato on 13/1/26.
-//
-//  Màn hình tải IPA: nhập link, xem hàng đợi tải, và trình duyệt nhúng để
-//  bấm nút tải trên trang web. Giao diện SwiftUI bao quanh dựng bằng bộ thẻ
-//  dùng chung (Theme + CardComponents); phần cầu nối WKWebView giữ nguyên.
-//
 
 import SwiftUI
 import WebKit
@@ -52,7 +47,6 @@ struct DownloadManagerView: View {
                         url: url,
                         customFileName: customFileName.isEmpty ? nil : customFileName,
                         onItmsServicesDetected: { itmsURL in
-                            // ✅ NEW: Handle itms-services from WebView
                             handleItmsServicesLink(itmsURL)
                         },
                         onDismiss: {
@@ -171,7 +165,6 @@ struct DownloadManagerView: View {
     }
 
     private func isValidURL(_ string: String) -> Bool {
-        // ✅ NEW: Support itms-services
         if string.lowercased().hasPrefix("itms-services://") {
             return true
         }
@@ -207,7 +200,6 @@ struct DownloadManagerView: View {
         }
     }
     
-    // ✅ NEW: Handle itms-services links
     private func handleItmsServicesLink(_ urlString: String) {
         isProcessing = true
         showWebView = false
@@ -315,7 +307,7 @@ struct DownloadManagerView: View {
 struct DownloadWebView: View {
     let url: URL
     let customFileName: String?
-    let onItmsServicesDetected: (String) -> Void  // ✅ NEW
+    let onItmsServicesDetected: (String) -> Void
     let onDismiss: () -> Void
     
     @StateObject private var coordinator = WebViewCoordinator()
@@ -380,7 +372,7 @@ struct DownloadWebView: View {
                         isLoading = loading
                         pageTitle = title
                     },
-                    onItmsServicesDetected: onItmsServicesDetected,  // ✅ NEW
+                    onItmsServicesDetected: onItmsServicesDetected,
                     onDownloadStarted: {
                         onDismiss()
                     }
@@ -423,14 +415,14 @@ struct SimpleWebView: UIViewRepresentable {
     let coordinator: WebViewCoordinator
     let customFileName: String?
     let onStateChange: (Bool, Bool, Bool, String) -> Void
-    let onItmsServicesDetected: (String) -> Void  // ✅ NEW
+    let onItmsServicesDetected: (String) -> Void
     let onDownloadStarted: () -> Void
     
     func makeCoordinator() -> Coordinator {
         Coordinator(
             customFileName: customFileName,
             onStateChange: onStateChange,
-            onItmsServicesDetected: onItmsServicesDetected,  // ✅ NEW
+            onItmsServicesDetected: onItmsServicesDetected,
             onDownloadStarted: onDownloadStarted
         )
     }
@@ -460,7 +452,7 @@ struct SimpleWebView: UIViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate, WKDownloadDelegate, WKUIDelegate {
         let customFileName: String?
         let onStateChange: (Bool, Bool, Bool, String) -> Void
-        let onItmsServicesDetected: (String) -> Void  // ✅ NEW
+        let onItmsServicesDetected: (String) -> Void
         let onDownloadStarted: () -> Void
         weak var webView: WKWebView?
         
@@ -471,14 +463,12 @@ struct SimpleWebView: UIViewRepresentable {
             self.onDownloadStarted = onDownloadStarted
         }
         
-        // MARK: - WKUIDelegate
         
         func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
             if let url = navigationAction.request.url {
                 let urlString = url.absoluteString
                 
                 
-                // ✅ NEW: Check itms-services
                 if urlString.lowercased().hasPrefix("itms-services://") {
                     DispatchQueue.main.async {
                         self.onItmsServicesDetected(urlString)
@@ -497,7 +487,6 @@ struct SimpleWebView: UIViewRepresentable {
             updateState(webView)
         }
         
-        // ✅ NEW: Check itms-services in navigation
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             
             guard let url = navigationAction.request.url else {

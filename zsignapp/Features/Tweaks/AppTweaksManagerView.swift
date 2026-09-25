@@ -3,11 +3,6 @@
 //  zsignapp
 //
 //  Created by Sato on 26/10/25.
-//
-//  Liệt kê framework / dylib / bundle có sẵn trong IPA: bật-tắt cho lần ký,
-//  hoặc trích xuất ra thư mục Tweaks. Giao diện dựng bằng bộ thẻ dùng chung
-//  (Theme + CardComponents) thay cho Form.
-//
 
 import SwiftUI
 import ZsignSwift

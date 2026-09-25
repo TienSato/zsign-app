@@ -13,7 +13,6 @@ struct ZSignCertificateHandler {
     
     // MARK: - Cleanup
     
-    /// Clean up old exported certificate files
     static func cleanupOldExports() {
         let fileManager = FileManager.default
         let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -21,7 +20,6 @@ struct ZSignCertificateHandler {
         
         guard fileManager.fileExists(atPath: tempShareDir.path) else { return }
         
-        // Get all .zsigncert files
         if let files = try? fileManager.contentsOfDirectory(at: tempShareDir, includingPropertiesForKeys: [.creationDateKey]) {
             for file in files where file.pathExtension == "zsigncert" {
                 // Delete files older than 1 hour
@@ -35,7 +33,6 @@ struct ZSignCertificateHandler {
     
     // MARK: - Export
     
-    /// Export certificate to .zsigncert file
     static func export(certificate: CertificatePair) async throws -> URL {
         let fileManager = FileManager.default
         
@@ -43,10 +40,8 @@ struct ZSignCertificateHandler {
             throw ZSignCertError.invalidCertificate
         }
         
-        // Get certificate directory
         let certDirectory = fileManager.certificateDirectory(uuid)
         
-        // Check if files exist
         let p12Path = certDirectory.appendingPathComponent("certificate.p12")
         let provisionPath = certDirectory.appendingPathComponent("profile.mobileprovision")
         
@@ -55,7 +50,6 @@ struct ZSignCertificateHandler {
             throw ZSignCertError.filesNotFound
         }
         
-        // Create temp directory for zip
         let tempDirectory = fileManager.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try fileManager.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         
@@ -63,14 +57,12 @@ struct ZSignCertificateHandler {
             try? fileManager.removeItem(at: tempDirectory)
         }
         
-        // Copy files to temp directory
         let tempP12 = tempDirectory.appendingPathComponent("certificate.p12")
         let tempProvision = tempDirectory.appendingPathComponent("profile.mobileprovision")
         
         try fileManager.copyItem(at: p12Path, to: tempP12)
         try fileManager.copyItem(at: provisionPath, to: tempProvision)
         
-        // Create metadata file with password and nickname
         let metadata = ZSignCertMetadata(
             password: certificate.password ?? "",
             nickname: certificate.nickname,
@@ -83,18 +75,14 @@ struct ZSignCertificateHandler {
         let metadataData = try encoder.encode(metadata)
         try metadataData.write(to: metadataPath)
         
-        // Create zip file name
         let nickname = certificate.nickname ?? "certificate"
         let sanitizedNickname = nickname.replacingOccurrences(of: "[^a-zA-Z0-9_-]", with: "_", options: .regularExpression)
         let zipFileName = "\(sanitizedNickname)_\(UUID().uuidString.prefix(8)).zsigncert"
         
-        // Create zip in temp location first
         let tempZipPath = tempDirectory.appendingPathComponent(zipFileName)
         
-        // Add custom file extension
         Zip.addCustomFileExtension("zsigncert")
         
-        // Create zip archive using Zip library
         try Zip.zipFiles(
             paths: [tempP12, tempProvision, metadataPath],
             zipFilePath: tempZipPath,
@@ -103,22 +91,18 @@ struct ZSignCertificateHandler {
             progress: nil
         )
         
-        // Copy to a more persistent temp location (outside of defer cleanup)
         let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let finalZipPath = documentsPath.appendingPathComponent("Temp").appendingPathComponent(zipFileName)
         
-        // Create Temp directory if needed
         let tempShareDir = documentsPath.appendingPathComponent("Temp")
         if !fileManager.fileExists(atPath: tempShareDir.path) {
             try fileManager.createDirectory(at: tempShareDir, withIntermediateDirectories: true)
         }
         
-        // Remove existing file if exists
         if fileManager.fileExists(atPath: finalZipPath.path) {
             try fileManager.removeItem(at: finalZipPath)
         }
         
-        // Copy to final location
         try fileManager.copyItem(at: tempZipPath, to: finalZipPath)
         
         return finalZipPath
@@ -126,11 +110,9 @@ struct ZSignCertificateHandler {
     
     // MARK: - Import
     
-    /// Import certificate from .zsigncert file
     static func `import`(from url: URL, nickname: String?, isDefault: Bool) async throws {
         let fileManager = FileManager.default
         
-        // Start accessing security-scoped resource
         let accessing = url.startAccessingSecurityScopedResource()
         defer {
             if accessing {
@@ -138,7 +120,6 @@ struct ZSignCertificateHandler {
             }
         }
         
-        // Create temp directory for extraction
         let uuid = UUID().uuidString
         let tempDirectory = fileManager.temporaryDirectory.appendingPathComponent("ZSignCertImport_\(uuid)")
         try fileManager.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
@@ -147,7 +128,6 @@ struct ZSignCertificateHandler {
             try? fileManager.removeItem(at: tempDirectory)
         }
         
-        // Copy file to temp location (like IPAHandler does)
         let copiedZSignCert = tempDirectory.appendingPathComponent(url.lastPathComponent)
         
         try? fileManager.removeItem(at: copiedZSignCert)
@@ -157,7 +137,6 @@ struct ZSignCertificateHandler {
             throw ZSignCertError.invalidZipFile
         }
         
-        // Check file size
         let attributes = try fileManager.attributesOfItem(atPath: copiedZSignCert.path)
         let fileSize = attributes[.size] as? UInt64 ?? 0
         
@@ -165,10 +144,8 @@ struct ZSignCertificateHandler {
             throw ZSignCertError.invalidZipFile
         }
         
-        // Add custom file extension for Zip library
         Zip.addCustomFileExtension("zsigncert")
         
-        // Unzip the .zsigncert file using async/await pattern (like IPAHandler)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             DispatchQueue.global(qos: .utility).async {
                 do {
@@ -188,7 +165,6 @@ struct ZSignCertificateHandler {
             }
         }
         
-        // Read metadata
         let metadataPath = tempDirectory.appendingPathComponent("metadata.json")
         guard fileManager.fileExists(atPath: metadataPath.path) else {
             throw ZSignCertError.missingMetadata
@@ -204,7 +180,6 @@ struct ZSignCertificateHandler {
             throw ZSignCertError.missingMetadata
         }
         
-        // Verify required files exist
         let p12Path = tempDirectory.appendingPathComponent("certificate.p12")
         let provisionPath = tempDirectory.appendingPathComponent("profile.mobileprovision")
         
@@ -215,10 +190,8 @@ struct ZSignCertificateHandler {
             throw ZSignCertError.filesNotFound
         }
         
-        // Use provided nickname or fallback to metadata nickname
         let finalNickname = nickname ?? metadata.nickname
         
-        // Create certificate handler and import
         let handler = CertificateHandler(
             p12URL: p12Path,
             provisionURL: provisionPath,
@@ -227,12 +200,10 @@ struct ZSignCertificateHandler {
             isDefault: isDefault
         )
         
-        // Validate certificate
         guard handler.validate() else {
             throw CertificateError.passwordMismatch
         }
         
-        // Copy files and add to database
         try await handler.copy()
         try await handler.addToDatabase()
     }
@@ -242,11 +213,9 @@ struct ZSignCertificateHandler {
 
 struct ZipCertificateHandler {
     
-    /// Import certificate from a ZIP file containing .p12 and .mobileprovision
     static func `import`(from url: URL, password: String, nickname: String?, isDefault: Bool) async throws {
         let fileManager = FileManager.default
         
-        // Start accessing security-scoped resource
         let accessing = url.startAccessingSecurityScopedResource()
         defer {
             if accessing {
@@ -254,7 +223,6 @@ struct ZipCertificateHandler {
             }
         }
         
-        // Create temp directory for extraction
         let uuid = UUID().uuidString
         let tempDirectory = fileManager.temporaryDirectory.appendingPathComponent("ZipCertImport_\(uuid)")
         try fileManager.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
@@ -263,7 +231,6 @@ struct ZipCertificateHandler {
             try? fileManager.removeItem(at: tempDirectory)
         }
         
-        // Copy file to temp location
         let copiedZip = tempDirectory.appendingPathComponent(url.lastPathComponent)
         
         try? fileManager.removeItem(at: copiedZip)
@@ -273,7 +240,6 @@ struct ZipCertificateHandler {
             throw ZipCertError.invalidZipFile
         }
         
-        // Check file size
         let attributes = try fileManager.attributesOfItem(atPath: copiedZip.path)
         let fileSize = attributes[.size] as? UInt64 ?? 0
         
@@ -281,10 +247,8 @@ struct ZipCertificateHandler {
             throw ZipCertError.invalidZipFile
         }
         
-        // Add custom file extension for Zip library
         Zip.addCustomFileExtension("zip")
         
-        // Unzip the file
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             DispatchQueue.global(qos: .utility).async {
                 do {
@@ -304,13 +268,10 @@ struct ZipCertificateHandler {
             }
         }
         
-        // Find .p12 and .mobileprovision files recursively
         let (p12Path, provisionPath) = try findCertificateFiles(in: tempDirectory)
         
-        // Generate nickname if not provided
         let finalNickname = nickname ?? p12Path.deletingPathExtension().lastPathComponent
         
-        // Create certificate handler and import
         let handler = CertificateHandler(
             p12URL: p12Path,
             provisionURL: provisionPath,
@@ -319,26 +280,22 @@ struct ZipCertificateHandler {
             isDefault: isDefault
         )
         
-        // Validate certificate
         guard handler.validate() else {
             throw CertificateError.passwordMismatch
         }
         
-        // Copy files and add to database
         try await handler.copy()
         try await handler.addToDatabase()
     }
     
     // MARK: - Helper Methods
     
-    /// Recursively find .p12 and .mobileprovision files in directory
     private static func findCertificateFiles(in directory: URL) throws -> (p12: URL, provision: URL) {
         let fileManager = FileManager.default
         
         var p12File: URL?
         var provisionFile: URL?
         
-        // Function to search recursively
         func searchDirectory(_ dir: URL) throws {
             let contents = try fileManager.contentsOfDirectory(
                 at: dir,
@@ -350,10 +307,8 @@ struct ZipCertificateHandler {
                 let isDirectory = (try? item.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
                 
                 if isDirectory {
-                    // Recursively search subdirectories
                     try searchDirectory(item)
                 } else {
-                    // Check file extension
                     if item.pathExtension.lowercased() == "p12" && p12File == nil {
                         p12File = item
                     } else if item.pathExtension.lowercased() == "mobileprovision" && provisionFile == nil {
@@ -361,17 +316,14 @@ struct ZipCertificateHandler {
                     }
                 }
                 
-                // Early exit if both files found
                 if p12File != nil && provisionFile != nil {
                     break
                 }
             }
         }
         
-        // Start searching
         try searchDirectory(directory)
         
-        // Verify both files were found
         guard let p12 = p12File, let provision = provisionFile else {
             throw ZipCertError.filesNotFound
         }

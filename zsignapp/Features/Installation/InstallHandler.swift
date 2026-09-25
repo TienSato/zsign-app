@@ -3,26 +3,6 @@
 //  zsignapp
 //  Created by Sato on 26/10/25.
 //
-//  Cài app đã ký qua OTA (itms-services). Toàn bộ luồng nằm trong file này:
-//  InstallHandler (điều phối) + InstallServer (HTTP cục bộ) + HTTPHandler (NIO).
-//
-//  VÌ SAO PHẢI CÓ SERVER CỤC BỘ
-//  iOS chỉ chịu cài từ một "manifest plist" tải qua HTTPS. sign.zsign.app sinh
-//  plist đó, nhưng FILE IPA KHÔNG BAO GIỜ ĐƯỢC UP LÊN MẠNG — trong plist,
-//  fetchurl trỏ ngược về http://127.0.0.1:<port> ngay trong máy. installd của
-//  iOS tự gọi vào server này để lấy IPA + 2 icon.
-//
-//  TRÌNH TỰ
-//    1. tìm file .ipa trong SignedApps/<uuid>/
-//    2. bật InstallServer trên một cổng ngẫu nhiên (4000...8000)
-//    3. mở itms-services://?action=download-manifest&url=<sign.zsign.app/plist?...>
-//    4. installd tải về: /app.ipa, /app57x57.png, /app512x512.png
-//    5. đủ 3 request -> đợi 2 giây -> coi như cài xong -> tắt server
-//       (quá 15 phút vẫn chưa đủ -> tắt server, coi như xong)
-//
-//  LƯU Ý: background audio phải bật ngay khi /app.ipa bị gọi. Nếu app bị iOS
-//  treo giữa chừng thì server chết và bản cài hỏng dở.
-//
 
 import Foundation
 import UIKit
@@ -37,7 +17,6 @@ final class InstallHandler {
     private let signedApp: SignedApp
     private let port: UInt16 = UInt16.random(in: 4000...8000)
 
-    /// Chốt chặn: quá lâu mà installd không lấy gì thì tự dọn server.
     private let serverTimeout: TimeInterval = 900   // 15 phút
 
     init(signedApp: SignedApp) {
@@ -58,10 +37,6 @@ final class InstallHandler {
 
         let server = InstallServer(port: port, ipaPath: ipaFile, app: signedApp)
         try server.start()
-
-        // Trao server cho pool giữ hộ. Hàm này trả về ngay sau khi mở link,
-        // nên nếu không có chỗ giữ tham chiếu thì server bị giải phóng và
-        // installd gọi vào sẽ không còn ai trả lời.
         InstallServerPool.shared.keep(server, timeout: serverTimeout)
 
         let manifestURL = buildManifestURL()
@@ -71,16 +46,14 @@ final class InstallHandler {
             throw InstallError.failedToOpenLink
         }
 
-        // Nhớ đã cài (bundle id -> version) để phân biệt Cài đặt vs Cập nhật
         InstalledRegistry.record(bundleId: signedApp.identifier, version: signedApp.version)
     }
 
-    /// https://sign.zsign.app/plist?... — máy chủ sinh manifest plist từ các tham số này.
-    /// fetchurl/smallimage/largeimage đều trỏ về server cục bộ, không phải lên mạng.
     private func buildManifestURL() -> URL {
+        let host = PlistServerConfig.host
         var comps = URLComponents()
         comps.scheme = "https"
-        comps.host = "sign.zsign.app"
+        comps.host = host
         comps.path = "/plist"
         comps.queryItems = [
             URLQueryItem(name: "bundleid",   value: signedApp.identifier ?? ""),
@@ -91,7 +64,7 @@ final class InstallHandler {
             URLQueryItem(name: "largeimage", value: "http://127.0.0.1:\(port)/app512x512.png"),
             URLQueryItem(name: "t",          value: String(Int(Date().timeIntervalSince1970)))
         ]
-        return comps.url ?? URL(string: "https://sign.zsign.app/error")!
+        return comps.url ?? URL(string: "https://\(PlistServerConfig.defaultHost)/error")!
     }
 
     private func buildITunesLink(manifestURL: URL) -> URL {
@@ -128,17 +101,6 @@ enum InstallError: LocalizedError {
         }
     }
 }
-
-/// Giữ các server cài đặt đang chạy sống ngoài vòng đời của install().
-///
-/// install() chỉ mở link rồi trả về ngay — việc tải IPA diễn ra sau đó, do
-/// installd của iOS chủ động gọi vào 127.0.0.1. Pool này là nơi duy nhất còn
-/// giữ tham chiếu tới server trong khoảng thời gian đó.
-///
-/// Server được thả ra ở một trong hai thời điểm:
-///   - installd lấy đủ IPA + 2 icon  -> onInstallationComplete
-///   - hết giờ chờ (người dùng bấm Huỷ ở hộp thoại cài của iOS, installd
-///     không bao giờ gọi vào) -> chốt chặn, tránh giữ cổng và 4 luồng NIO mãi
 private final class InstallServerPool {
     static let shared = InstallServerPool()
 
@@ -161,7 +123,6 @@ private final class InstallServerPool {
         }
     }
 
-    /// Thả và tắt server. Gọi nhiều lần cũng chỉ tắt đúng một lần.
     func release(_ server: InstallServer) {
         lock.lock()
         guard let index = servers.firstIndex(where: { $0 === server }) else {
@@ -187,7 +148,6 @@ private final class InstallServer {
     private let threadPool: NIOThreadPool
     private let fileIO: NonBlockingFileIO
 
-    /// installd gọi đủ 3 đường dẫn (/app.ipa + 2 icon) thì mới coi là xong.
     private var ipaRequested = false
     private var iconsRequested = 0
 
@@ -245,8 +205,6 @@ private final class InstallServer {
         try? channel?.close().wait()
         channel = nil
 
-        // Giữ tham chiếu trực tiếp thay vì [weak self]: nếu server bị giải phóng
-        // trước khi khối này chạy thì EventLoopGroup sẽ không bao giờ được tắt.
         let group = self.group
         let threadPool = self.threadPool
         DispatchQueue.global(qos: .utility).async {
@@ -254,8 +212,7 @@ private final class InstallServer {
             try? threadPool.syncShutdownGracefully()
 
             DispatchQueue.main.async {
-                // Chỉ tắt tiếng nền nếu người dùng KHÔNG bật tuỳ chọn giữ nền.
-                // (key phải khớp AppSettings.Keys.backgroundAudioEnabled)
+
                 if !UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled") {
                     BackgroundAudioManager.shared.stopBackgroundAudio()
                 }
@@ -328,7 +285,6 @@ private final class HTTPHandler: ChannelInboundHandler {
         }
     }
 
-    /// Truyền IPA theo từng khối 1 MB, không nạp cả file vào RAM.
     private func streamIPA(context: ChannelHandlerContext) {
         let path = ipaPath.path
 
@@ -386,7 +342,6 @@ private final class HTTPHandler: ChannelInboundHandler {
         return HTTPResponseHead(version: .http1_1, status: .ok, headers: headers)
     }
 
-    /// Gửi trọn một phản hồi nhỏ (icon / 404) rồi đóng kết nối.
     private func sendOnce(context: ChannelHandlerContext, head: HTTPResponseHead, body: Data) {
         context.write(wrapOutboundOut(.head(head)), promise: nil)
 
@@ -401,7 +356,6 @@ private final class HTTPHandler: ChannelInboundHandler {
 
     // MARK: Icon
 
-    /// Ưu tiên icon tuỳ chỉnh của bản đã ký, rồi tới icon gốc của nguồn, cuối cùng là ảnh thay thế.
     private func getIconData(size: CGFloat) -> Data {
         guard let iconFileName = app.iconFileName, let appUUID = app.uuid else {
             return placeholderIcon(size: size)

@@ -2,10 +2,6 @@
 //  SearchViewModel.swift
 //  zsignapp
 //  Created by Sato on 26/10/25.
-//
-//  Màn tìm NGUỒN. Tìm ỨNG DỤNG đã chuyển thành ô nhập ngay trên màn Store
-//  (xem StoreAppsList trong AllSourceAppsView.swift) nên không còn màn riêng.
-
 import SwiftUI
 import AltSourceKit
 import Combine
@@ -43,7 +39,6 @@ class SearchViewModel: ObservableObject {
 
 // MARK: - Vỏ dùng chung cho hai màn tìm kiếm
 
-/// Thanh tìm kiếm + ba trạng thái rỗng, phần kết quả do màn gọi truyền vào.
 private struct SearchScaffold<Results: View>: View {
     @ObservedObject var viewModel: SearchViewModel
     @FocusState.Binding var isFocused: Bool
@@ -206,7 +201,6 @@ private struct SearchScaffold<Results: View>: View {
     }
 }
 
-/// Nút "tìm lại từ đầu" dùng ở cuối cả hai danh sách kết quả.
 private struct NewSearchButton: View {
     let action: () -> Void
     

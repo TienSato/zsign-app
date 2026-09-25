@@ -1,37 +1,14 @@
 //
 //  ProgressOverlay.swift
 //  zsignapp
-//
-//  Lớp phủ tiến trình dùng chung cho TOÀN BỘ app: nhập IPA, ký, ký hàng loạt,
-//  tự động ký & cài, kiểm tra chứng chỉ, xuất chứng chỉ...
-//
-//  Muốn đổi giao diện lớp phủ tiến trình ở bất kỳ đâu trong app thì SỬA
-//  DUY NHẤT FILE NÀY. Các màn hình chỉ truyền nội dung vào, không tự vẽ.
-//
-//  Bố cục: phủ kín nền bằng đúng màu nền của app, KHÔNG có hộp/thẻ.
-//  Icon app đập theo nhịp ở giữa, nội dung tiến trình nằm bên dưới.
-//
-//  Cách dùng:
-//      if isImporting {
-//          ProgressOverlay(title: "Importing App", step: L(importStep), progress: importProgress)
-//      }
-//
-//  - progress = nil  -> chỉ có icon đập, không có thanh (việc không đo được tiến độ)
-//  - progress != nil -> có thanh + phần trăm bên dưới
-//
 
 import SwiftUI
 
 struct ProgressOverlay: View {
-    /// Tiêu đề. Dùng chuỗi hằng để tự động dịch theo ngôn ngữ đang chọn.
     let title: LocalizedStringKey
-    /// Dòng phụ: thường là tên app đang xử lý. Truyền chuỗi đã sẵn sàng hiển thị.
     var subtitle: String? = nil
-    /// Bước hiện tại. Nếu chuỗi đến từ biến, hãy bọc L(...) trước khi truyền vào.
     var step: String? = nil
-    /// 0...1. nil nghĩa là không đo được tiến độ.
     var progress: Double? = nil
-    /// Nhãn phụ bên trái thanh, ví dụ "3/10".
     var trailingLabel: String? = nil
 
     @State private var beat = false

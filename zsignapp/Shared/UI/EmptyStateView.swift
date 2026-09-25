@@ -1,15 +1,11 @@
 //
 //  EmptyStateView.swift
 //  zsignapp
-//  View "không có dữ liệu" dùng chung cho toàn app.
-//  iOS 17+ dùng ContentUnavailableView của hệ thống, iOS 16 dùng fallback thủ công.
-//
+
 
 import SwiftUI
 
 struct EmptyStateView<Actions: View>: View {
-    /// standard: icon xám, tiêu đề .headline, chiếm hết khung.
-    /// compact: icon .secondary, tiêu đề .title2 semibold, chỉ padding.
     enum Style {
         case standard
         case compact
@@ -19,7 +15,6 @@ struct EmptyStateView<Actions: View>: View {
     let systemImage: String
     let message: LocalizedStringKey
     var style: Style = .standard
-    /// Nút hành động đặt ngay dưới phần mô tả. Bỏ trống thì không có gì.
     @ViewBuilder var actions: Actions
 
     var body: some View {

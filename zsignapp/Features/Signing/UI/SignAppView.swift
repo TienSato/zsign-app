@@ -1,14 +1,7 @@
 //
 //  SignAppView.swift
 //  zsignapp
-//
-//  Created by Sato on 26/10/25.
-//
-//  Giao diện dạng thẻ (Theme + CardComponents). Toàn bộ luồng ký
-//  (signApp / findRecentlySignedApp / InstallHandler / tiến trình) giữ nguyên.
-//  Phần tiến trình vẫn là MỘT THẺ nằm trong dòng chảy nội dung, không phải
-//  lớp phủ che màn hình.
-//
+
 
 import SwiftUI
 import PhotosUI
@@ -774,7 +767,6 @@ struct SignAppView: View {
 
 // MARK: - Ô nhập liệu dùng trong màn ký
 
-/// Hàng nhập liệu: nhãn nhỏ phía trên, ô nhập phía dưới, thẳng cột với các hàng khác.
 private struct SignFieldRow: View {
     let icon: String
     let title: String

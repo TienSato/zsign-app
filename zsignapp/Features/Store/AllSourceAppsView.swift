@@ -1,10 +1,7 @@
 //
 //  AllSourceAppsView.swift
 //  zsignapp
-//
-//  Kho ứng dụng: danh sách tổng hợp, trang chi tiết kiểu App Store,
-//  quản lý nguồn. Giao diện dùng bộ thẻ chung (Theme + CardComponents).
-//
+
 import SwiftUI
 import AltSourceKit
 import Combine
@@ -12,19 +9,13 @@ import UIKit
 
 // MARK: - Danh sách ứng dụng dùng chung (tổng hợp & theo nguồn)
 
-/// Một thẻ chứa toàn bộ hàng ứng dụng, có tiêu đề đếm số lượng phía trên.
 private struct StoreAppsList: View {
     let apps: [StoreApp]
-    /// Hiện tên nguồn ở mỗi dòng (tắt khi đang xem đúng một nguồn).
     var showsSource: Bool = true
-    /// Do nút kính lúp trên thanh công cụ bật/tắt.
     @Binding var isSearching: Bool
 
     @State private var query = ""
-    /// Từ khoá ĐÃ bấm tìm. Khác `query` (chữ đang gõ) — không lọc theo từng
-    /// phím gõ, vì lọc hàng chục nghìn mục mỗi phím thì máy nào cũng giật.
     @State private var submitted = ""
-    /// nil = chưa tìm, hiện tất cả. Lưu sẵn kết quả thay vì lọc trong body.
     @State private var results: [StoreApp]?
     @FocusState private var focused: Bool
 
@@ -147,8 +138,6 @@ private struct StoreAppsList: View {
 
     // MARK: - Lọc
 
-    /// Lọc MỘT lần cho mỗi lần bấm tìm. Khớp chuỗi con ở bất kỳ vị trí nào:
-    /// "f", "face", "book" đều ra Facebook. Không phân biệt hoa thường và dấu.
     private func applyFilter() async {
         let term = SourcesViewModel.fold(submitted.trimmingCharacters(in: .whitespaces))
         guard !term.isEmpty else {
@@ -176,7 +165,6 @@ struct AllSourceAppsView: View {
         sourcesCache.cachedSources
     }
 
-    /// Đọc thẳng danh sách đã dựng sẵn — KHÔNG gộp lại ở đây.
     private var allApps: [StoreApp] {
         viewModel.catalog
     }
@@ -413,7 +401,6 @@ struct SourceAppRow: View {
 // MARK: - Source App Detail View (App Store Style)
 struct SourceAppDetailView: View {
     let app: ASRepository.App
-    /// Nguồn mà ứng dụng này đến từ. Rỗng thì không hiện dòng nguồn.
     var sourceName: String = ""
     
     @ObservedObject private var downloadManager = DownloadManager.shared
@@ -1364,7 +1351,6 @@ struct SourceAppsView: View {
         return L("All Repositories")
     }
     
-    /// Lọc từ danh sách đã dựng sẵn theo khoá nguồn — không gộp lại từ đầu.
     private var allApps: [StoreApp] {
         let keys = Set(sources.compactMap { source -> String? in
             guard let url = source.sourceURL else { return nil }

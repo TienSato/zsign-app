@@ -26,10 +26,8 @@ class TweakHandler {
     // MARK: - Main Entry Point
     
     func inject() async throws {
-        // Phải gọi checkEllekit() TRƯỚC khi xử lý dylib/framework
         try await checkEllekit()
         
-        // ✅ SAU ĐÓ mới kiểm tra rỗng
         guard !urls.isEmpty else {
             return
         }
@@ -49,7 +47,7 @@ class TweakHandler {
             case "framework":
                 try await handleFramework(at: url)
             default:
-                break   // đuôi file không hỗ trợ -> bỏ qua
+                break
             }
         }
         
@@ -78,11 +76,9 @@ class TweakHandler {
             guard let ellekitURL = Bundle.main.url(forResource: "ellekit", withExtension: "deb") else {
                 throw TweakError.ellekitNotFound
             }
-            // ✅ Insert vào đầu danh sách để xử lý đầu tiên
             urls.insert(ellekitURL, at: 0)
         }
         
-        // Nếu IPA đã có sẵn CydiaSubstrate.framework thì xử lý theo tuỳ chọn thay thế bằng ElleKit
         if fileManager.fileExists(atPath: substrateFramework.path) {
             if options.experiment_replaceSubstrateWithEllekit {
                 try fileManager.removeItem(at: substrateFramework)
@@ -91,12 +87,9 @@ class TweakHandler {
                 return
             }
         } else {
-            // ✅ Không kiểm tra urls.isEmpty ở đây
-            // Vì có thể user chỉ muốn inject ElleKit mà không có tweak khác
             if options.experiment_replaceSubstrateWithEllekit {
                 try await addEllekit()
             } else if !urls.isEmpty {
-                // ✅ Chỉ add ElleKit nếu có tweaks khác cần inject
                 try await addEllekit()
             }
         }
@@ -132,15 +125,12 @@ class TweakHandler {
             throw TweakError.executableNotFound
         }
         
-        // Đổi đường dẫn CydiaSubstrate sang @rpath (bỏ qua kết quả: dylib không
-        // tham chiếu CydiaSubstrate thì thao tác này thất bại là bình thường)
         _ = Zsign.changeDylibPath(
             appExecutable: destinationURL.path,
             for: "/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
             with: "@rpath/CydiaSubstrate.framework/CydiaSubstrate"
         )
         
-        // Nhúng dylib (bỏ qua kết quả: nếu đã nhúng sẵn thì zsign trả về false)
         let injectPath = "\(options.injectPath)\(injectFolder)\(destinationURL.lastPathComponent)"
         _ = Zsign.injectDyLib(
             appExecutable: appExec.path,

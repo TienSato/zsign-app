@@ -20,11 +20,9 @@ struct IslandBadgeView: View {
     private let diScale: CGFloat = 0.86
 
     var body: some View {
-        // Chỉ dựng cho máy CÓ Dynamic Island — controller đã chặn từ ngoài,
-        // nên ở đây luôn dùng số đo của DI, không còn nhánh tai thỏ.
         let w = diWidth * diScale
         let h = diHeight * diScale
-        let top = diTop + (diHeight - h) / 2   // giữ badge đúng tâm vùng DI
+        let top = diTop + (diHeight - h) / 2
 
         let iconSize = h * 0.60
         let fontSize = h * 0.34
@@ -44,7 +42,7 @@ struct IslandBadgeView: View {
             .frame(width: w, height: h)
             .background(Capsule(style: .continuous).fill(background))
             .overlay(Capsule(style: .continuous).strokeBorder(tint.opacity(0.65), lineWidth: 1))
-            .frame(maxWidth: .infinity)   // căn giữa == căn theo DI
+            .frame(maxWidth: .infinity)
             .padding(.top, top)
             Spacer(minLength: 0)
         }
@@ -84,8 +82,6 @@ final class IslandBadgeController {
     private let title = "zSign"
 
     func apply(enabled: Bool) {
-        // Máy không có Dynamic Island thì badge sẽ lộ hẳn ra màn hình chứ
-        // không nấp được sau đâu cả -> không dựng cửa sổ nào.
         guard enabled, DeviceInfo.hasDynamicIsland else {
             window?.isHidden = true
             window = nil

@@ -2,13 +2,6 @@
 //  EntitlementCatalog.swift
 //  zsignapp
 //
-//  Danh mục quyền (entitlement) để màn hình Chi tiết chứng chỉ hiển thị tên dễ
-//  hiểu + mô tả ngắn thay vì chỉ có chuỗi com.apple.developer... khô khan.
-//
-//  Khoá nào không có trong danh mục vẫn được hiện, xếp vào nhóm "Khác" và lấy
-//  đoạn cuối của khoá làm tên — không bao giờ giấu quyền của người dùng.
-//
-
 import SwiftUI
 
 enum EntitlementCategory: Int, CaseIterable {
@@ -62,7 +55,6 @@ struct EntitlementInfo {
 }
 
 enum EntitlementCatalog {
-    /// Tra cứu một khoá entitlement. Không có trong danh mục thì tự dựng mục "Khác".
     static func info(for key: String) -> EntitlementInfo {
         if let entry = table[key] {
             return EntitlementInfo(key: key, title: L(entry.0), detail: L(entry.1), category: entry.2)
@@ -72,10 +64,8 @@ enum EntitlementCatalog {
         return EntitlementInfo(key: key, title: fallback, detail: "", category: .other)
     }
 
-    /// Khoá đã có trong danh mục?
     static func isKnown(_ key: String) -> Bool { table[key] != nil }
 
-    /// Mọi khoá thuộc một nhóm, theo đúng thứ tự khai báo trong bảng.
     static func keys(in category: EntitlementCategory) -> [String] {
         order.filter { table[$0]?.2 == category }
     }
@@ -138,7 +128,6 @@ enum EntitlementCatalog {
         "beta-reports-active": ("TestFlight", "Gửi báo cáo bản beta.", .dev),
     ]
 
-    /// Thứ tự hiển thị trong mỗi nhóm.
     private static let order: [String] = [
         "application-identifier",
         "com.apple.developer.team-identifier",

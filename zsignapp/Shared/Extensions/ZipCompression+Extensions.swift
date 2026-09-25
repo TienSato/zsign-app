@@ -7,11 +7,9 @@
 import Foundation
 import Zip
 
-// ✅ ĐÚNG: ZipCompression là top-level enum, không phải Zip.ZipCompression
 typealias CompressionLevel = ZipCompression
 
 extension ZipCompression {
-    /// Human-readable label for compression level
     var label: String {
         switch self {
         case .NoCompression:
@@ -25,7 +23,6 @@ extension ZipCompression {
         }
     }
     
-    /// Detailed description for each level
     var description: String {
         switch self {
         case .NoCompression:
@@ -39,7 +36,6 @@ extension ZipCompression {
         }
     }
     
-    /// Icon for each level
     var icon: String {
         switch self {
         case .NoCompression:
@@ -53,7 +49,6 @@ extension ZipCompression {
         }
     }
     
-    /// Color for each level
     var color: String {
         switch self {
         case .NoCompression:
@@ -67,7 +62,6 @@ extension ZipCompression {
         }
     }
     
-    /// Convert from Int to CompressionLevel
     static func from(rawValue: Int) -> ZipCompression {
         switch rawValue {
         case 0:
@@ -83,12 +77,10 @@ extension ZipCompression {
         }
     }
     
-    /// Convert CompressionLevel to Int for storage
     var intValue: Int {
         return self.rawValue
     }
     
-    /// Convert from old ZipCompression rawValue (for migration)
     static func fromLegacyRawValue(_ rawValue: Int) -> ZipCompression {
         return from(rawValue: rawValue)
     }

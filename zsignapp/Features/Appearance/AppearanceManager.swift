@@ -1,10 +1,6 @@
 //
 //  AppearanceManager.swift
 //  zsignapp
-//  Quản lý giao diện do người dùng chọn: màu chủ đạo (theo máy / preset / tùy chỉnh)
-//  và chế độ sáng/tối. Lưu vào UserDefaults, áp toàn app qua .tint + .preferredColorScheme.
-//
-
 import SwiftUI
 import UIKit
 
@@ -49,7 +45,6 @@ final class AppearanceManager: ObservableObject {
     @Published var customColor: Color { didSet { d.set(customColor.toHexString(), forKey: "appearance.customHex") } }
     @Published var appScheme: AppColorScheme { didSet { d.set(appScheme.rawValue, forKey: "appearance.scheme") } }
 
-    /// Bảng màu preset (dịu, hợp iOS).
     static let presets: [(name: String, color: Color)] = [
         ("Blue", Color(red: 0.20, green: 0.48, blue: 0.90)),
         ("Indigo",       Color(red: 0.30, green: 0.35, blue: 0.78)),
@@ -71,7 +66,6 @@ final class AppearanceManager: ObservableObject {
         appScheme = AppColorScheme(rawValue: d.string(forKey: "appearance.scheme") ?? "") ?? .system
     }
 
-    /// Màu chủ đạo cuối cùng (cần truyền màu máy hiện tại cho chế độ auto).
     func effectiveAccent(deviceAccent: Color) -> Color {
         switch mode {
         case .auto:

@@ -2,10 +2,6 @@
 //  SourcesView.swift
 //  zsignapp
 //  Created by Sato on 26/10/25.
-//
-//  Vỏ điều hướng của tab AppStore + cache nguồn + view model dùng chung.
-//  Giao diện theo bộ thẻ chung (Theme + CardComponents).
-
 import SwiftUI
 import AltSourceKit
 import Combine

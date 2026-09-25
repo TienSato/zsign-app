@@ -2,24 +2,12 @@
 //  CardComponents.swift
 //  zsignapp
 //
-//  Các khối dựng nên giao diện dạng thẻ. Thay cho Section/Row của Form.
-//
-//  Ý tưởng: mỗi màn hình là ScrollView + VStack các CardGroup. Bên trong
-//  CardGroup xếp các CardRow, tự chèn đường kẻ mảnh giữa các hàng.
-//
-//      CardScreen {
-//          CardGroup("Management") {
-//              CardRow(icon: "key.fill", title: "Certificates") { ... }
-//              CardRow(icon: "paintpalette.fill", title: "Appearance") { ... }
-//          }
-//      }
-//
+
 
 import SwiftUI
 
 // MARK: - Khung màn hình
 
-/// Nền canvas + cuộn + lề chuẩn. Dùng thay cho Form ở gốc mỗi màn hình.
 struct CardScreen<Content: View>: View {
     @ViewBuilder var content: Content
 
@@ -39,7 +27,6 @@ struct CardScreen<Content: View>: View {
 
 // MARK: - Nhóm thẻ
 
-/// Một thẻ trắng chứa nhiều hàng, có tiêu đề nhỏ phía trên và chú thích phía dưới.
 struct CardGroup<Content: View>: View {
     var title: String? = nil
     var footnote: String? = nil
@@ -75,7 +62,6 @@ struct CardGroup<Content: View>: View {
     }
 }
 
-/// Đường kẻ mảnh giữa hai hàng, thụt vào cho thẳng với chữ.
 struct CardDivider: View {
     var inset: CGFloat = Theme.Metric.cardPadding + Theme.Metric.iconBox + 12
 
@@ -89,8 +75,6 @@ struct CardDivider: View {
 
 // MARK: - Hàng
 
-/// Hàng chuẩn: ô icon vuông + tiêu đề + mô tả + phần đuôi.
-/// Truyền `destination` để thành NavigationLink, `action` để thành nút.
 struct CardRow<Trailing: View>: View {
     let icon: String
     let title: String
@@ -111,7 +95,6 @@ struct CardRow<Trailing: View>: View {
         .contentShape(Rectangle())
     }
 
-    /// Chỉ mình glyph, không có ô nền. Khung rộng cố định để chữ các hàng thẳng cột.
     private var iconBox: some View {
         Image(systemName: icon)
             .font(.system(size: Theme.Metric.iconSize, weight: .semibold))
@@ -147,7 +130,6 @@ extension CardRow where Trailing == EmptyView {
     }
 }
 
-/// Mũi tên ">" cho hàng dẫn sang màn khác.
 struct CardChevron: View {
     var body: some View {
         Image(systemName: "chevron.right")
@@ -156,7 +138,6 @@ struct CardChevron: View {
     }
 }
 
-/// Hàng dẫn sang màn hình khác. Bọc sẵn NavigationLink và bỏ màu xanh mặc định.
 struct CardNavRow<Destination: View>: View {
     let icon: String
     let title: String
@@ -176,7 +157,6 @@ struct CardNavRow<Destination: View>: View {
     }
 }
 
-/// Hàng có công tắc bật/tắt.
 struct CardToggleRow: View {
     let icon: String
     let title: String
@@ -192,7 +172,6 @@ struct CardToggleRow: View {
     }
 }
 
-/// Hàng chỉ hiển thị một giá trị bên phải.
 struct CardValueRow: View {
     let icon: String
     let title: String
@@ -210,7 +189,6 @@ struct CardValueRow: View {
 
 // MARK: - Nút
 
-/// Nút chính đầy màu, chiếm hết chiều ngang.
 struct FilledButton: View {
     let title: String
     var icon: String? = nil

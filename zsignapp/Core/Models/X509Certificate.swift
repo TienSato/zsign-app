@@ -2,18 +2,6 @@
 //  X509Certificate.swift
 //  zsignapp
 //
-//  Đọc chứng chỉ X.509 (DER) nhúng trong mobileprovision, khoá
-//  DeveloperCertificates. iOS KHÔNG có SecCertificateCopyValues (chỉ macOS mới
-//  có) nên phải tự bóc ASN.1/DER để lấy Common Name, Organization, OU, Team ID,
-//  Country, Serial, hạn dùng và Issuer.
-//
-//  Cấu trúc theo RFC 5280:
-//      Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm, signature }
-//      TBSCertificate ::= SEQUENCE {
-//          [0] version OPTIONAL, serialNumber, signature,
-//          issuer Name, validity Validity, subject Name, ... }
-//      Name ::= SEQUENCE OF SET OF SEQUENCE { OID, value }
-//
 
 import Foundation
 import CryptoKit
@@ -22,13 +10,13 @@ struct X509Certificate {
     var commonName: String?
     var organization: String?
     var organizationalUnit: String?
-    var teamID: String?          // OID UID — Apple để Team ID ở đây
+    var teamID: String?
     var country: String?
-    var serial: String?          // hex hoa
-    var sha1: String?            // hex hoa của toàn bộ DER
+    var serial: String?
+    var sha1: String?
     var notBefore: Date?
     var notAfter: Date?
-    var issuer: String?          // Common Name của bên cấp
+    var issuer: String?
 
     var isExpired: Bool {
         guard let notAfter else { return false }
@@ -40,7 +28,6 @@ struct X509Certificate {
     init?(der: Data) {
         let b = [UInt8](der)
 
-        // SHA-1 tính trên toàn bộ DER, không phụ thuộc việc bóc tách bên dưới.
         sha1 = Insecure.SHA1.hash(data: der).map { String(format: "%02X", $0) }.joined()
 
         guard let cert = Self.readTLV(b, 0), cert.isConstructed else { return nil }
@@ -48,16 +35,13 @@ struct X509Certificate {
         guard let tbs = top.first, tbs.isConstructed else { return nil }
 
         var f = Self.children(b, tbs.value)
-        // [0] version là tuỳ chọn; có thì bỏ qua để các trường sau về đúng chỗ.
         if let first = f.first, first.tag == 0xA0 { f.removeFirst() }
         guard f.count >= 5 else { return nil }
 
-        // serialNumber: INTEGER, bỏ byte 0x00 đệm dấu ở đầu nếu có.
         var serialBytes = Array(b[f[0].value])
         if serialBytes.first == 0x00 { serialBytes.removeFirst() }
         serial = serialBytes.map { String(format: "%02X", $0) }.joined()
 
-        // f[1] = thuật toán ký (bỏ qua), f[2] = issuer, f[3] = validity, f[4] = subject
         issuer = Self.parseName(b, f[2].value)[Self.oidCN]
 
         let validity = Self.children(b, f[3].value)
@@ -82,11 +66,10 @@ struct X509Certificate {
     private static let oidOU  = "2.5.4.11"
     private static let oidUID = "0.9.2342.19200300.100.1.1"
 
-    /// Một khối Tag-Length-Value, mô tả bằng chỉ số tuyệt đối trong mảng gốc.
     private struct TLV {
         let tag: UInt8
         let value: Range<Int>
-        let end: Int                 // vị trí ngay sau khối này
+        let end: Int
         var isConstructed: Bool { tag & 0x20 != 0 }
     }
 
@@ -120,13 +103,12 @@ struct X509Certificate {
         var i = range.lowerBound
         while i < range.upperBound, let tlv = readTLV(b, i) {
             result.append(tlv)
-            guard tlv.end > i else { break }   // chặn vòng lặp vô tận nếu DER hỏng
+            guard tlv.end > i else { break }
             i = tlv.end
         }
         return result
     }
 
-    /// Name -> [OID: giá trị]. Trùng OID thì giữ giá trị đầu tiên.
     private static func parseName(_ b: [UInt8], _ range: Range<Int>) -> [String: String] {
         var out: [String: String] = [:]
         for rdn in children(b, range) where rdn.isConstructed {
@@ -148,13 +130,11 @@ struct X509Certificate {
         var i = range.lowerBound
         guard i < range.upperBound else { return "" }
 
-        // Byte đầu gói 2 thành phần: first * 40 + second
         let first = Int(b[i])
         i += 1
         parts.append("\(first / 40)")
         parts.append("\(first % 40)")
 
-        // Các thành phần sau: base-128, bit cao = còn byte tiếp theo
         var value = 0
         while i < range.upperBound {
             let byte = b[i]
@@ -168,7 +148,6 @@ struct X509Certificate {
         return parts.joined(separator: ".")
     }
 
-    /// UTCTime (tag 0x17, YY) hoặc GeneralizedTime (tag 0x18, YYYY).
     private static func parseTime(_ b: [UInt8], _ tlv: TLV) -> Date? {
         guard let text = String(bytes: b[tlv.value], encoding: .ascii) else { return nil }
 

@@ -173,14 +173,11 @@ class BackgroundAudioManager: NSObject {
     
     // MARK: - Public Methods
     
-    /// Start background audio to keep app active
-    /// - Parameter force: If true, bypass user setting check (used for downloads)
     func startBackgroundAudio(force: Bool = false) {
         guard isInitialized else {
             return
         }
         
-        // ✅ THAY ĐỔI CHÍNH:
         // - force = true: Luôn start (dành cho downloads)
         // - force = false: Kiểm tra user setting (default behavior)
         let shouldStart = force || UserDefaults.standard.bool(forKey: "zsignapp.backgroundAudioEnabled")
